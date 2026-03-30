@@ -1,0 +1,18 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+appsettings.Development.json
+
+# Secrets
+secrets.json
+
+# Angular
+pryschedule-ui/node_modules/
+pryschedule-ui/dist/
+pryschedule-ui/.angular/
+
+# Environment
+.env

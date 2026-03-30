@@ -1,0 +1,158 @@
+using SendGrid;
+using SendGrid.Helpers.Mail;
+
+namespace ProScheduleAPI.Services;
+
+public class EmailService
+{
+    private readonly IConfiguration _config;
+    private readonly ILogger<EmailService> _logger;
+
+    public EmailService(IConfiguration config, ILogger<EmailService> logger)
+    {
+        _config = config;
+        _logger = logger;
+    }
+
+    public async Task SendAsync(string toEmail, string toName, string subject, string htmlBody,
+        string? fromEmail = null, string? fromName = null)
+    {
+        var apiKey = _config["SendGrid:ApiKey"];
+        if (string.IsNullOrEmpty(apiKey))
+        {
+            _logger.LogWarning("SendGrid API key not configured. Email not sent to {Email}", toEmail);
+            return;
+        }
+
+        var client = new SendGridClient(apiKey);
+        var from = new EmailAddress(
+            fromEmail ?? _config["SendGrid:FromEmail"] ?? "noreply@pryschedule.com",
+            fromName ?? _config["SendGrid:FromName"] ?? "ProSchedule"
+        );
+        var to = new EmailAddress(toEmail, toName);
+        var msg = MailHelper.CreateSingleEmail(from, to, subject, null, htmlBody);
+
+        var response = await client.SendEmailAsync(msg);
+        if (!response.IsSuccessStatusCode)
+            _logger.LogError("SendGrid error {Status} sending to {Email}", response.StatusCode, toEmail);
+    }
+
+    // --- Notification templates ---
+
+    public Task SendBookingConfirmationAsync(
+        string clientEmail, string clientName,
+        string providerName, string apptTypeName,
+        DateTime startTime, string practiceSlug,
+        string cancellationToken, string? fromEmail = null, string? fromName = null)
+    {
+        var subject = $"Appointment Confirmed – {apptTypeName}";
+        var cancelUrl = $"/book/{practiceSlug}/cancel?token={cancellationToken}";
+        var rescheduleUrl = $"/book/{practiceSlug}?reschedule={cancellationToken}";
+
+        var html = $"""
+            <h2>Your appointment is confirmed!</h2>
+            <p>Hi {clientName},</p>
+            <p>Your <strong>{apptTypeName}</strong> with <strong>{providerName}</strong> is scheduled for:</p>
+            <p style="font-size:18px;font-weight:bold">{startTime:dddd, MMMM d, yyyy 'at' h:mm tt}</p>
+            <br/>
+            <p>
+              <a href="{rescheduleUrl}" style="margin-right:16px">Reschedule</a>
+              <a href="{cancelUrl}">Cancel appointment</a>
+            </p>
+            <p style="color:#999;font-size:12px">Sent by ProSchedule</p>
+            """;
+
+        return SendAsync(clientEmail, clientName, subject, html, fromEmail, fromName);
+    }
+
+    public Task SendReminderAsync(
+        string clientEmail, string clientName,
+        string providerName, string apptTypeName,
+        DateTime startTime, string practiceSlug,
+        string cancellationToken, int hoursAway,
+        string? fromEmail = null, string? fromName = null)
+    {
+        var subject = $"Reminder: {apptTypeName} in {hoursAway} hours";
+        var cancelUrl = $"/book/{practiceSlug}/cancel?token={cancellationToken}";
+
+        var html = $"""
+            <h2>Appointment Reminder</h2>
+            <p>Hi {clientName},</p>
+            <p>This is a reminder that your <strong>{apptTypeName}</strong> with <strong>{providerName}</strong> is in <strong>{hoursAway} hours</strong>:</p>
+            <p style="font-size:18px;font-weight:bold">{startTime:dddd, MMMM d, yyyy 'at' h:mm tt}</p>
+            <br/>
+            <p><a href="{cancelUrl}">Cancel appointment</a></p>
+            <p style="color:#999;font-size:12px">Sent by ProSchedule</p>
+            """;
+
+        return SendAsync(clientEmail, clientName, subject, html, fromEmail, fromName);
+    }
+
+    public Task SendCancellationToClientAsync(
+        string clientEmail, string clientName,
+        string apptTypeName, DateTime startTime,
+        string? fromEmail = null, string? fromName = null)
+    {
+        var subject = $"Appointment Cancelled – {apptTypeName}";
+        var html = $"""
+            <h2>Appointment Cancelled</h2>
+            <p>Hi {clientName},</p>
+            <p>Your <strong>{apptTypeName}</strong> on <strong>{startTime:dddd, MMMM d, yyyy 'at' h:mm tt}</strong> has been cancelled.</p>
+            <p>To rebook, visit our booking page.</p>
+            <p style="color:#999;font-size:12px">Sent by ProSchedule</p>
+            """;
+        return SendAsync(clientEmail, clientName, subject, html, fromEmail, fromName);
+    }
+
+    public Task SendNewBookingToProviderAsync(
+        string providerEmail, string providerName,
+        string clientName, string clientEmail,
+        string apptTypeName, DateTime startTime,
+        string? fromEmail = null, string? fromName = null)
+    {
+        var subject = $"New Booking: {apptTypeName} – {clientName}";
+        var html = $"""
+            <h2>New Appointment Booked</h2>
+            <p>Hi {providerName},</p>
+            <p>A new appointment has been booked:</p>
+            <ul>
+              <li><strong>Client:</strong> {clientName} ({clientEmail})</li>
+              <li><strong>Type:</strong> {apptTypeName}</li>
+              <li><strong>When:</strong> {startTime:dddd, MMMM d, yyyy 'at' h:mm tt}</li>
+            </ul>
+            <p style="color:#999;font-size:12px">Sent by ProSchedule</p>
+            """;
+        return SendAsync(providerEmail, providerName, subject, html, fromEmail, fromName);
+    }
+
+    public Task SendCancellationToProviderAsync(
+        string providerEmail, string providerName,
+        string clientName, string apptTypeName, DateTime startTime,
+        string? fromEmail = null, string? fromName = null)
+    {
+        var subject = $"Appointment Cancelled: {apptTypeName} – {clientName}";
+        var html = $"""
+            <h2>Appointment Cancelled</h2>
+            <p>Hi {providerName},</p>
+            <p><strong>{clientName}</strong>'s <strong>{apptTypeName}</strong> on <strong>{startTime:dddd, MMMM d, yyyy 'at' h:mm tt}</strong> has been cancelled.</p>
+            <p style="color:#999;font-size:12px">Sent by ProSchedule</p>
+            """;
+        return SendAsync(providerEmail, providerName, subject, html, fromEmail, fromName);
+    }
+
+    public Task SendIntakeSubmittedToProviderAsync(
+        string providerEmail, string providerName,
+        string clientName, string apptTypeName, DateTime startTime,
+        string? fromEmail = null, string? fromName = null)
+    {
+        var subject = $"Intake Form Submitted – {clientName}";
+        var html = $"""
+            <h2>Intake Form Submitted</h2>
+            <p>Hi {providerName},</p>
+            <p><strong>{clientName}</strong> has submitted their intake form for their <strong>{apptTypeName}</strong> on <strong>{startTime:dddd, MMMM d, yyyy 'at' h:mm tt}</strong>.</p>
+            <p>Log in to ProSchedule to view the responses.</p>
+            <p style="color:#999;font-size:12px">Sent by ProSchedule</p>
+            """;
+        return SendAsync(providerEmail, providerName, subject, html, fromEmail, fromName);
+    }
+}
