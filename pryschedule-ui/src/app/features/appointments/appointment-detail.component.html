@@ -1,0 +1,67 @@
+<div class="page">
+  <a routerLink="/appointments" class="back">← Back to Appointments</a>
+
+  @if (loading()) {
+    <div class="loading">Loading...</div>
+  } @else if (appt()) {
+    <div class="detail-layout">
+      <div class="main-card card">
+        <div class="card-header">
+          <div>
+            <h1>{{ appt()!.appointmentTypeName }}</h1>
+            <div class="meta">{{ appt()!.startTime | date:'EEEE, MMMM d, y · h:mm a' }} – {{ appt()!.endTime | date:'h:mm a' }}</div>
+          </div>
+          <span class="badge status-{{ appt()!.status }}">{{ statusLabel(appt()!.status) }}</span>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-block">
+            <div class="info-label">Client</div>
+            <div class="info-value">{{ appt()!.clientName }}</div>
+            <div class="info-sub">{{ appt()!.clientEmail }}</div>
+            @if (appt()!.clientPhone) { <div class="info-sub">{{ appt()!.clientPhone }}</div> }
+          </div>
+          <div class="info-block">
+            <div class="info-label">Provider</div>
+            <div class="info-value">{{ appt()!.providerName }}</div>
+          </div>
+          <div class="info-block">
+            <div class="info-label">Duration</div>
+            <div class="info-value">{{ appt()!.durationMinutes }} minutes</div>
+          </div>
+        </div>
+
+        @if (appt()!.notes) {
+          <div class="notes-block">
+            <div class="info-label">Notes</div>
+            <p>{{ appt()!.notes }}</p>
+          </div>
+        }
+
+        @if (appt()!.status === 0) {
+          <div class="actions">
+            <button class="btn btn-success" (click)="updateStatus(1)">Mark Completed</button>
+            <button class="btn btn-danger" (click)="updateStatus(2)">Cancel</button>
+            <button class="btn btn-warning" (click)="updateStatus(3)">No Show</button>
+          </div>
+        }
+      </div>
+
+      <div class="side-card card">
+        <h3>Intake Form</h3>
+        @if (appt()!.hasIntakeResponse && appt()!.intakeResponse) {
+          <div class="intake-submitted">
+            <div class="badge badge-green">Submitted {{ appt()!.intakeResponse!.submittedAt | date:'MMM d, y' }}</div>
+            <div class="intake-data">
+              <pre>{{ formatResponses(appt()!.intakeResponse!.responsesJson) }}</pre>
+            </div>
+          </div>
+        } @else {
+          <div class="intake-pending">
+            <span class="badge badge-gray">Not yet submitted</span>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

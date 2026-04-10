@@ -1,0 +1,36 @@
+<div class="shell">
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">📅</span>
+      <span class="logo-text">ProSchedule</span>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-name">{{ user()?.firstName }} {{ user()?.lastName }}</div>
+      <div class="user-practice">{{ user()?.practiceName }}</div>
+      <div class="user-role badge">{{ user()?.role }}</div>
+    </div>
+    <ul class="nav-links">
+      <li><a routerLink="/dashboard" routerLinkActive="active">
+        <span class="nav-icon">🏠</span> Dashboard
+      </a></li>
+      <li><a routerLink="/appointments" routerLinkActive="active">
+        <span class="nav-icon">📋</span> Appointments
+      </a></li>
+      @if (auth.isAdmin()) {
+        <li><a routerLink="/providers" routerLinkActive="active">
+          <span class="nav-icon">👤</span> Providers
+        </a></li>
+        <li><a routerLink="/appointment-types" routerLinkActive="active">
+          <span class="nav-icon">⚙️</span> Appointment Types
+        </a></li>
+        <li><a routerLink="/settings" routerLinkActive="active">
+          <span class="nav-icon">🔧</span> Settings
+        </a></li>
+      }
+    </ul>
+    <button class="logout-btn" (click)="auth.logout()">Sign Out</button>
+  </nav>
+  <main class="main-content">
+    <router-outlet />
+  </main>
+</div>

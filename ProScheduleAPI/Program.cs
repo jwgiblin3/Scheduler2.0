@@ -55,7 +55,7 @@ builder.Services.AddHostedService<ReminderHostedService>();
 builder.Services.AddCors(opts =>
 {
     opts.AddPolicy("Angular", policy =>
-        policy.WithOrigins("http://localhost:4300")
+        policy.WithOrigins("http://localhost:4200")
               .AllowAnyHeader()
               .AllowAnyMethod());
 });

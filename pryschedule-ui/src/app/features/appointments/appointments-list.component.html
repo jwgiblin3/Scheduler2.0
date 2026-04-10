@@ -1,0 +1,66 @@
+<div class="page">
+  <div class="page-header">
+    <h1>Appointments</h1>
+    <div class="header-right">
+    <button class="btn btn-export" (click)="exportCsv()">⬇ Export CSV</button>
+    <div class="filters">
+      <input type="date" [(ngModel)]="filterFrom" (change)="load()" class="filter-input" />
+      <input type="date" [(ngModel)]="filterTo" (change)="load()" class="filter-input" />
+    </div>
+      <select [(ngModel)]="filterStatus" (change)="load()" class="filter-select">
+        <option value="">All statuses</option>
+        <option value="0">Scheduled</option>
+        <option value="1">Completed</option>
+        <option value="2">Cancelled</option>
+        <option value="3">No Show</option>
+      </select>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">Loading...</div>
+  } @else if (appointments().length === 0) {
+    <div class="empty-state">No appointments found for selected filters.</div>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date & Time</th>
+            <th>Client</th>
+            <th>Provider</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Intake</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (a of appointments(); track a.id) {
+            <tr>
+              <td>
+                <div class="date">{{ a.startTime | date:'MMM d, y' }}</div>
+                <div class="time">{{ a.startTime | date:'h:mm a' }}</div>
+              </td>
+              <td>
+                <div>{{ a.clientName }}</div>
+                <div class="sub">{{ a.clientEmail }}</div>
+              </td>
+              <td>{{ a.providerName }}</td>
+              <td>{{ a.appointmentTypeName }}</td>
+              <td><span class="badge status-{{ a.status }}">{{ statusLabel(a.status) }}</span></td>
+              <td>
+                @if (a.hasIntakeResponse) {
+                  <span class="badge badge-green">Submitted</span>
+                } @else {
+                  <span class="badge badge-gray">Pending</span>
+                }
+              </td>
+              <td><a [routerLink]="['/appointments', a.id]" class="link">View →</a></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
