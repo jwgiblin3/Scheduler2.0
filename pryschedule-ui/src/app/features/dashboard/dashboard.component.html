@@ -1,0 +1,75 @@
+
+    <div class="page">
+      <header class="page-header">
+        <div>
+          <h1>Dashboard</h1>
+          <p>Welcome back, {{ auth.currentUser()?.firstName }}!</p>
+        </div>
+        <div class="header-actions">
+          <a class="btn btn-secondary" [href]="bookingLink" target="_blank">View Booking Page</a>
+        </div>
+      </header>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value">{{ todayCount() }}</div>
+          <div class="stat-label">Today's Appointments</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{ weekCount() }}</div>
+          <div class="stat-label">This Week</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{ upcomingCount() }}</div>
+          <div class="stat-label">Upcoming (Scheduled)</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <div class="view-tabs">
+            <button class="tab" [class.active]="calView() === 'day'" (click)="setView('day')">Day</button>
+            <button class="tab" [class.active]="calView() === 'week'" (click)="setView('week')">Week</button>
+            <button class="tab" [class.active]="calView() === 'month'" (click)="setView('month')">Month</button>
+          </div>
+          <a routerLink="/appointments" class="link">View all →</a>
+        </div>
+
+        @if (loading()) {
+          <div class="loading">Loading...</div>
+        } @else if (visibleAppts().length === 0) {
+          <div class="empty-state">No appointments in this period. <a routerLink="/appointments">View all</a></div>
+        } @else {
+          @if (calView() === 'month') {
+            <div class="month-grid">
+              @for (day of monthDays(); track day.date) {
+                <div class="month-cell" [class.today]="day.isToday">
+                  <div class="month-day-num">{{ day.date | date:'d' }}</div>
+                  @for (a of day.appts; track a.id) {
+                    <a class="month-appt" [routerLink]="['/appointments', a.id]" [class]="'status-' + a.status">
+                      {{ a.startTime | date:'h:mm a' }} {{ a.clientName }}
+                    </a>
+                  }
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="appt-list">
+              @for (a of visibleAppts(); track a.id) {
+                <a class="appt-card" [routerLink]="['/appointments', a.id]">
+                  <div class="appt-time">
+                    @if (calView() === 'week') { <div class="appt-date">{{ a.startTime | date:'EEE d' }}</div> }
+                    {{ a.startTime | date:'h:mm a' }}
+                  </div>
+                  <div class="appt-info">
+                    <div class="appt-client">{{ a.clientName }}</div>
+                    <div class="appt-meta">{{ a.appointmentTypeName }} · {{ a.providerName }}</div>
+                  </div>
+                  <div class="appt-status" [class]="'status-' + a.status">{{ statusLabel(a.status) }}</div>
+                </a>
+              }
+            </div>
+          }
+        }
+      </div>
+    </div>

@@ -5,9 +5,17 @@ public class Provider
     public int Id { get; set; }
     public int PracticeId { get; set; }
     public Practice Practice { get; set; } = null!;
+
+    // Primary name shown to clients and in the admin UI.
+    public string? DisplayName { get; set; }
+
+    // Legacy name fields — kept nullable/optional for backward compatibility with
+    // existing rows. DisplayName is now the canonical name.
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
+
+    // Email is now optional — providers are not required to have one.
+    public string? Email { get; set; }
     public string? Phone { get; set; }
     public string? Bio { get; set; }
     public bool IsActive { get; set; } = true;

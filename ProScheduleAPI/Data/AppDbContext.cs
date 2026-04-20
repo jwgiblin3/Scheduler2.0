@@ -27,6 +27,18 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<int>, int>
         builder.Entity<ProviderAppointmentType>()
             .HasKey(x => new { x.ProviderId, x.AppointmentTypeId });
 
+        builder.Entity<ProviderAppointmentType>()
+            .HasOne(x => x.Provider)
+            .WithMany(p => p.ProviderAppointmentTypes)
+            .HasForeignKey(x => x.ProviderId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<ProviderAppointmentType>()
+            .HasOne(x => x.AppointmentType)
+            .WithMany(at => at.ProviderAppointmentTypes)
+            .HasForeignKey(x => x.AppointmentTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.Entity<Practice>()
             .HasIndex(p => p.Slug)
             .IsUnique();
@@ -39,6 +51,27 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<int>, int>
             .HasOne(u => u.Practice)
             .WithMany(p => p.Users)
             .HasForeignKey(u => u.PracticeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // SQL Server doesn't allow multiple cascade paths to the same table.
+        // Appointments references Clients, Providers, and AppointmentTypes — all of which
+        // trace back to Practice — so we restrict cascades here and handle deletes manually.
+        builder.Entity<Appointment>()
+            .HasOne(a => a.Client)
+            .WithMany(c => c.Appointments)
+            .HasForeignKey(a => a.ClientId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Appointment>()
+            .HasOne(a => a.Provider)
+            .WithMany(p => p.Appointments)
+            .HasForeignKey(a => a.ProviderId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Appointment>()
+            .HasOne(a => a.AppointmentType)
+            .WithMany(at => at.Appointments)
+            .HasForeignKey(a => a.AppointmentTypeId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

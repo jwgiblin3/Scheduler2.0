@@ -17,10 +17,22 @@ public class ReminderHostedService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        // Wait for the app to fully start before hitting the database
+        await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+
         while (!stoppingToken.IsCancellationRequested)
         {
-            await SendDueRemindersAsync();
-            // Check every 15 minutes
+            try
+            {
+                await SendDueRemindersAsync();
+            }
+            catch (Exception ex)
+            {
+                // Log but never let an exception escape ExecuteAsync — an unhandled
+                // exception here calls StopApplication() in .NET 6+ and kills the host.
+                _logger.LogError(ex, "Unhandled error in reminder service loop");
+            }
+
             await Task.Delay(TimeSpan.FromMinutes(15), stoppingToken);
         }
     }
@@ -68,7 +80,7 @@ public class ReminderHostedService : BackgroundService
                             await email.SendReminderAsync(
                                 appt.Client.Email,
                                 $"{appt.Client.FirstName} {appt.Client.LastName}",
-                                $"{appt.Provider.FirstName} {appt.Provider.LastName}",
+                                appt.Provider.GetDisplayName(),
                                 appt.AppointmentType.Name,
                                 appt.StartTime,
                                 practice.Slug,

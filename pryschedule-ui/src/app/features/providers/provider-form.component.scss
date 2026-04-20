@@ -1,0 +1,27 @@
+
+    .page { padding: 2rem; max-width: 700px; }
+    .back { color: #667eea; text-decoration: none; font-size: .85rem; display: block; margin-bottom: 1rem; }
+    h1 { margin: 0 0 1.5rem; font-size: 1.4rem; color: #1a1f36; }
+    .card { background: #fff; border-radius: 10px; padding: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+    .section-title { font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; color: #a0aec0; margin: 1.5rem 0 .75rem; padding-bottom: .5rem; border-bottom: 1px solid #f7f8fc; }
+    .section-title:first-child { margin-top: 0; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-group { margin-bottom: 1rem; }
+    label { display: block; font-size: .85rem; font-weight: 500; color: #4a5568; margin-bottom: 4px; }
+    input, textarea, select { width: 100%; padding: .6rem .75rem; border: 1.5px solid #e2e8f0; border-radius: 6px; font-size: .9rem; box-sizing: border-box; }
+    textarea { resize: vertical; }
+    .checkbox-label { display: flex; align-items: center; gap: .4rem; font-size: .9rem; cursor: pointer; margin-bottom: .4rem; }
+    .checkbox-label input { width: auto; }
+    .appt-types { display: flex; flex-direction: column; gap: .3rem; }
+    .day-row { margin-bottom: .75rem; }
+    .day-label { font-size: .85rem; font-weight: 500; color: #4a5568; display: inline-block; width: 90px; }
+    .btn-add-slot { background: transparent; border: 1px dashed #e2e8f0; color: #667eea; border-radius: 6px; padding: .2rem .6rem; font-size: .78rem; cursor: pointer; }
+    .time-slot { display: flex; align-items: center; gap: .5rem; margin-top: .4rem; margin-left: 90px; }
+    .time-input { width: 120px; padding: .4rem .5rem; }
+    .btn-remove { background: transparent; border: none; color: #fc8181; cursor: pointer; font-size: 1rem; }
+    .alert-error { background: #fff5f5; color: #c53030; padding: .6rem .75rem; border-radius: 6px; font-size: .85rem; margin-bottom: .75rem; }
+    .form-actions { display: flex; gap: .75rem; justify-content: flex-end; margin-top: 1.5rem; }
+    .btn { text-decoration: none; padding: .6rem 1.25rem; border-radius: 6px; font-size: .9rem; cursor: pointer; border: none; display: inline-block; }
+    .btn-primary { background: #667eea; color: #fff; }
+    .btn-secondary { border: 1.5px solid #e2e8f0; color: #4a5568; background: transparent; }
+    .btn-primary:disabled { opacity: .6; }

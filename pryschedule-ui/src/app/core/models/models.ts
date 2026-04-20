@@ -3,9 +3,14 @@ export interface AuthResponse {
   email: string;
   firstName: string;
   lastName: string;
-  role: string;
-  practiceId: number;
-  practiceName: string;
+  role: string;            // "Admin" | "Staff" | "Client"
+  // Practice fields are nullable — clients don't own a practice.
+  practiceId?: number | null;
+  practiceName?: string | null;
+  practiceSlug?: string | null;
+  // When true, the signed-in user has appointments booked as a client.
+  hasClientAppointments?: boolean;
+  phone?: string | null;
 }
 
 export interface LoginRequest {
@@ -22,11 +27,32 @@ export interface RegisterRequest {
   practiceSlug: string;
 }
 
-export interface Provider {
-  id: number;
+/** Registration for a client who only books appointments (no practice). */
+export interface ClientRegisterRequest {
   firstName: string;
   lastName: string;
   email: string;
+  password: string;
+  phone?: string;
+}
+
+/** Appointment as seen by a client on "My Appointments". */
+export interface MyAppointment {
+  id: number;
+  practiceName: string;
+  practiceSlug: string;
+  providerName: string;
+  appointmentTypeName: string;
+  startTime: string;
+  endTime: string;
+  status: AppointmentStatus;
+  cancellationToken?: string;
+}
+
+export interface Provider {
+  id: number;
+  displayName: string;
+  email?: string;
   phone?: string;
   bio?: string;
   isActive: boolean;
@@ -119,8 +145,7 @@ export interface BookingInfo {
 
 export interface PublicProvider {
   id: number;
-  firstName: string;
-  lastName: string;
+  displayName: string;
   bio?: string;
   appointmentTypeIds: number[];
 }

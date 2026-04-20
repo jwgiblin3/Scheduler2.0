@@ -1,0 +1,40 @@
+
+    <div class="auth-page">
+      <div class="auth-card">
+        <div class="auth-logo">📅 ProSchedule</div>
+        <h2>Create your account</h2>
+        <p class="auth-subtitle">Sign up to book and manage your appointments.</p>
+        <form [formGroup]="form" (ngSubmit)="onSubmit()">
+          <div class="form-row">
+            <div class="form-group">
+              <label>First Name</label>
+              <input type="text" formControlName="firstName" />
+            </div>
+            <div class="form-group">
+              <label>Last Name</label>
+              <input type="text" formControlName="lastName" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" formControlName="email" placeholder="you@example.com" />
+          </div>
+          <div class="form-group">
+            <label>Phone (optional)</label>
+            <input type="tel" formControlName="phone" />
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" formControlName="password" placeholder="At least 8 characters" />
+          </div>
+          @if (error) {
+            <div class="alert-error">{{ error }}</div>
+          }
+          <button type="submit" class="btn-primary" [disabled]="loading">
+            {{ loading ? 'Creating account...' : 'Create Account' }}
+          </button>
+        </form>
+        <p class="auth-footer">Already have an account? <a routerLink="/login">Sign in</a></p>
+        <p class="auth-footer-alt">Own a practice? <a routerLink="/register">Register a practice</a></p>
+      </div>
+    </div>

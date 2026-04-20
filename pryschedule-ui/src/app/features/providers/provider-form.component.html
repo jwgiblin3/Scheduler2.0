@@ -1,0 +1,75 @@
+
+    <div class="page">
+      <a routerLink="/providers" class="back">← Back to Providers</a>
+      <h1>{{ isEdit ? 'Edit Provider' : 'Add Provider' }}</h1>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="card">
+        <div class="section-title">Basic Info</div>
+        <div class="form-group">
+          <label>Display Name *</label>
+          <input formControlName="displayName" placeholder="e.g. Dr. Jane Smith" />
+          <small>This is how clients will see this provider on the booking page.</small>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" formControlName="email" placeholder="Optional" />
+          </div>
+          <div class="form-group">
+            <label>Phone</label>
+            <input formControlName="phone" placeholder="Optional" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Bio</label>
+          <textarea formControlName="bio" rows="3" placeholder="Brief description shown to clients..."></textarea>
+        </div>
+
+        @if (isEdit) {
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" formControlName="isActive" /> Active
+            </label>
+          </div>
+        }
+
+        <div class="section-title">Appointment Types</div>
+        <div class="appt-types">
+          @for (at of apptTypes(); track at.id) {
+            <label class="checkbox-label">
+              <input type="checkbox" [value]="at.id" (change)="onApptTypeChange($event, at.id)" [checked]="isApptTypeSelected(at.id)" />
+              {{ at.name }} ({{ at.durationMinutes }}min)
+            </label>
+          }
+        </div>
+
+        <div class="section-title">Weekly Availability</div>
+        <div formArrayName="availabilities">
+          @for (day of dayOptions; track day.value) {
+            <div class="day-row">
+              <label class="day-label">{{ day.label }}</label>
+              <button type="button" class="btn-add-slot" (click)="addSlot(day.value)">+ Add slot</button>
+              @for (ctrl of getSlotsForDay(day.value); track $index) {
+                <div class="time-slot" [formGroupName]="getSlotIndex(day.value, $index)">
+                  <input type="time" formControlName="startTime" class="time-input" />
+                  <span>to</span>
+                  <input type="time" formControlName="endTime" class="time-input" />
+                  <button type="button" class="btn-remove" (click)="removeSlot(day.value, $index)">✕</button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        @if (error()) {
+          <div class="alert-error">{{ error() }}</div>
+        }
+
+        <div class="form-actions">
+          <a routerLink="/providers" class="btn btn-secondary">Cancel</a>
+          <button type="submit" class="btn btn-primary" [disabled]="saving()">
+            {{ saving() ? 'Saving...' : (isEdit ? 'Save Changes' : 'Create Provider') }}
+          </button>
+        </div>
+      </form>
+    </div>

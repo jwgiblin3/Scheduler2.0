@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProScheduleAPI.Data;
 using ProScheduleAPI.DTOs;
+using ProScheduleAPI.Models;
 
 namespace ProScheduleAPI.Controllers;
 
@@ -40,8 +41,7 @@ public class PublicController : ControllerBase
             Providers = providers.Select(p => new
             {
                 p.Id,
-                p.FirstName,
-                p.LastName,
+                DisplayName = ResolveDisplayName(p),
                 p.Bio,
                 AppointmentTypeIds = p.ProviderAppointmentTypes.Select(x => x.AppointmentTypeId).ToList()
             }),
@@ -81,8 +81,7 @@ public class PublicController : ControllerBase
             Provider = new
             {
                 provider.Id,
-                provider.FirstName,
-                provider.LastName,
+                DisplayName = ResolveDisplayName(provider),
                 provider.Bio,
                 AppointmentTypeIds = apptTypeIds
             },
@@ -91,5 +90,13 @@ public class PublicController : ControllerBase
                 a.BufferBeforeMinutes, a.BufferAfterMinutes,
                 a.RequiresIntakeForm, a.IsActive))
         });
+    }
+
+    // Prefer the new DisplayName; fall back to legacy First + Last for older rows.
+    private static string ResolveDisplayName(Provider p)
+    {
+        if (!string.IsNullOrWhiteSpace(p.DisplayName)) return p.DisplayName!;
+        var legacy = $"{p.FirstName} {p.LastName}".Trim();
+        return string.IsNullOrEmpty(legacy) ? "Provider" : legacy;
     }
 }

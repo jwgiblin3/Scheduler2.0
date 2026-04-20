@@ -1,0 +1,25 @@
+
+    .page { padding: 2rem; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+    h1 { margin: 0; font-size: 1.6rem; color: #1a1f36; }
+    .filters { display: flex; gap: .5rem; flex-wrap: wrap; }
+    .header-right { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+    .btn-export { padding: .4rem .85rem; background: #fff; border: 1.5px solid #e2e8f0; border-radius: 6px; font-size: .82rem; cursor: pointer; color: #4a5568; }
+    .btn-export:hover { border-color: #667eea; color: #667eea; }
+    .filter-input, .filter-select { padding: .4rem .6rem; border: 1.5px solid #e2e8f0; border-radius: 6px; font-size: .85rem; }
+    .loading, .empty-state { color: #718096; padding: 2rem 0; }
+    .table-wrap { background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,.06); overflow: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: .75rem 1rem; font-size: .8rem; color: #718096; text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid #e2e8f0; }
+    td { padding: .75rem 1rem; border-bottom: 1px solid #f7f8fc; font-size: .9rem; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    .date { font-weight: 500; }
+    .time, .sub { font-size: .78rem; color: #718096; margin-top: 2px; }
+    .badge { font-size: .75rem; padding: 2px 8px; border-radius: 12px; display: inline-block; }
+    .status-0 { background: #ebf8ff; color: #2b6cb0; }
+    .status-1 { background: #f0fff4; color: #276749; }
+    .status-2 { background: #fff5f5; color: #c53030; }
+    .status-3 { background: #fffaf0; color: #c05621; }
+    .badge-green { background: #f0fff4; color: #276749; }
+    .badge-gray { background: #f7f8fc; color: #718096; }
+    .link { color: #667eea; text-decoration: none; font-size: .85rem; }

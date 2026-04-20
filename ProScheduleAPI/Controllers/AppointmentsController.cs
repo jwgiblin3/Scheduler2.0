@@ -62,7 +62,7 @@ public class AppointmentsController : ControllerBase
             a.Id,
             $"{a.Client.FirstName} {a.Client.LastName}",
             a.Client.Email,
-            $"{a.Provider.FirstName} {a.Provider.LastName}",
+            a.Provider.GetDisplayName(),
             a.AppointmentType.Name,
             a.StartTime,
             a.EndTime,
@@ -92,7 +92,7 @@ public class AppointmentsController : ControllerBase
             a.Client.Email,
             a.Client.Phone ?? "",
             a.ProviderId,
-            $"{a.Provider.FirstName} {a.Provider.LastName}",
+            a.Provider.GetDisplayName(),
             a.AppointmentTypeId,
             a.AppointmentType.Name,
             a.AppointmentType.DurationMinutes,
@@ -168,15 +168,16 @@ public class AppointmentsController : ControllerBase
             var fromEmail = notifSettings?.FromEmail;
             var fromName = notifSettings?.FromName;
             var clientName = $"{client.FirstName} {client.LastName}";
-            var providerName = provider is null ? "" : $"{provider.FirstName} {provider.LastName}";
+            var providerName = provider?.GetDisplayName() ?? "";
 
             if (notifSettings?.EmailEnabled != false)
             {
                 await _email.SendBookingConfirmationAsync(client.Email, clientName, providerName,
                     apptType.Name, appointment.StartTime, practice.Slug, appointment.CancellationToken!, fromEmail, fromName);
 
-                if (provider is not null)
-                    await _email.SendNewBookingToProviderAsync(provider.Email, providerName,
+                // Provider email is now optional — only notify if one is set.
+                if (provider is not null && !string.IsNullOrWhiteSpace(provider.Email))
+                    await _email.SendNewBookingToProviderAsync(provider.Email!, providerName,
                         clientName, client.Email, apptType.Name, appointment.StartTime, fromEmail, fromName);
             }
 
@@ -228,9 +229,9 @@ public class AppointmentsController : ControllerBase
             if (notifSettings?.EmailEnabled != false)
             {
                 await _email.SendCancellationToClientAsync(client.Email, clientName, apptType.Name, appointment.StartTime, fromEmail, fromName);
-                if (provider is not null)
-                    await _email.SendCancellationToProviderAsync(provider.Email,
-                        $"{provider.FirstName} {provider.LastName}", clientName, apptType.Name, appointment.StartTime, fromEmail, fromName);
+                if (provider is not null && !string.IsNullOrWhiteSpace(provider.Email))
+                    await _email.SendCancellationToProviderAsync(provider.Email!,
+                        provider.GetDisplayName(), clientName, apptType.Name, appointment.StartTime, fromEmail, fromName);
             }
 
             if (notifSettings?.SmsEnabled == true && client.SmsOptIn && !string.IsNullOrEmpty(client.Phone))
@@ -330,7 +331,7 @@ public class AppointmentsController : ControllerBase
                 $"\"{a.Client.FirstName} {a.Client.LastName}\"",
                 a.Client.Email,
                 a.Client.Phone ?? "",
-                $"\"{a.Provider.FirstName} {a.Provider.LastName}\"",
+                $"\"{a.Provider.GetDisplayName()}\"",
                 $"\"{a.AppointmentType.Name}\"",
                 a.AppointmentType.DurationMinutes,
                 a.Status.ToString(),
@@ -362,7 +363,7 @@ public class AppointmentsController : ControllerBase
             a.Id,
             $"{a.Client.FirstName} {a.Client.LastName}",
             a.Client.Email,
-            $"{a.Provider.FirstName} {a.Provider.LastName}",
+            a.Provider.GetDisplayName(),
             a.AppointmentType.Name,
             a.StartTime,
             a.EndTime,

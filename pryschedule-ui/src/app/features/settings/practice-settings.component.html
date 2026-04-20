@@ -1,0 +1,106 @@
+
+    <div class="page">
+      <h1>Practice Settings</h1>
+
+      <div class="sections">
+        <!-- Practice Info -->
+        <div class="card">
+          <h2>Practice Information</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Practice Name *</label>
+              <input [(ngModel)]="name" />
+            </div>
+            <div class="form-group">
+              <label>Phone</label>
+              <input [(ngModel)]="phone" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Practice URL Slug *</label>
+            <input [ngModel]="slug()" (ngModelChange)="slug.set($event)" name="slug" placeholder="mywellness" />
+            <small>Used in your booking link. Lowercase letters, numbers, and dashes only.</small>
+          </div>
+          <div class="form-group">
+            <label>Address</label>
+            <input [(ngModel)]="address" placeholder="123 Main St, City, State" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Time Zone</label>
+              <select [(ngModel)]="timeZone">
+                <option value="America/New_York">Eastern (ET)</option>
+                <option value="America/Chicago">Central (CT)</option>
+                <option value="America/Denver">Mountain (MT)</option>
+                <option value="America/Los_Angeles">Pacific (PT)</option>
+                <option value="America/Anchorage">Alaska</option>
+                <option value="Pacific/Honolulu">Hawaii</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Cancellation Window (hours)</label>
+              <input type="number" [(ngModel)]="cancellationWindowHours" min="0" max="168" />
+              <small>Clients must cancel at least this many hours before their appointment.</small>
+            </div>
+          </div>
+          @if (practiceSaved()) { <div class="alert-success">Settings saved!</div> }
+          @if (slugError()) { <div class="alert-error">{{ slugError() }}</div> }
+          <div class="form-actions">
+            <button class="btn btn-primary" [disabled]="savingPractice()" (click)="savePractice()">
+              {{ savingPractice() ? 'Saving...' : 'Save Practice Settings' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Notification Settings -->
+        <div class="card">
+          <h2>Notifications & Reminders</h2>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="emailEnabled" /> Enable email notifications
+            </label>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>From Email</label>
+              <input type="email" [(ngModel)]="fromEmail" placeholder="noreply@yourpractice.com" [disabled]="!emailEnabled" />
+            </div>
+            <div class="form-group">
+              <label>From Name</label>
+              <input [(ngModel)]="fromName" placeholder="My Practice" [disabled]="!emailEnabled" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>First Reminder (hours before)</label>
+              <input type="number" [(ngModel)]="reminder1Hours" min="1" max="168" [disabled]="!emailEnabled" />
+            </div>
+            <div class="form-group">
+              <label>Second Reminder (hours before)</label>
+              <input type="number" [(ngModel)]="reminder2Hours" min="1" max="168" [disabled]="!emailEnabled" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="smsEnabled" /> Enable SMS notifications (requires Twilio)
+            </label>
+          </div>
+          @if (notifSaved()) { <div class="alert-success">Notification settings saved!</div> }
+          <div class="form-actions">
+            <button class="btn btn-primary" [disabled]="savingNotif()" (click)="saveNotifications()">
+              {{ savingNotif() ? 'Saving...' : 'Save Notification Settings' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Booking Link -->
+        <div class="card">
+          <h2>Your Booking Link</h2>
+          <p class="booking-link-desc">Share this link with clients to let them book online:</p>
+          <div class="booking-link-box">
+            <span class="link-text">{{ bookingLink() }}</span>
+            <button class="btn btn-copy" (click)="copyLink()">{{ copied() ? 'Copied!' : 'Copy' }}</button>
+          </div>
+        </div>
+      </div>
+    </div>

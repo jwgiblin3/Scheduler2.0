@@ -111,11 +111,12 @@ public class IntakeFormsController : ControllerBase
             if (appt?.Provider is null) return;
 
             var notifSettings = await _db.NotificationSettings.FirstOrDefaultAsync(n => n.PracticeId == appt.PracticeId);
-            if (notifSettings?.EmailEnabled != false)
+            // Provider email is now optional — only notify if one is on file.
+            if (notifSettings?.EmailEnabled != false && !string.IsNullOrWhiteSpace(appt.Provider.Email))
             {
                 await _email.SendIntakeSubmittedToProviderAsync(
-                    appt.Provider.Email,
-                    $"{appt.Provider.FirstName} {appt.Provider.LastName}",
+                    appt.Provider.Email!,
+                    appt.Provider.GetDisplayName(),
                     $"{appt.Client.FirstName} {appt.Client.LastName}",
                     appt.AppointmentType.Name,
                     appt.StartTime,

@@ -1,9 +1,10 @@
 import { Routes } from '@angular/router';
-import { authGuard, adminGuard } from './core/guards/auth.guard';
+import { authGuard, adminGuard, clientGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
-  { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
+  { path: '', redirectTo: '/home', pathMatch: 'full' },
 
+  // --- Auth ---
   {
     path: 'login',
     loadComponent: () => import('./features/auth/login.component').then(m => m.LoginComponent)
@@ -12,8 +13,26 @@ export const routes: Routes = [
     path: 'register',
     loadComponent: () => import('./features/auth/register.component').then(m => m.RegisterComponent)
   },
+  {
+    path: 'my/register',
+    loadComponent: () => import('./features/auth/client-register.component').then(m => m.ClientRegisterComponent)
+  },
 
-  // Admin / Staff shell
+  // --- Unified landing (any signed-in user) ---
+  {
+    path: 'home',
+    canActivate: [clientGuard],
+    loadComponent: () => import('./features/home/home.component').then(m => m.HomeComponent)
+  },
+
+  // --- Client portal ("My Appointments") ---
+  {
+    path: 'my/appointments',
+    canActivate: [clientGuard],
+    loadComponent: () => import('./features/client/my-appointments.component').then(m => m.MyAppointmentsComponent)
+  },
+
+  // --- Admin / Staff shell ---
   {
     path: '',
     loadComponent: () => import('./shared/components/shell.component').then(m => m.ShellComponent),
@@ -59,7 +78,7 @@ export const routes: Routes = [
     ]
   },
 
-  // Public client booking portal
+  // --- Public client booking portal ---
   {
     path: 'book/:slug',
     loadComponent: () => import('./features/booking/booking.component').then(m => m.BookingComponent)
@@ -73,5 +92,5 @@ export const routes: Routes = [
     loadComponent: () => import('./features/booking/booking-confirm.component').then(m => m.BookingConfirmComponent)
   },
 
-  { path: '**', redirectTo: '/dashboard' }
+  { path: '**', redirectTo: '/home' }
 ];

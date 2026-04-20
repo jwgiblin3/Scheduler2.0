@@ -59,6 +59,21 @@ public class SettingsController : ControllerBase
 
         if (practice is null) return NotFound();
 
+        // Slug updates (optional). Normalize + validate uniqueness.
+        if (!string.IsNullOrWhiteSpace(req.Slug))
+        {
+            var normalized = NormalizeSlug(req.Slug);
+            if (string.IsNullOrWhiteSpace(normalized))
+                return BadRequest("Slug must contain at least one letter or number.");
+
+            if (normalized != practice.Slug)
+            {
+                var taken = await _db.Practices.AnyAsync(p => p.Slug == normalized && p.Id != practice.Id);
+                if (taken) return BadRequest("That practice URL slug is already taken.");
+                practice.Slug = normalized;
+            }
+        }
+
         practice.Name = req.Name;
         practice.Phone = req.Phone;
         practice.Address = req.Address;
@@ -66,7 +81,24 @@ public class SettingsController : ControllerBase
         practice.CancellationWindowHours = req.CancellationWindowHours;
 
         await _db.SaveChangesAsync();
-        return NoContent();
+        return Ok(new { practice.Slug });
+    }
+
+    private static string NormalizeSlug(string input)
+    {
+        // lowercase, trim, replace whitespace/underscores with dashes, drop anything not [a-z0-9-]
+        var lower = input.Trim().ToLowerInvariant();
+        var builder = new System.Text.StringBuilder(lower.Length);
+        char? prev = null;
+        foreach (var ch in lower)
+        {
+            if (char.IsLetterOrDigit(ch)) { builder.Append(ch); prev = ch; }
+            else if (ch == ' ' || ch == '_' || ch == '-')
+            {
+                if (prev != '-') { builder.Append('-'); prev = '-'; }
+            }
+        }
+        return builder.ToString().Trim('-');
     }
 
     [HttpPut("notifications")]
@@ -103,7 +135,8 @@ public record UpdatePracticeRequest(
     string? Phone,
     string? Address,
     string? TimeZone,
-    int CancellationWindowHours
+    int CancellationWindowHours,
+    string? Slug
 );
 
 public record UpdateNotificationSettingsRequest(

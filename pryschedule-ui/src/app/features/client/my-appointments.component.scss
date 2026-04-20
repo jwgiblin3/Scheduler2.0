@@ -1,0 +1,49 @@
+
+    .my-appts-page { min-height: 100vh; background: #f7f8fc; }
+    .my-appts-header { background: #fff; border-bottom: 1px solid #e2e8f0; padding: 1rem 0; }
+    .my-appts-header-inner { max-width: 960px; margin: 0 auto; padding: 0 1.5rem; display: flex; align-items: center; gap: 1rem; }
+    .logo { font-size: 1.2rem; font-weight: 700; color: #1a1f36; }
+    .spacer { flex: 1; }
+    .header-link { color: #667eea; font-size: .9rem; text-decoration: none; margin-right: .5rem; }
+    .header-link:hover { text-decoration: underline; }
+    .user-chip { display: flex; align-items: center; gap: .75rem; font-size: .9rem; color: #4a5568; }
+    .user-chip-name { font-weight: 500; }
+    .user-chip-signout { background: none; border: none; color: #667eea; cursor: pointer; font-size: .85rem; padding: .3rem .6rem; border-radius: 4px; }
+    .user-chip-signout:hover { background: #f0f4ff; }
+
+    .my-appts-container { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; }
+    h1 { margin: 0 0 1.5rem; font-size: 1.6rem; color: #1a1f36; }
+    h2 { margin: 0 0 .75rem; font-size: 1rem; color: #4a5568; font-weight: 600; }
+
+    .appt-section { margin-bottom: 2.25rem; }
+    .appt-list { display: flex; flex-direction: column; gap: .75rem; }
+
+    .appt-card { display: grid; grid-template-columns: 110px 1fr auto; gap: 1.25rem; align-items: center; background: #fff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 1rem 1.25rem; }
+    .appt-card.past { opacity: .7; }
+    .appt-when { text-align: center; }
+    .appt-date { font-size: .82rem; color: #718096; text-transform: uppercase; letter-spacing: .04em; font-weight: 600; }
+    .appt-time { font-size: 1.1rem; color: #1a1f36; font-weight: 600; margin-top: 2px; }
+    .appt-info { min-width: 0; }
+    .appt-title { font-size: 1rem; font-weight: 600; color: #1a1f36; }
+    .appt-meta { font-size: .85rem; color: #4a5568; margin-top: 2px; }
+    .appt-status { display: inline-block; margin-top: .5rem; font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; font-weight: 600; padding: .25rem .55rem; border-radius: 4px; }
+    .appt-status.status-scheduled { background: #e6f4ff; color: #2c7be5; }
+    .appt-status.status-completed { background: #e3faed; color: #2f855a; }
+    .appt-status.status-cancelled { background: #fff5f5; color: #c53030; }
+    .appt-status.status-no-show { background: #fef3c7; color: #92400e; }
+
+    .btn-cancel { background: #fff; border: 1.5px solid #e2e8f0; color: #c53030; border-radius: 6px; padding: .5rem .9rem; font-size: .85rem; font-weight: 500; cursor: pointer; transition: border-color .15s, background .15s; }
+    .btn-cancel:hover { border-color: #c53030; background: #fff5f5; }
+
+    .state-panel { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.5rem; color: #4a5568; text-align: center; }
+    .state-panel.empty { padding: 2.5rem 1.5rem; }
+    .state-panel.muted { color: #a0aec0; font-style: italic; }
+    .state-panel.warn { background: #fffbeb; border-color: #fde68a; color: #78350f; text-align: left; }
+    .state-panel.warn code { background: #fef3c7; padding: 1px 5px; border-radius: 3px; font-size: .85em; }
+    .state-title { font-weight: 600; font-size: 1rem; color: #1a1f36; margin-bottom: .4rem; }
+    .state-panel.warn .state-title { color: #78350f; }
+    .state-body { font-size: .9rem; color: #718096; line-height: 1.5; }
+    .state-panel.warn .state-body { color: #78350f; }
+    .alert-error { background: #fff5f5; color: #c53030; padding: 1rem 1.25rem; border-radius: 8px; display: flex; flex-direction: column; gap: .75rem; align-items: flex-start; }
+    .btn-retry { background: #fff; border: 1.5px solid #e2e8f0; color: #4a5568; border-radius: 6px; padding: .45rem .9rem; font-size: .85rem; font-weight: 500; cursor: pointer; margin-top: .75rem; align-self: flex-start; }
+    .btn-retry:hover { border-color: #667eea; color: #5a67d8; }

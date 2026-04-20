@@ -1,0 +1,18 @@
+
+    .confirm-page { min-height: 100vh; background: #f7f8fc; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .confirm-card { background: #fff; border-radius: 12px; padding: 2.5rem; max-width: 500px; width: 100%; box-shadow: 0 2px 12px rgba(0,0,0,.07); text-align: center; }
+    .checkmark { width: 60px; height: 60px; background: #48bb78; border-radius: 50%; color: #fff; font-size: 1.75rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; }
+    h1 { margin: 0 0 .5rem; font-size: 1.5rem; color: #1a1f36; }
+    .subtitle { color: #718096; font-size: .9rem; margin: 0 0 1.5rem; }
+    .details { background: #f7f8fc; border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; text-align: left; }
+    .detail-row { display: flex; justify-content: space-between; gap: 1rem; }
+    .detail-label { font-size: .8rem; color: #a0aec0; }
+    .detail-value { font-size: .9rem; font-weight: 500; }
+    .intake-notice { background: #ebf8ff; border-radius: 8px; padding: 1rem 1.25rem; display: flex; gap: .75rem; text-align: left; margin-bottom: 1.5rem; }
+    .intake-icon { font-size: 1.5rem; }
+    .intake-title { font-weight: 600; font-size: .9rem; }
+    .intake-sub { font-size: .8rem; color: #4a5568; margin: .25rem 0 .75rem; }
+    .btn-intake { display: inline-block; padding: .5rem 1rem; background: #667eea; color: #fff; text-decoration: none; border-radius: 6px; font-size: .85rem; }
+    .manage-links { border-top: 1px solid #f7f8fc; padding-top: 1.25rem; }
+    .manage-links p { font-size: .85rem; color: #718096; margin: 0 0 .5rem; }
+    .link-cancel { color: #fc8181; text-decoration: none; font-size: .85rem; }

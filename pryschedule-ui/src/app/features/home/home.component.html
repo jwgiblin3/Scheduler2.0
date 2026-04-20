@@ -1,0 +1,54 @@
+
+    <div class="home-page">
+      <div class="home-header">
+        <div class="home-header-inner">
+          <div class="logo">📅 ProSchedule</div>
+          <div class="spacer"></div>
+          <div class="user-chip">
+            <span class="user-chip-name">{{ user()?.firstName }} {{ user()?.lastName }}</span>
+            <button class="user-chip-signout" type="button" (click)="auth.logout()">Sign out</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="home-container">
+        <h1>Welcome, {{ user()?.firstName }}</h1>
+        <p class="home-subtitle">Where would you like to go?</p>
+
+        <div class="home-cards">
+          <!-- Practice card (only for practice owners / admins) -->
+          @if (auth.hasPractice()) {
+            <a class="home-card home-card-practice" routerLink="/dashboard">
+              <div class="home-card-icon">🏥</div>
+              <div class="home-card-body">
+                <div class="home-card-title">My Practice</div>
+                <div class="home-card-subtitle">{{ user()?.practiceName }}</div>
+                <div class="home-card-desc">
+                  Manage providers, appointments, availability, and settings for your practice.
+                </div>
+              </div>
+              <div class="home-card-arrow">→</div>
+            </a>
+          }
+
+          <!-- Appointments card (always shown for any signed-in user) -->
+          <a class="home-card home-card-appts" routerLink="/my/appointments">
+            <div class="home-card-icon">📅</div>
+            <div class="home-card-body">
+              <div class="home-card-title">My Appointments</div>
+              <div class="home-card-subtitle">
+                @if (auth.hasClientAppointments()) {
+                  View and manage your booked sessions
+                } @else {
+                  You haven't booked anything yet
+                }
+              </div>
+              <div class="home-card-desc">
+                See upcoming appointments, reschedule, or cancel.
+              </div>
+            </div>
+            <div class="home-card-arrow">→</div>
+          </a>
+        </div>
+      </div>
+    </div>

@@ -50,8 +50,9 @@ public class ProvidersController : ControllerBase
         var provider = new Provider
         {
             PracticeId = PracticeId,
-            FirstName = req.FirstName,
-            LastName = req.LastName,
+            DisplayName = req.DisplayName,
+            FirstName = string.Empty,
+            LastName = string.Empty,
             Email = req.Email,
             Phone = req.Phone,
             Bio = req.Bio,
@@ -88,8 +89,7 @@ public class ProvidersController : ControllerBase
 
         if (provider is null) return NotFound();
 
-        provider.FirstName = req.FirstName;
-        provider.LastName = req.LastName;
+        provider.DisplayName = req.DisplayName;
         provider.Email = req.Email;
         provider.Phone = req.Phone;
         provider.Bio = req.Bio;
@@ -131,8 +131,7 @@ public class ProvidersController : ControllerBase
 
     private static ProviderDto ToDto(Provider p) => new(
         p.Id,
-        p.FirstName,
-        p.LastName,
+        ResolveDisplayName(p),
         p.Email,
         p.Phone,
         p.Bio,
@@ -140,4 +139,12 @@ public class ProvidersController : ControllerBase
         p.Availabilities.Select(a => new AvailabilityDto(a.Id, a.DayOfWeek, a.StartTime, a.EndTime, a.IsActive)).ToList(),
         p.ProviderAppointmentTypes.Select(x => x.AppointmentTypeId).ToList()
     );
+
+    // Use DisplayName if set; fall back to legacy First + Last for pre-existing rows.
+    private static string ResolveDisplayName(Provider p)
+    {
+        if (!string.IsNullOrWhiteSpace(p.DisplayName)) return p.DisplayName!;
+        var legacy = $"{p.FirstName} {p.LastName}".Trim();
+        return string.IsNullOrEmpty(legacy) ? "Unnamed Provider" : legacy;
+    }
 }

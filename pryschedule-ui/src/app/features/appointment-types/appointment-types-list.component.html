@@ -1,0 +1,75 @@
+
+    <div class="page">
+      <div class="page-header">
+        <h1>Appointment Types</h1>
+        <button class="btn btn-primary" (click)="openNew()">+ New Type</button>
+      </div>
+
+      <div class="layout">
+        <div class="list-col">
+          @for (at of types(); track at.id) {
+            <div class="type-card" [class.selected]="selected()?.id === at.id" (click)="select(at)">
+              <div class="type-name">{{ at.name }}</div>
+              <div class="type-meta">{{ at.durationMinutes }}min
+                @if (at.bufferAfterMinutes > 0) { + {{ at.bufferAfterMinutes }}min buffer }
+              </div>
+              <div class="type-badges">
+                <span class="badge" [class.badge-green]="at.isActive" [class.badge-gray]="!at.isActive">{{ at.isActive ? 'Active' : 'Inactive' }}</span>
+                @if (at.requiresIntakeForm) { <span class="badge badge-blue">Intake Form</span> }
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="edit-col">
+          @if (selected()) {
+            <div class="card">
+              <h2>{{ isNew() ? 'New Appointment Type' : 'Edit: ' + selected()!.name }}</h2>
+              <div class="form-group">
+                <label>Name *</label>
+                <input [(ngModel)]="editName" placeholder="e.g. 60-min Massage" />
+              </div>
+              <div class="form-group">
+                <label>Description</label>
+                <textarea [(ngModel)]="editDesc" rows="3" placeholder="Shown to clients during booking..."></textarea>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Duration (minutes) *</label>
+                  <input type="number" [(ngModel)]="editDuration" min="5" />
+                </div>
+                <div class="form-group">
+                  <label>Buffer Before (min)</label>
+                  <input type="number" [(ngModel)]="editBufferBefore" min="0" />
+                </div>
+                <div class="form-group">
+                  <label>Buffer After (min)</label>
+                  <input type="number" [(ngModel)]="editBufferAfter" min="0" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" [(ngModel)]="editRequiresIntake" /> Requires intake form
+                </label>
+              </div>
+              @if (!isNew()) {
+                <div class="form-group">
+                  <label class="checkbox-label">
+                    <input type="checkbox" [(ngModel)]="editIsActive" /> Active
+                  </label>
+                </div>
+              }
+              @if (error()) { <div class="alert-error">{{ error() }}</div> }
+              <div class="form-actions">
+                <button class="btn btn-secondary" (click)="cancel()">Cancel</button>
+                <button class="btn btn-primary" [disabled]="saving()" (click)="save()">
+                  {{ saving() ? 'Saving...' : 'Save' }}
+                </button>
+              </div>
+            </div>
+          } @else {
+            <div class="empty-detail">Select a type to edit, or click "+ New Type"</div>
+          }
+        </div>
+      </div>
+    </div>

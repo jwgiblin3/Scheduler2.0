@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import {
   Provider, AppointmentType, AppointmentSummary, AppointmentDetail,
-  AvailableSlot, IntakeForm, BookingInfo
+  AvailableSlot, IntakeForm, BookingInfo, MyAppointment
 } from '../models/models';
 
 @Injectable({ providedIn: 'root' })
@@ -123,6 +123,11 @@ export class ApiService {
 
   getClientAppointments(clientId: number) {
     return this.http.get<any[]>(`${this.base}/appointments/client/${clientId}`);
+  }
+
+  /** Appointments belonging to the currently signed-in client (JWT resolves identity). */
+  getMyAppointments() {
+    return this.http.get<MyAppointment[]>(`${this.base}/appointments/me`);
   }
 
   getPracticeSettings() {

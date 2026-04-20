@@ -2,9 +2,8 @@ namespace ProScheduleAPI.DTOs;
 
 public record ProviderDto(
     int Id,
-    string FirstName,
-    string LastName,
-    string Email,
+    string DisplayName,
+    string? Email,
     string? Phone,
     string? Bio,
     bool IsActive,
@@ -13,9 +12,8 @@ public record ProviderDto(
 );
 
 public record CreateProviderRequest(
-    string FirstName,
-    string LastName,
-    string Email,
+    string DisplayName,
+    string? Email,
     string? Phone,
     string? Bio,
     List<AvailabilityDto> Availabilities,
@@ -23,9 +21,8 @@ public record CreateProviderRequest(
 );
 
 public record UpdateProviderRequest(
-    string FirstName,
-    string LastName,
-    string Email,
+    string DisplayName,
+    string? Email,
     string? Phone,
     string? Bio,
     bool IsActive,

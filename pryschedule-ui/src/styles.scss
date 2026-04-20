@@ -1,3 +1,7 @@
+// Kendo UI default theme is loaded via angular.json "styles" array
+// (node_modules/@progress/kendo-theme-default/dist/all.css). That avoids Sass
+// @use/@import compatibility issues when compiling the precompiled theme.
+
 *, *::before, *::after { box-sizing: border-box; }
 
 body {
