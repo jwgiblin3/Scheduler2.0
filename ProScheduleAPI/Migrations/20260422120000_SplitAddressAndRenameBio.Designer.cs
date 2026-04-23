@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ProScheduleAPI.Data;
 
@@ -11,9 +12,11 @@ using ProScheduleAPI.Data;
 namespace ProScheduleAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260422120000_SplitAddressAndRenameBio")]
+    partial class SplitAddressAndRenameBio
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -856,15 +859,4 @@ namespace ProScheduleAPI.Migrations
                     b.Navigation("Users");
                 });
 
-            modelBuilder.Entity("ProScheduleAPI.Models.Provider", b =>
-                {
-                    b.Navigation("Appointments");
-
-                    b.Navigation("Availabilities");
-
-                    b.Navigation("ProviderAppointmentTypes");
-                });
-#pragma warning restore 612, 618
-        }
-    }
-}
+ 

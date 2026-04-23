@@ -1,104 +1,18 @@
-
-    <div class="my-appts-page">
-      <div class="my-appts-header">
-        <div class="my-appts-header-inner">
-          <div class="logo">📅 ProSchedule</div>
-          <div class="spacer"></div>
-          @if (auth.hasPractice()) {
-            <a class="header-link" routerLink="/dashboard">My Practice</a>
-            <a class="header-link" routerLink="/home">Switch View</a>
-          }
-          <div class="user-chip">
-            <span class="user-chip-name">{{ auth.currentUser()?.firstName }} {{ auth.currentUser()?.lastName }}</span>
-            <button class="user-chip-signout" type="button" (click)="auth.logout()">Sign out</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="my-appts-container">
-        <h1>My Appointments</h1>
-
-        @if (loading()) {
-          <div class="state-panel">Loading your appointments...</div>
-        } @else if (endpointMissing()) {
-          <div class="state-panel warn">
-            <div class="state-title">The server hasn't wired up the My Appointments endpoint yet.</div>
-            <div class="state-body">
-              The UI called <code>GET /appointments/me</code> and got a 404. Add that endpoint
-              on the backend (returns <code>MyAppointment[]</code> for the authenticated user),
-              then reload this page.
-            </div>
-            <button class="btn-retry" type="button" (click)="load()">Try again</button>
-          </div>
-        } @else if (error()) {
-          <div class="alert-error">
-            {{ error() }}
-            <button class="btn-retry" type="button" (click)="load()">Try again</button>
-          </div>
-        } @else if (totalCount() === 0) {
-          <div class="state-panel empty">
-            <div class="state-title">No appointments yet</div>
-            <div class="state-body">
-              You haven't booked any appointments. Find a practice and book your first session.
-            </div>
-          </div>
-        } @else {
-          <section class="appt-section">
-            <h2>Upcoming ({{ upcoming().length }})</h2>
-            @if (upcoming().length === 0) {
-              <div class="state-panel muted">Nothing scheduled.</div>
-            } @else {
-              <div class="appt-list">
-                @for (a of upcoming(); track a.id) {
-                  <div class="appt-card">
-                    <div class="appt-when">
-                      <div class="appt-date">{{ a.startTime | date:'EEE, MMM d' }}</div>
-                      <div class="appt-time">{{ a.startTime | date:'h:mm a' }}</div>
-                    </div>
-                    <div class="appt-info">
-                      <div class="appt-title">{{ a.appointmentTypeName }}</div>
-                      <div class="appt-meta">
-                        with <strong>{{ a.providerName }}</strong>
-                        at {{ a.practiceName }}
-                      </div>
-                      <div class="appt-status" [class]="statusClass(a.status)">
-                        {{ statusLabel(a.status) }}
-                      </div>
-                    </div>
-                    <div class="appt-actions">
-                      <button class="btn-cancel" type="button" (click)="cancel(a)">Cancel</button>
-                    </div>
-                  </div>
-                }
-              </div>
-            }
-          </section>
-
-          @if (past().length > 0) {
-            <section class="appt-section">
-              <h2>Past & cancelled ({{ past().length }})</h2>
-              <div class="appt-list">
-                @for (a of past(); track a.id) {
-                  <div class="appt-card past">
-                    <div class="appt-when">
-                      <div class="appt-date">{{ a.startTime | date:'EEE, MMM d' }}</div>
-                      <div class="appt-time">{{ a.startTime | date:'h:mm a' }}</div>
-                    </div>
-                    <div class="appt-info">
-                      <div class="appt-title">{{ a.appointmentTypeName }}</div>
-                      <div class="appt-meta">
-                        with <strong>{{ a.providerName }}</strong>
-                        at {{ a.practiceName }}
-                      </div>
-                      <div class="appt-status" [class]="statusClass(a.status)">
-                        {{ statusLabel(a.status) }}
-                      </div>
-                    </div>
-                  </div>
-                }
-              </div>
-            </section>
-          }
-        }
+<div class="my-appts-page">
+  <div class="my-appts-header">
+    <div class="my-appts-header-inner">
+      <div class="logo">📅 ProSchedule</div>
+      <div class="spacer"></div>
+      @if (auth.hasPractice()) {
+        <a class="header-link" routerLink="/dashboard">My Practice</a>
+        <a class="header-link" routerLink="/home">Switch View</a>
+      }
+      <div class="user-chip">
+        <span class="user-chip-name">{{ auth.currentUser()?.firstName }} {{ auth.currentUser()?.lastName }}</span>
+        <button class="user-chip-signout" type="button" (click)="auth.logout()">Sign out</button>
       </div>
     </div>
+  </div>
+
+  <app-my-appointments-widget />
+</div>

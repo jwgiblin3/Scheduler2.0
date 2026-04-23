@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProScheduleAPI.Data;
 using ProScheduleAPI.Models;
+using ProScheduleAPI.Services;
 
 namespace ProScheduleAPI.Controllers;
 
@@ -33,7 +34,14 @@ public class SettingsController : ControllerBase
             practice.Name,
             practice.Slug,
             practice.Phone,
-            practice.Address,
+            practice.Address,         // legacy — kept so older clients keep working
+            practice.AddressLine1,
+            practice.City,
+            practice.State,
+            practice.PostalCode,
+            practice.Website,
+            practice.LogoUrl,
+            practice.BannerColor,
             practice.TimeZone,
             practice.CancellationWindowHours,
             NotificationSettings = practice.NotificationSettings is null ? null : new
@@ -77,11 +85,63 @@ public class SettingsController : ControllerBase
         practice.Name = req.Name;
         practice.Phone = req.Phone;
         practice.Address = req.Address;
+        practice.AddressLine1 = Trim(req.AddressLine1);
+        practice.City = Trim(req.City);
+        practice.State = Trim(req.State);
+        practice.PostalCode = Trim(req.PostalCode);
+        practice.Website = NormalizeWebsite(req.Website);
+        practice.LogoUrl = NormalizeLogoUrl(req.LogoUrl);
+        practice.BannerColor = NormalizeBannerColor(req.BannerColor);
         practice.TimeZone = req.TimeZone;
         practice.CancellationWindowHours = req.CancellationWindowHours;
 
         await _db.SaveChangesAsync();
+
+        // CORS allow-list may have changed — the dynamic origin policy caches
+        // practice websites, so nudge it to reload on the next request.
+        PracticeCorsOriginProvider.Invalidate();
+
         return Ok(new { practice.Slug });
+    }
+
+    private static string? NormalizeWebsite(string? input) =>
+        WebsiteNormalizer.Normalize(input);
+
+    // Trim + empty-to-null so blank strings don't pollute the database.
+    private static string? Trim(string? input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return null;
+        var t = input.Trim();
+        return t.Length == 0 ? null : t;
+    }
+
+    // Logo URLs are stored as-is but trimmed + emptied out so a blank string
+    // doesn't render as a broken image on the booking page.
+    private static string? NormalizeLogoUrl(string? input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return null;
+        var trimmed = input.Trim();
+        return trimmed.Length == 0 ? null : trimmed;
+    }
+
+    // Banner colors must be a 3- or 6-digit hex code. Anything else is rejected
+    // at the UI layer today, but we guard here too so bad data never reaches
+    // the DB. Leading '#' is added if missing.
+    private static string? NormalizeBannerColor(string? input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return null;
+        var value = input.Trim();
+        if (!value.StartsWith('#')) value = "#" + value;
+        var hex = value[1..];
+        if (hex.Length != 3 && hex.Length != 6) return null;
+        foreach (var ch in hex)
+        {
+            var isHexDigit = (ch >= '0' && ch <= '9')
+                          || (ch >= 'a' && ch <= 'f')
+                          || (ch >= 'A' && ch <= 'F');
+            if (!isHexDigit) return null;
+        }
+        return "#" + hex.ToLowerInvariant();
     }
 
     private static string NormalizeSlug(string input)
@@ -133,7 +193,14 @@ public class SettingsController : ControllerBase
 public record UpdatePracticeRequest(
     string Name,
     string? Phone,
-    string? Address,
+    string? Address,        // legacy single-line — still accepted so old clients keep working
+    string? AddressLine1,
+    string? City,
+    string? State,
+    string? PostalCode,
+    string? Website,
+    string? LogoUrl,
+    string? BannerColor,
     string? TimeZone,
     int CancellationWindowHours,
     string? Slug

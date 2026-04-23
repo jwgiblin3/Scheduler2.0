@@ -26,9 +26,26 @@ public class AppointmentsController : ControllerBase
         _sms = sms;
     }
 
-    private int? PracticeId => User.Identity?.IsAuthenticated == true
-        ? int.Parse(User.FindFirstValue("practiceId")!)
-        : null;
+    private int? PracticeId
+    {
+        get
+        {
+            // Client-only users have no practiceId claim — don't crash on them.
+            var raw = User.FindFirstValue("practiceId");
+            return int.TryParse(raw, out var pid) ? pid : null;
+        }
+    }
+
+    /// <summary>Currently signed-in AspNetUsers.Id, or null if unauthenticated.
+    /// Prefers the custom "userId" claim and falls back to the standard NameIdentifier.</summary>
+    private int? CurrentUserId
+    {
+        get
+        {
+            var raw = User.FindFirstValue("userId") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+            return int.TryParse(raw, out var id) ? id : null;
+        }
+    }
 
     // GET api/appointments — admin/staff view
     [HttpGet]
@@ -71,7 +88,41 @@ public class AppointmentsController : ControllerBase
         )));
     }
 
-    [HttpGet("{id}")]
+    // GET api/appointments/me — signed-in client's appointments across all practices.
+    // Declared BEFORE [HttpGet("{id}")] so the literal "me" wins over the int id binding.
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<ActionResult<List<MyAppointmentDto>>> GetMine()
+    {
+        if (CurrentUserId is not int userId) return Unauthorized();
+
+        // Materialize first — GetDisplayName() is a C# extension method and
+        // can't be translated to SQL, so the projection must happen in memory.
+        var rows = await _db.Appointments
+            .AsNoTracking()
+            .Where(a => a.Client.AppUserId == userId)
+            .Include(a => a.Client).ThenInclude(c => c.Practice)
+            .Include(a => a.Provider)
+            .Include(a => a.AppointmentType)
+            .OrderByDescending(a => a.StartTime)
+            .ToListAsync();
+
+        var appts = rows.Select(a => new MyAppointmentDto(
+            a.Id,
+            a.Client.Practice.Name,
+            a.Client.Practice.Slug,
+            a.Provider.GetDisplayName(),
+            a.AppointmentType.Name,
+            a.StartTime,
+            a.EndTime,
+            a.Status,
+            a.CancellationToken
+        )).ToList();
+
+        return Ok(appts);
+    }
+
+    [HttpGet("{id:int}")]
     [Authorize]
     public async Task<ActionResult<AppointmentDetailDto>> GetById(int id)
     {
@@ -108,10 +159,16 @@ public class AppointmentsController : ControllerBase
         ));
     }
 
-    // Public booking endpoint — no auth required
+    // Booking endpoint — requires a signed-in account (guest bookings are disabled).
+    // The [Authorize] ensures CurrentUserId is always set, so every Client row
+    // created here gets properly linked to an AspNetUsers account.
     [HttpPost("book")]
+    [Authorize]
     public async Task<ActionResult> Book([FromQuery] string practiceSlug, CreateAppointmentRequest req)
     {
+        if (CurrentUserId is not int bookingUserId)
+            return Unauthorized("You must be signed in to book an appointment.");
+
         var practice = await _db.Practices.FirstOrDefaultAsync(p => p.Slug == practiceSlug);
         if (practice is null) return NotFound("Practice not found.");
 
@@ -124,15 +181,22 @@ public class AppointmentsController : ControllerBase
         var apptType = await _db.AppointmentTypes.FindAsync(req.AppointmentTypeId);
         if (apptType is null) return BadRequest("Invalid appointment type.");
 
-        // Find or create client
+        // Find or create the Client row. Prefer matching by AppUserId (so a user
+        // who changes email addresses still sees all their appointments).
+        // Fall back to email within the same practice for legacy rows.
+        Console.WriteLine($"[Book] practice={practice.Slug} userId={bookingUserId} email={req.ClientEmail}");
+
         var client = await _db.Clients.FirstOrDefaultAsync(c =>
-            c.PracticeId == practice.Id && c.Email == req.ClientEmail);
+                c.PracticeId == practice.Id && c.AppUserId == bookingUserId)
+            ?? await _db.Clients.FirstOrDefaultAsync(c =>
+                c.PracticeId == practice.Id && c.Email == req.ClientEmail);
 
         if (client is null)
         {
             client = new Client
             {
                 PracticeId = practice.Id,
+                AppUserId = bookingUserId,
                 FirstName = req.ClientFirstName,
                 LastName = req.ClientLastName,
                 Email = req.ClientEmail,
@@ -141,6 +205,18 @@ public class AppointmentsController : ControllerBase
             };
             _db.Clients.Add(client);
             await _db.SaveChangesAsync();
+            Console.WriteLine($"[Book] created new Client id={client.Id} AppUserId={client.AppUserId}");
+        }
+        else if (client.AppUserId is null)
+        {
+            // Guest client row matched by email — claim it for this signed-in user.
+            client.AppUserId = bookingUserId;
+            await _db.SaveChangesAsync();
+            Console.WriteLine($"[Book] claimed existing Client id={client.Id} -> AppUserId={bookingUserId}");
+        }
+        else
+        {
+            Console.WriteLine($"[Book] reusing Client id={client.Id} AppUserId={client.AppUserId}");
         }
 
         var appointment = new Appointment
@@ -265,7 +341,7 @@ public class AppointmentsController : ControllerBase
         return NoContent();
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:int}")]
     [Authorize]
     public async Task<IActionResult> UpdateStatus(int id, UpdateAppointmentRequest req)
     {

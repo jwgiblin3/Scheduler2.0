@@ -38,11 +38,18 @@ public class PublicController : ControllerBase
             practice.Name,
             practice.Slug,
             practice.TimeZone,
+            practice.Website,
+            practice.LogoUrl,
+            practice.BannerColor,
+            practice.AddressLine1,
+            practice.City,
+            practice.State,
+            practice.PostalCode,
             Providers = providers.Select(p => new
             {
                 p.Id,
                 DisplayName = ResolveDisplayName(p),
-                p.Bio,
+                Description = p.Description,
                 AppointmentTypeIds = p.ProviderAppointmentTypes.Select(x => x.AppointmentTypeId).ToList()
             }),
             AppointmentTypes = apptTypes.Select(a => new AppointmentTypeDto(
@@ -78,11 +85,18 @@ public class PublicController : ControllerBase
             practice.Name,
             practice.Slug,
             practice.TimeZone,
+            practice.Website,
+            practice.LogoUrl,
+            practice.BannerColor,
+            practice.AddressLine1,
+            practice.City,
+            practice.State,
+            practice.PostalCode,
             Provider = new
             {
                 provider.Id,
                 DisplayName = ResolveDisplayName(provider),
-                provider.Bio,
+                Description = provider.Description,
                 AppointmentTypeIds = apptTypeIds
             },
             AppointmentTypes = apptTypes.Select(a => new AppointmentTypeDto(

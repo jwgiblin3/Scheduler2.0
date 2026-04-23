@@ -1,0 +1,40 @@
+
+    <div class="auth-page">
+      <div class="auth-card">
+        <div class="auth-logo">📅 ProSchedule</div>
+        <h2>Open your practice</h2>
+        @if (user(); as u) {
+          <p class="auth-subtitle">
+            Signed in as <strong>{{ u.firstName }} {{ u.lastName }}</strong> ({{ u.email }}).
+            Fill in a few details to turn this account into a practice admin.
+          </p>
+        } @else {
+          <p class="auth-subtitle">Set up your practice on ProSchedule.</p>
+        }
+        <form [formGroup]="form" (ngSubmit)="onSubmit()">
+          <div class="form-group">
+            <label>Practice Name</label>
+            <input
+              formControlName="practiceName"
+              placeholder="My Wellness Practice"
+              (input)="onNameChange($any($event.target).value)"
+            />
+          </div>
+          <div class="form-group">
+            <label>Booking URL slug</label>
+            <div class="input-prefix">
+              <span class="prefix">pryschedule.com/book/</span>
+              <input formControlName="practiceSlug" placeholder="my-practice" />
+            </div>
+            <small>Letters, numbers, and hyphens only. This is the link your clients use to book.</small>
+          </div>
+          @if (error) {
+            <div class="alert-error">{{ error }}</div>
+          }
+          <button type="submit" class="btn-primary" [disabled]="loading">
+            {{ loading ? 'Creating practice...' : 'Create Practice' }}
+          </button>
+        </form>
+        <p class="auth-footer"><a routerLink="/home">Back to home</a></p>
+      </div>
+    </div>

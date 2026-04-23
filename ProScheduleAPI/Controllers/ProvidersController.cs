@@ -55,7 +55,7 @@ public class ProvidersController : ControllerBase
             LastName = string.Empty,
             Email = req.Email,
             Phone = req.Phone,
-            Bio = req.Bio,
+            Description = req.Description,
             Availabilities = req.Availabilities.Select(a => new ProviderAvailability
             {
                 DayOfWeek = a.DayOfWeek,
@@ -92,7 +92,7 @@ public class ProvidersController : ControllerBase
         provider.DisplayName = req.DisplayName;
         provider.Email = req.Email;
         provider.Phone = req.Phone;
-        provider.Bio = req.Bio;
+        provider.Description = req.Description;
         provider.IsActive = req.IsActive;
 
         _db.ProviderAvailabilities.RemoveRange(provider.Availabilities);
@@ -134,7 +134,7 @@ public class ProvidersController : ControllerBase
         ResolveDisplayName(p),
         p.Email,
         p.Phone,
-        p.Bio,
+        p.Description,
         p.IsActive,
         p.Availabilities.Select(a => new AvailabilityDto(a.Id, a.DayOfWeek, a.StartTime, a.EndTime, a.IsActive)).ToList(),
         p.ProviderAppointmentTypes.Select(x => x.AppointmentTypeId).ToList()

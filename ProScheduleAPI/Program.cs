@@ -51,17 +51,28 @@ builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<SmsService>();
 builder.Services.AddHostedService<ReminderHostedService>();
 
-// CORS — read allowed origins from appsettings
-var allowedOrigins = builder.Configuration
-    .GetSection("Cors:AllowedOrigins")
-    .Get<string[]>() ?? ["http://localhost:4200"];
+// CORS — origins come from two sources, unioned in PracticeCorsOriginProvider:
+//   1. Static list in appsettings ("Cors:AllowedOrigins") for the ProSchedule
+//      UI itself plus any dev hosts.
+//   2. Practice.Website values in the database, so every registered practice
+//      that sets their public site URL can iframe-embed /widget/* without a
+//      server redeploy.
+// The provider caches the DB lookup for a short TTL; controllers invalidate it
+// on practice create/update.
+builder.Services.AddSingleton<PracticeCorsOriginProvider>();
 
 builder.Services.AddCors(opts =>
 {
+    // The CORS policy delegate runs per-request, so we need a stable handle to
+    // the singleton provider. We can't call BuildServiceProvider() here — that
+    // would create a second root every request. Instead, bind the delegate
+    // lazily to the real provider once the host is built (see below).
     opts.AddPolicy("Angular", policy =>
-        policy.WithOrigins(allowedOrigins)
-              .AllowAnyHeader()
-              .AllowAnyMethod());
+        policy
+            .SetIsOriginAllowed(origin =>
+                PracticeCorsOriginProviderAccessor.Current?.IsAllowed(origin) ?? false)
+            .AllowAnyHeader()
+            .AllowAnyMethod());
 });
 
 builder.Services.AddControllers();
@@ -91,6 +102,13 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+
+// Bind the CORS origin provider accessor now that the root ServiceProvider
+// exists. The SetIsOriginAllowed delegate above reads this static reference
+// on every preflight — resolving the singleton exactly once keeps the DB cache
+// shared across requests and avoids BuildServiceProvider() leaks.
+PracticeCorsOriginProviderAccessor.Current =
+    app.Services.GetRequiredService<PracticeCorsOriginProvider>();
 
 if (app.Environment.IsDevelopment())
 {

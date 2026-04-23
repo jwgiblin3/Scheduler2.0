@@ -5,7 +5,7 @@ public record ProviderDto(
     string DisplayName,
     string? Email,
     string? Phone,
-    string? Bio,
+    string? Description,
     bool IsActive,
     List<AvailabilityDto> Availabilities,
     List<int> AppointmentTypeIds
@@ -15,7 +15,7 @@ public record CreateProviderRequest(
     string DisplayName,
     string? Email,
     string? Phone,
-    string? Bio,
+    string? Description,
     List<AvailabilityDto> Availabilities,
     List<int> AppointmentTypeIds
 );
@@ -24,7 +24,7 @@ public record UpdateProviderRequest(
     string DisplayName,
     string? Email,
     string? Phone,
-    string? Bio,
+    string? Description,
     bool IsActive,
     List<AvailabilityDto> Availabilities,
     List<int> AppointmentTypeIds

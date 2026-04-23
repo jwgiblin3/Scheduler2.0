@@ -32,7 +32,7 @@ export class ProviderFormComponent implements OnInit {
     displayName: ['', Validators.required],
     email: ['', Validators.email], // optional; validated only when filled
     phone: [''],
-    bio: [''],
+    description: [''],
     isActive: [true],
     availabilities: this.fb.array([])
   });
@@ -111,7 +111,7 @@ export class ProviderFormComponent implements OnInit {
 
     if (this.isEdit) {
       this.api.getProvider(this.providerId).subscribe(p => {
-        this.form.patchValue({ displayName: p.displayName, email: p.email ?? '', phone: p.phone, bio: p.bio, isActive: p.isActive });
+        this.form.patchValue({ displayName: p.displayName, email: p.email ?? '', phone: p.phone, description: p.description, isActive: p.isActive });
         this.selectedApptTypeIds = [...p.appointmentTypeIds];
         p.availabilities.forEach(a => {
           this.availabilitiesArray.push(this.fb.group({

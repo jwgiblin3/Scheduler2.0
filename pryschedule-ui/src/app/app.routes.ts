@@ -17,6 +17,11 @@ export const routes: Routes = [
     path: 'my/register',
     loadComponent: () => import('./features/auth/client-register.component').then(m => m.ClientRegisterComponent)
   },
+  {
+    path: 'my/create-practice',
+    canActivate: [clientGuard],
+    loadComponent: () => import('./features/auth/create-practice.component').then(m => m.CreatePracticeComponent)
+  },
 
   // --- Unified landing (any signed-in user) ---
   {
@@ -76,6 +81,18 @@ export const routes: Routes = [
         loadComponent: () => import('./features/settings/practice-settings.component').then(m => m.PracticeSettingsComponent)
       }
     ]
+  },
+
+  // --- Embeddable widgets (no header/footer, no guards). Safe to iframe
+  //     from a third-party site. CORS + frame-ancestors must be configured
+  //     to allow the embedder's origin. ---
+  {
+    path: 'widget/book/:slug',
+    loadComponent: () => import('./widgets/booking-widget/booking-widget.component').then(m => m.BookingWidgetComponent)
+  },
+  {
+    path: 'widget/my/appointments',
+    loadComponent: () => import('./widgets/my-appointments-widget/my-appointments-widget.component').then(m => m.MyAppointmentsWidgetComponent)
   },
 
   // --- Public client booking portal ---

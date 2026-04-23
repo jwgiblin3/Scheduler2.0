@@ -31,6 +31,21 @@
             </a>
           }
 
+          <!-- Create-practice card (only when the user doesn't already own one) -->
+          @if (!auth.hasPractice()) {
+            <a class="home-card home-card-create-practice" routerLink="/my/create-practice">
+              <div class="home-card-icon">🏥</div>
+              <div class="home-card-body">
+                <div class="home-card-title">Open a Practice</div>
+                <div class="home-card-subtitle">Turn this account into a practice admin</div>
+                <div class="home-card-desc">
+                  Set up your practice name and booking URL to start taking appointments.
+                </div>
+              </div>
+              <div class="home-card-arrow">→</div>
+            </a>
+          }
+
           <!-- Appointments card (always shown for any signed-in user) -->
           <a class="home-card home-card-appts" routerLink="/my/appointments">
             <div class="home-card-icon">📅</div>

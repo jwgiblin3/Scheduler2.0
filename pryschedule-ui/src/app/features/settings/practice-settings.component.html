@@ -22,8 +22,48 @@
             <small>Used in your booking link. Lowercase letters, numbers, and dashes only.</small>
           </div>
           <div class="form-group">
-            <label>Address</label>
-            <input [(ngModel)]="address" placeholder="123 Main St, City, State" />
+            <label>Street Address</label>
+            <input [(ngModel)]="addressLine1" placeholder="123 Main St" />
+          </div>
+          <div class="form-row form-row-address">
+            <div class="form-group">
+              <label>City</label>
+              <input [(ngModel)]="city" placeholder="Ridgewood" />
+            </div>
+            <div class="form-group">
+              <label>State</label>
+              <input [(ngModel)]="state" placeholder="NJ" maxlength="40" />
+            </div>
+            <div class="form-group">
+              <label>ZIP / Postal Code</label>
+              <input [(ngModel)]="postalCode" placeholder="07450" maxlength="12" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Website</label>
+            <input type="url" [(ngModel)]="website" placeholder="https://yourpractice.com" />
+            <small>Used on the public booking page and added to the widget CORS allow-list.</small>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Logo URL</label>
+              <input type="url" [(ngModel)]="logoUrl" placeholder="https://yourpractice.com/logo.png" />
+              <small>Shown at the top of your public booking page.</small>
+            </div>
+            <div class="form-group">
+              <label>Banner Color</label>
+              <div class="color-input">
+                <input type="color" [(ngModel)]="bannerColor" />
+                <input type="text" [(ngModel)]="bannerColor" placeholder="#0F766E" maxlength="7" />
+              </div>
+              <small>Hex color used as the booking page banner / accent.</small>
+            </div>
+          </div>
+          <div class="branding-preview" [style.background]="bannerColor">
+            @if (logoUrl) {
+              <img [src]="logoUrl" alt="Logo preview" />
+            }
+            <span class="branding-preview__name">{{ name || 'Your Practice' }}</span>
           </div>
           <div class="form-row">
             <div class="form-group">

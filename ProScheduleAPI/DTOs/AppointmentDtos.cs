@@ -60,3 +60,16 @@ public record CancelRequest(string CancellationToken);
 public record AvailableSlotDto(DateTime Start, DateTime End);
 
 public record IntakeFormResponseDto(int Id, string ResponsesJson, DateTime SubmittedAt);
+
+/// <summary>Appointment summary as shown to a signed-in client on their "My Appointments" page.</summary>
+public record MyAppointmentDto(
+    int Id,
+    string PracticeName,
+    string PracticeSlug,
+    string ProviderName,
+    string AppointmentTypeName,
+    DateTime StartTime,
+    DateTime EndTime,
+    AppointmentStatus Status,
+    string? CancellationToken
+);

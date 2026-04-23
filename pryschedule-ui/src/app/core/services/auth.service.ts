@@ -4,7 +4,8 @@ import { Router } from '@angular/router';
 import { tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import {
-  AuthResponse, ClientRegisterRequest, LoginRequest, RegisterRequest
+  AuthResponse, ClientRegisterRequest, CreatePracticeRequest,
+  LoginRequest, RegisterRequest
 } from '../models/models';
 
 const TOKEN_KEY = 'ps_token';
@@ -38,6 +39,19 @@ export class AuthService {
   /** Client-only registration (no practice, used on the booking flow). */
   clientRegister(req: ClientRegisterRequest) {
     return this.http.post<AuthResponse>(`${this.apiUrl}/client-register`, req).pipe(
+      tap(res => this.setSession(res))
+    );
+  }
+
+  /**
+   * Creates a new Practice for the signed-in account. Requires an existing
+   * auth session (the JWT identifies the caller). The response carries a
+   * fresh token with the new practiceId claim baked in — we replace the
+   * cached session so subsequent requests are immediately scoped to the
+   * new practice.
+   */
+  createPractice(req: CreatePracticeRequest) {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/create-practice`, req).pipe(
       tap(res => this.setSession(res))
     );
   }

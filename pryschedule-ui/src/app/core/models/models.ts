@@ -36,6 +36,12 @@ export interface ClientRegisterRequest {
   phone?: string;
 }
 
+/** Adds a practice to an existing signed-in account. */
+export interface CreatePracticeRequest {
+  practiceName: string;
+  practiceSlug: string;
+}
+
 /** Appointment as seen by a client on "My Appointments". */
 export interface MyAppointment {
   id: number;
@@ -54,7 +60,8 @@ export interface Provider {
   displayName: string;
   email?: string;
   phone?: string;
-  bio?: string;
+  /** Short provider description shown on the public booking page. Renamed from `bio`. */
+  description?: string;
   isActive: boolean;
   availabilities: Availability[];
   appointmentTypeIds: number[];
@@ -139,6 +146,12 @@ export interface BookingInfo {
   name: string;
   slug: string;
   timeZone: string;
+  /** Practice website — shown as a link in the booking page header. */
+  website?: string | null;
+  /** Absolute URL to the practice logo. Rendered in the booking header. */
+  logoUrl?: string | null;
+  /** Hex color used as the booking page banner / accent. */
+  bannerColor?: string | null;
   providers: PublicProvider[];
   appointmentTypes: AppointmentType[];
 }
@@ -146,6 +159,6 @@ export interface BookingInfo {
 export interface PublicProvider {
   id: number;
   displayName: string;
-  bio?: string;
+  description?: string;
   appointmentTypeIds: number[];
 }

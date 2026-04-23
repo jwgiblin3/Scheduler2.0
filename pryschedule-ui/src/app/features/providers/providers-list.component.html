@@ -19,7 +19,7 @@
               <div class="provider-info">
                 <div class="provider-name">{{ p.displayName }}</div>
                 @if (p.email) { <div class="provider-email">{{ p.email }}</div> }
-                @if (p.bio) { <div class="provider-bio">{{ p.bio }}</div> }
+                @if (p.description) { <div class="provider-bio">{{ p.description }}</div> }
               </div>
               <div class="provider-meta">
                 <span class="badge" [class.badge-green]="p.isActive" [class.badge-gray]="!p.isActive">

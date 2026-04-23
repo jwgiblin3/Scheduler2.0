@@ -47,11 +47,25 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<int>, int>
             .HasIndex(a => a.CancellationToken)
             .IsUnique();
 
+        // AppUser.PracticeId is nullable — client-only accounts don't belong to a practice.
         builder.Entity<AppUser>()
             .HasOne(u => u.Practice)
             .WithMany(p => p.Users)
             .HasForeignKey(u => u.PracticeId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Link Client rows back to the AspNetUsers account that booked them (optional).
+        // Used by GET /appointments/me to resolve "which appointments belong to this user".
+        builder.Entity<Client>()
+            .HasOne(c => c.AppUser)
+            .WithMany()
+            .HasForeignKey(c => c.AppUserId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Client>()
+            .HasIndex(c => c.AppUserId);
 
         // SQL Server doesn't allow multiple cascade paths to the same table.
         // Appointments references Clients, Providers, and AppointmentTypes — all of which

@@ -16,6 +16,8 @@ export class PracticeSettingsComponent implements OnInit {
 
   // Practice fields
   name = ''; phone = ''; address = ''; timeZone = 'America/New_York'; cancellationWindowHours = 24;
+  addressLine1 = ''; city = ''; state = ''; postalCode = '';
+  website = ''; logoUrl = ''; bannerColor = '#0F766E';
   slug = signal('');   // signal so the booking link updates reactively when it changes
   savingPractice = signal(false); practiceSaved = signal(false); slugError = signal('');
 
@@ -40,6 +42,13 @@ export class PracticeSettingsComponent implements OnInit {
     this.slugError.set('');
     this.api.updatePracticeSettings({
       name: this.name, phone: this.phone, address: this.address,
+      addressLine1: this.addressLine1,
+      city: this.city,
+      state: this.state,
+      postalCode: this.postalCode,
+      website: this.website,
+      logoUrl: this.logoUrl,
+      bannerColor: this.bannerColor,
       timeZone: this.timeZone, cancellationWindowHours: this.cancellationWindowHours,
       slug: this.slug()
     }).subscribe({
@@ -72,6 +81,13 @@ export class PracticeSettingsComponent implements OnInit {
   ngOnInit() {
     this.api.getPracticeSettings().subscribe(s => {
       this.name = s.name; this.slug.set(s.slug ?? ''); this.phone = s.phone ?? ''; this.address = s.address ?? '';
+      this.addressLine1 = s.addressLine1 ?? '';
+      this.city = s.city ?? '';
+      this.state = s.state ?? '';
+      this.postalCode = s.postalCode ?? '';
+      this.website = s.website ?? '';
+      this.logoUrl = s.logoUrl ?? '';
+      this.bannerColor = s.bannerColor ?? '#0F766E';
       this.timeZone = s.timeZone ?? 'America/New_York';
       this.cancellationWindowHours = s.cancellationWindowHours;
       if (s.notificationSettings) {

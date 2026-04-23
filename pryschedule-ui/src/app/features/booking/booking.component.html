@@ -1,222 +1,26 @@
-
-    <div class="booking-page">
-      <div class="booking-header">
-        <div class="header-inner">
-          <div class="logo">📅 ProSchedule</div>
-          @if (practice()) {
-            <div class="practice-name">{{ practice()!.name }}</div>
-          }
-          <div class="header-spacer"></div>
-          @if (auth.isLoggedIn()) {
-            <a class="header-link" routerLink="/my/appointments">My Appointments</a>
-            <span class="header-user">{{ auth.currentUser()?.firstName }}</span>
-          } @else {
-            <a class="header-link"
-               [routerLink]="['/login']"
-               [queryParams]="{ returnUrl: returnUrl() }">Sign in</a>
-          }
-        </div>
-      </div>
-
-      @if (error()) {
-        <div class="container"><div class="alert-error">{{ error() }}</div></div>
-      } @else if (!practice()) {
-        <div class="container loading">Loading...</div>
+<div class="booking-page">
+  <div class="booking-header" [style.background]="bannerColor()">
+    <div class="header-inner">
+      <a class="practice-brand"
+         [attr.href]="website()"
+         [attr.target]="website() ? '_blank' : null"
+         [attr.rel]="website() ? 'noopener' : null">
+        @if (logoUrl()) {
+          <img class="practice-logo" [src]="logoUrl()" [alt]="displayName() + ' logo'" />
+        }
+        <span class="practice-name">{{ displayName() }}</span>
+      </a>
+      <div class="header-spacer"></div>
+      @if (auth.isLoggedIn()) {
+        <a class="header-link" routerLink="/my/appointments">My Appointments</a>
+        <span class="header-user">{{ auth.currentUser()?.firstName }}</span>
       } @else {
-        <div class="container">
-          <div class="booking-card">
-            <h2>Book an Appointment</h2>
-
-            <!-- Step 1: Select appointment type -->
-            <div class="step" [class.completed]="selectedType()">
-              <div class="step-header">
-                <span class="step-num">1</span>
-                <span class="step-label">Select Appointment Type</span>
-                @if (selectedType()) {
-                  <span class="step-value">{{ selectedType()!.name }}</span>
-                  <button type="button" class="step-change" (click)="editType()">Change</button>
-                }
-              </div>
-              @if (!selectedType()) {
-                <div class="type-list">
-                  @for (t of practice()!.appointmentTypes; track t.id) {
-                    <div class="type-item" (click)="selectType(t)">
-                      <div class="type-name">{{ t.name }}</div>
-                      <div class="type-meta">{{ t.durationMinutes }} min @if (t.description) { · {{ t.description }} }</div>
-                    </div>
-                  }
-                </div>
-              }
-            </div>
-
-            <!-- Step 2: Select provider -->
-            @if (selectedType()) {
-              <div class="step" [class.completed]="selectedProvider() !== undefined">
-                <div class="step-header">
-                  <span class="step-num">2</span>
-                  <span class="step-label">Select Provider</span>
-                  @if (selectedProvider() !== undefined) {
-                    <span class="step-value">{{ providerName(selectedProvider()!) }}</span>
-                    <button type="button" class="step-change" (click)="editProvider()">Change</button>
-                  }
-                </div>
-                @if (selectedProvider() === undefined) {
-                  <div class="provider-list">
-                    <div class="provider-item" (click)="selectProvider(null)">
-                      <div class="prov-avatar">✨</div>
-                      <div>
-                        <div class="prov-name">Any Available Provider</div>
-                        <div class="prov-bio">We'll match you with whoever's open first.</div>
-                      </div>
-                    </div>
-                    @for (p of allProviders(); track p.id) {
-                      @let offersService = p.appointmentTypeIds.includes(selectedType()!.id);
-                      <div class="provider-item" (click)="selectProvider(p)">
-                        <div class="prov-avatar">{{ initials(p.displayName) }}</div>
-                        <div class="prov-info">
-                          <div class="prov-name">{{ p.displayName }}</div>
-                          @if (p.bio) { <div class="prov-bio">{{ p.bio }}</div> }
-                          @if (!offersService) {
-                            <div class="prov-hint">Not yet linked to this service</div>
-                          }
-                        </div>
-                      </div>
-                    }
-                  </div>
-                }
-              </div>
-            }
-
-            <!-- Step 3: Pick a time -->
-            @if (selectedProvider() !== undefined) {
-              <div class="step" [class.completed]="selectedSlot()">
-                <div class="step-header">
-                  <span class="step-num">3</span>
-                  <span class="step-label">Select Date & Time</span>
-                  @if (selectedSlot()) {
-                    <span class="step-value">{{ selectedSlot()!.start | date:'EEE, MMM d · h:mm a' }}</span>
-                    <button type="button" class="step-change" (click)="editSlot()">Change</button>
-                  }
-                </div>
-
-                @if (!selectedSlot()) {
-                  <!-- Week navigation -->
-                  <div class="week-nav">
-                    <button class="week-nav-btn" type="button" (click)="prevWeek()" [disabled]="loadingSlots()">← Prev</button>
-                    <div class="week-nav-label">
-                      <strong>{{ providerName(selectedProvider()!) }}</strong>
-                      <span class="week-nav-range">{{ dateRangeLabel() }}</span>
-                    </div>
-                    <button class="week-nav-btn" type="button" (click)="nextWeek()" [disabled]="loadingSlots()">Next →</button>
-                  </div>
-
-                  @if (loadingSlots()) {
-                    <div class="slots-loading">Loading available times...</div>
-                  } @else {
-                    @if (nextAvailableSlot(); as n) {
-                      <div class="next-slot-card" (click)="selectSlot(n)">
-                        <div class="next-slot-text">
-                          <div class="next-slot-label">Next Available</div>
-                          <div class="next-slot-time">{{ n.start | date:'EEEE, MMM d · h:mm a' }}</div>
-                        </div>
-                        <button class="btn-next-book" type="button">Book this time →</button>
-                      </div>
-                    }
-
-                    <!-- All days of the visible week, each with its slots -->
-                    <div class="slot-days">
-                      @for (group of slotsByDay(); track group.date) {
-                        <div class="slot-day">
-                          <div class="slot-day-label">{{ group.date | date:'EEE, MMM d' }}</div>
-                          @if (group.slots.length > 0) {
-                            <div class="slot-chips">
-                              @for (s of group.slots; track s.start) {
-                                <button class="slot-chip" type="button" (click)="selectSlot(s)">
-                                  {{ s.start | date:'h:mm a' }}
-                                </button>
-                              }
-                            </div>
-                          } @else {
-                            <div class="slot-day-empty">No times available</div>
-                          }
-                        </div>
-                      }
-                    </div>
-
-                    @if (slots().length === 0) {
-                      <div class="no-slots">
-                        <strong>No availability this week.</strong><br/>
-                        Try the <em>Next →</em> button above to browse a future week.
-                        If this provider was just added, the practice admin needs to configure
-                        weekly hours in <em>Providers → edit → Weekly Availability</em>.
-                      </div>
-                    }
-                  }
-                }
-              </div>
-            }
-
-            <!-- Step 4: Sign in / Confirm -->
-            @if (selectedSlot()) {
-              <div class="step">
-                <div class="step-header">
-                  <span class="step-num">4</span>
-                  <span class="step-label">Sign in to confirm</span>
-                </div>
-
-                @if (!auth.isLoggedIn()) {
-                  <!-- Not logged in: prompt sign-in or register. No guest bookings. -->
-                  <div class="auth-prompt">
-                    <div class="auth-prompt-title">Almost there — sign in to book this time.</div>
-                    <div class="auth-prompt-body">
-                      We use your account so you can view, reschedule, or cancel your
-                      appointments anytime.
-                    </div>
-                    <div class="auth-prompt-actions">
-                      <a class="btn-primary"
-                         [routerLink]="['/my/register']"
-                         [queryParams]="{ returnUrl: returnUrl() }">
-                        Create an account
-                      </a>
-                      <a class="btn-secondary"
-                         [routerLink]="['/login']"
-                         [queryParams]="{ returnUrl: returnUrl() }">
-                        I already have one — sign in
-                      </a>
-                    </div>
-                    <button class="btn-link" type="button" (click)="clearSlot()">Pick a different time</button>
-                  </div>
-                } @else {
-                  <!-- Logged in: just confirm booking with identity from the session. -->
-                  <div class="signed-in-banner">
-                    Signed in as
-                    <strong>{{ auth.currentUser()?.firstName }} {{ auth.currentUser()?.lastName }}</strong>
-                    · {{ auth.currentUser()?.email }}
-                    <button class="signed-in-signout" type="button" (click)="auth.logout({ returnUrl: returnUrl() })">Not you? Sign in as someone else</button>
-                  </div>
-
-                  <div class="form-group">
-                    <label>Phone (optional)</label>
-                    <input type="tel" [(ngModel)]="clientPhone"
-                           [placeholder]="auth.currentUser()?.phone || 'For appointment reminders'" />
-                  </div>
-                  <div class="form-group">
-                    <label class="checkbox-label">
-                      <input type="checkbox" [(ngModel)]="smsOptIn" />
-                      Text me reminders and updates
-                    </label>
-                  </div>
-
-                  @if (bookError()) { <div class="alert-error">{{ bookError() }}</div> }
-
-                  <button class="btn-confirm" [disabled]="booking()" (click)="book()">
-                    {{ booking() ? 'Booking...' : 'Confirm Appointment' }}
-                  </button>
-                  <button class="btn-link" type="button" (click)="clearSlot()">Pick a different time</button>
-                }
-              </div>
-            }
-          </div>
-        </div>
+        <a class="header-link"
+           [routerLink]="['/login']"
+           [queryParams]="{ returnUrl: returnUrl() }">Sign in</a>
       }
     </div>
+  </div>
+
+  <app-booking-widget [slug]="slug" />
+</div>

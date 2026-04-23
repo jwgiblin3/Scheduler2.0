@@ -21,7 +21,7 @@ export class RegisterComponent {
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(8)]],
     practiceName: ['', Validators.required],
-    practiceSlug: ['', [Validators.required, Validators.pattern(/^[a-z0-9-]+$/)]]
+    practiceSlug: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9-]+$/)]]
   });
 
   loading = false;
@@ -30,12 +30,15 @@ export class RegisterComponent {
   onSubmit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.error = 'Please fill in all required fields correctly.';
+      this.error = this.describeFormErrors();
       return;
     }
     this.loading = true;
     this.error = '';
     const v = this.form.value as any;
+    // Slugs are stored and resolved lowercase — normalize before send so
+    // "My-Clinic" and "my-clinic" both map to the same practice URL.
+    if (v.practiceSlug) v.practiceSlug = String(v.practiceSlug).toLowerCase();
     this.auth.register(v).subscribe({
       next: () => this.router.navigateByUrl(this.auth.postLoginRoute()),
       error: err => {
@@ -51,5 +54,43 @@ export class RegisterComponent {
         this.loading = false;
       }
     });
+  }
+
+  /**
+   * Build a human-readable error message that names which field(s) are
+   * invalid and why — much more useful than "fill in the required fields".
+   */
+  private describeFormErrors(): string {
+    const labels: Record<string, string> = {
+      firstName: 'First name',
+      lastName: 'Last name',
+      email: 'Email',
+      password: 'Password',
+      practiceName: 'Practice name',
+      practiceSlug: 'Booking URL slug'
+    };
+    const messages: string[] = [];
+    for (const [key, label] of Object.entries(labels)) {
+      const ctrl = this.form.get(key);
+      if (!ctrl || ctrl.valid) continue;
+      const errs = ctrl.errors ?? {};
+      if (errs['required']) {
+        messages.push(`${label} is required.`);
+      } else if (errs['email']) {
+        messages.push(`${label} must be a valid email address.`);
+      } else if (errs['minlength']) {
+        const req = errs['minlength'].requiredLength;
+        messages.push(`${label} must be at least ${req} characters.`);
+      } else if (errs['pattern']) {
+        if (key === 'practiceSlug') {
+          messages.push('Booking URL slug can only contain letters, numbers, and hyphens (no spaces or other punctuation).');
+        } else {
+          messages.push(`${label} has an invalid format.`);
+        }
+      } else {
+        messages.push(`${label} is invalid.`);
+      }
+    }
+    return messages.length ? messages.join(' ') : 'Please fill in all required fields correctly.';
   }
 }

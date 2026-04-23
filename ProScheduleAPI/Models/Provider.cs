@@ -17,7 +17,13 @@ public class Provider
     // Email is now optional — providers are not required to have one.
     public string? Email { get; set; }
     public string? Phone { get; set; }
-    public string? Bio { get; set; }
+
+    /// <summary>
+    /// Short description of the provider shown to clients on the public
+    /// booking page (credentials, specialties, a brief blurb). Previously
+    /// named "Bio" in both the model and the DB.
+    /// </summary>
+    public string? Description { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
