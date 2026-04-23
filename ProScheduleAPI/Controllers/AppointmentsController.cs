@@ -249,7 +249,10 @@ public class AppointmentsController : ControllerBase
             if (notifSettings?.EmailEnabled != false)
             {
                 await _email.SendBookingConfirmationAsync(client.Email, clientName, providerName,
-                    apptType.Name, appointment.StartTime, practice.Slug, appointment.CancellationToken!, fromEmail, fromName);
+                    apptType.Name, appointment.StartTime, practice.Slug, appointment.CancellationToken!,
+                    practice.Name,
+                    practice.AddressLine1, practice.City, practice.State, practice.PostalCode,
+                    fromEmail, fromName);
 
                 // Provider email is now optional — only notify if one is set.
                 if (provider is not null && !string.IsNullOrWhiteSpace(provider.Email))

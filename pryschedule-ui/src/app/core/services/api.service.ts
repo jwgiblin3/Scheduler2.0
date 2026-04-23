@@ -142,6 +142,48 @@ export class ApiService {
     return this.http.put(`${this.base}/settings/notifications`, body);
   }
 
+  // --- Practice holidays ---
+  getHolidays() {
+    return this.http.get<{ id: number; startDate: string; endDate: string; name: string | null }[]>(
+      `${this.base}/settings/holidays`
+    );
+  }
+
+  createHoliday(body: { startDate: string; endDate: string; name?: string | null }) {
+    return this.http.post<{ id: number; startDate: string; endDate: string; name: string | null }>(
+      `${this.base}/settings/holidays`, body
+    );
+  }
+
+  updateHoliday(id: number, body: { startDate: string; endDate: string; name?: string | null }) {
+    return this.http.put(`${this.base}/settings/holidays/${id}`, body);
+  }
+
+  deleteHoliday(id: number) {
+    return this.http.delete(`${this.base}/settings/holidays/${id}`);
+  }
+
+  // --- Provider exceptions ---
+  getProviderExceptions(providerId: number) {
+    return this.http.get<{ id: number; startDate: string; endDate: string; reason: string | null }[]>(
+      `${this.base}/providers/${providerId}/exceptions`
+    );
+  }
+
+  createProviderException(providerId: number, body: { startDate: string; endDate: string; reason?: string | null }) {
+    return this.http.post<{ id: number; startDate: string; endDate: string; reason: string | null }>(
+      `${this.base}/providers/${providerId}/exceptions`, body
+    );
+  }
+
+  updateProviderException(providerId: number, exceptionId: number, body: { startDate: string; endDate: string; reason?: string | null }) {
+    return this.http.put(`${this.base}/providers/${providerId}/exceptions/${exceptionId}`, body);
+  }
+
+  deleteProviderException(providerId: number, exceptionId: number) {
+    return this.http.delete(`${this.base}/providers/${providerId}/exceptions/${exceptionId}`);
+  }
+
   cancelAppointment(cancellationToken: string) {
     return this.http.post(`${this.base}/appointments/cancel`, { cancellationToken });
   }

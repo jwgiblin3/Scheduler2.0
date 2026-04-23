@@ -30,4 +30,5 @@ public class Provider
     public ICollection<ProviderAvailability> Availabilities { get; set; } = [];
     public ICollection<Appointment> Appointments { get; set; } = [];
     public ICollection<ProviderAppointmentType> ProviderAppointmentTypes { get; set; } = [];
+    public ICollection<ProviderException> Exceptions { get; set; } = [];
 }

@@ -28,6 +28,16 @@ export class PracticeSettingsComponent implements OnInit {
 
   copied = signal(false);
 
+  // --- Holidays editor state ---
+  // Existing rows (straight from API); the "new row" fields below are the
+  // inputs at the top of the table and reset after save.
+  holidays = signal<{ id: number; startDate: string; endDate: string; name: string | null }[]>([]);
+  newHolidayStart = '';
+  newHolidayEnd = '';
+  newHolidayName = '';
+  savingHoliday = signal(false);
+  holidayError = signal('');
+
   // computed() so the template re-renders reactively whenever the slug signal changes.
   bookingLink = computed(() => `${window.location.origin}/book/${this.slug() || ''}`);
 
@@ -78,7 +88,43 @@ export class PracticeSettingsComponent implements OnInit {
     });
   }
 
+  // --- Holidays actions ---
+
+  addHoliday() {
+    this.holidayError.set('');
+    if (!this.newHolidayStart) { this.holidayError.set('Start date is required.'); return; }
+    // End defaults to start — a single-day closure is the common case.
+    const end = this.newHolidayEnd || this.newHolidayStart;
+    this.savingHoliday.set(true);
+    this.api.createHoliday({
+      startDate: this.newHolidayStart,
+      endDate: end,
+      name: this.newHolidayName || null
+    }).subscribe({
+      next: row => {
+        this.holidays.update(rows => [...rows, row].sort((a, b) => a.startDate.localeCompare(b.startDate)));
+        this.newHolidayStart = '';
+        this.newHolidayEnd = '';
+        this.newHolidayName = '';
+        this.savingHoliday.set(false);
+      },
+      error: err => {
+        this.holidayError.set(typeof err.error === 'string' ? err.error : 'Could not add holiday.');
+        this.savingHoliday.set(false);
+      }
+    });
+  }
+
+  removeHoliday(id: number) {
+    if (!confirm('Remove this closure?')) return;
+    this.api.deleteHoliday(id).subscribe({
+      next: () => this.holidays.update(rows => rows.filter(r => r.id !== id)),
+      error: () => this.holidayError.set('Could not delete.')
+    });
+  }
+
   ngOnInit() {
+    this.api.getHolidays().subscribe(rows => this.holidays.set(rows));
     this.api.getPracticeSettings().subscribe(s => {
       this.name = s.name; this.slug.set(s.slug ?? ''); this.phone = s.phone ?? ''; this.address = s.address ?? '';
       this.addressLine1 = s.addressLine1 ?? '';

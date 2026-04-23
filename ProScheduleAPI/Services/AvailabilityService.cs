@@ -30,6 +30,21 @@ public class AvailabilityService
 
         if (apptType is null) return [];
 
+        // Practice-wide closures (holidays, retreats, weather days) override
+        // everything — if any row covers this date, no slots can be offered.
+        var practiceClosed = await _db.PracticeHolidays
+            .AnyAsync(h => h.PracticeId == provider.PracticeId
+                           && h.StartDate <= date
+                           && h.EndDate >= date);
+        if (practiceClosed) return [];
+
+        // Provider-specific out-of-office blocks (vacation, CE, sick leave).
+        var providerOut = await _db.ProviderExceptions
+            .AnyAsync(e => e.ProviderId == providerId
+                           && e.StartDate <= date
+                           && e.EndDate >= date);
+        if (providerOut) return [];
+
         var dayAvailability = provider.Availabilities
             .Where(a => a.IsActive && a.DayOfWeek == date.DayOfWeek)
             .ToList();

@@ -9,854 +9,865 @@ using ProScheduleAPI.Data;
 
 #nullable disable
 
-namespace ProScheduleAPI.Migrations
+namespace ProScheduleAPI.Migrations;
+
+[DbContext(typeof(AppDbContext))]
+[Migration("20260422120000_SplitAddressAndRenameBio")]
+partial class SplitAddressAndRenameBio
 {
-    [DbContext(typeof(AppDbContext))]
-    [Migration("20260422120000_SplitAddressAndRenameBio")]
-    partial class SplitAddressAndRenameBio
+    /// <inheritdoc />
+    protected override void BuildTargetModel(ModelBuilder modelBuilder)
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
-        {
 #pragma warning disable 612, 618
-            modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.4")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+        modelBuilder
+            .HasAnnotation("ProductVersion", "9.0.4")
+            .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+        SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<int>", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+        modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<int>", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("ConcurrencyStamp")
-                        .IsConcurrencyToken()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("ConcurrencyStamp")
+                    .IsConcurrencyToken()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Name")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                b.Property<string>("Name")
+                    .HasMaxLength(256)
+                    .HasColumnType("nvarchar(256)");
 
-                    b.Property<string>("NormalizedName")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                b.Property<string>("NormalizedName")
+                    .HasMaxLength(256)
+                    .HasColumnType("nvarchar(256)");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("NormalizedName")
-                        .IsUnique()
-                        .HasDatabaseName("RoleNameIndex")
-                        .HasFilter("[NormalizedName] IS NOT NULL");
+                b.HasIndex("NormalizedName")
+                    .IsUnique()
+                    .HasDatabaseName("RoleNameIndex")
+                    .HasFilter("[NormalizedName] IS NOT NULL");
 
-                    b.ToTable("AspNetRoles", (string)null);
-                });
+                b.ToTable("AspNetRoles", (string)null);
+            });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+        modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("ClaimType")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("ClaimType")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("ClaimValue")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("ClaimValue")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int");
+                b.Property<int>("RoleId")
+                    .HasColumnType("int");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("RoleId");
+                b.HasIndex("RoleId");
 
-                    b.ToTable("AspNetRoleClaims", (string)null);
-                });
+                b.ToTable("AspNetRoleClaims", (string)null);
+            });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+        modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("ClaimType")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("ClaimType")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("ClaimValue")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("ClaimValue")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                b.Property<int>("UserId")
+                    .HasColumnType("int");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.ToTable("AspNetUserClaims", (string)null);
-                });
+                b.ToTable("AspNetUserClaims", (string)null);
+            });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
-                {
-                    b.Property<string>("LoginProvider")
-                        .HasColumnType("nvarchar(450)");
+        modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
+            {
+                b.Property<string>("LoginProvider")
+                    .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("ProviderKey")
-                        .HasColumnType("nvarchar(450)");
+                b.Property<string>("ProviderKey")
+                    .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("ProviderDisplayName")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("ProviderDisplayName")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                b.Property<int>("UserId")
+                    .HasColumnType("int");
 
-                    b.HasKey("LoginProvider", "ProviderKey");
+                b.HasKey("LoginProvider", "ProviderKey");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.ToTable("AspNetUserLogins", (string)null);
-                });
+                b.ToTable("AspNetUserLogins", (string)null);
+            });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
-                {
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+        modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
+            {
+                b.Property<int>("UserId")
+                    .HasColumnType("int");
 
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int");
+                b.Property<int>("RoleId")
+                    .HasColumnType("int");
 
-                    b.HasKey("UserId", "RoleId");
+                b.HasKey("UserId", "RoleId");
 
-                    b.HasIndex("RoleId");
+                b.HasIndex("RoleId");
 
-                    b.ToTable("AspNetUserRoles", (string)null);
-                });
+                b.ToTable("AspNetUserRoles", (string)null);
+            });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
-                {
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+        modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
+            {
+                b.Property<int>("UserId")
+                    .HasColumnType("int");
 
-                    b.Property<string>("LoginProvider")
-                        .HasColumnType("nvarchar(450)");
+                b.Property<string>("LoginProvider")
+                    .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(450)");
+                b.Property<string>("Name")
+                    .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("Value")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Value")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("UserId", "LoginProvider", "Name");
+                b.HasKey("UserId", "LoginProvider", "Name");
 
-                    b.ToTable("AspNetUserTokens", (string)null);
-                });
+                b.ToTable("AspNetUserTokens", (string)null);
+            });
 
-            modelBuilder.Entity("ProScheduleAPI.Models.AppUser", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+        modelBuilder.Entity("ProScheduleAPI.Models.AppUser", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AccessFailedCount")
-                        .HasColumnType("int");
+                b.Property<int>("AccessFailedCount")
+                    .HasColumnType("int");
 
-                    b.Property<string>("ConcurrencyStamp")
-                        .IsConcurrencyToken()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("ConcurrencyStamp")
+                    .IsConcurrencyToken()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime>("CreatedAt")
+                    .HasColumnType("datetime2");
 
-                    b.Property<string>("Email")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                b.Property<string>("Email")
+                    .HasMaxLength(256)
+                    .HasColumnType("nvarchar(256)");
 
-                    b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("bit");
+                b.Property<bool>("EmailConfirmed")
+                    .HasColumnType("bit");
 
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("FirstName")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("LastName")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("LockoutEnabled")
-                        .HasColumnType("bit");
+                b.Property<bool>("LockoutEnabled")
+                    .HasColumnType("bit");
 
-                    b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("datetimeoffset");
+                b.Property<DateTimeOffset?>("LockoutEnd")
+                    .HasColumnType("datetimeoffset");
 
-                    b.Property<string>("NormalizedEmail")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                b.Property<string>("NormalizedEmail")
+                    .HasMaxLength(256)
+                    .HasColumnType("nvarchar(256)");
 
-                    b.Property<string>("NormalizedUserName")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                b.Property<string>("NormalizedUserName")
+                    .HasMaxLength(256)
+                    .HasColumnType("nvarchar(256)");
 
-                    b.Property<string>("PasswordHash")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("PasswordHash")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("PhoneNumber")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("PhoneNumberConfirmed")
-                        .HasColumnType("bit");
+                b.Property<bool>("PhoneNumberConfirmed")
+                    .HasColumnType("bit");
 
-                    b.Property<int?>("PracticeId")
-                        .HasColumnType("int");
+                b.Property<int?>("PracticeId")
+                    .HasColumnType("int");
 
-                    b.Property<int>("Role")
-                        .HasColumnType("int");
+                b.Property<int>("Role")
+                    .HasColumnType("int");
 
-                    b.Property<string>("SecurityStamp")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("SecurityStamp")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("bit");
+                b.Property<bool>("TwoFactorEnabled")
+                    .HasColumnType("bit");
 
-                    b.Property<string>("UserName")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                b.Property<string>("UserName")
+                    .HasMaxLength(256)
+                    .HasColumnType("nvarchar(256)");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("NormalizedEmail")
-                        .HasDatabaseName("EmailIndex");
+                b.HasIndex("NormalizedEmail")
+                    .HasDatabaseName("EmailIndex");
 
-                    b.HasIndex("NormalizedUserName")
-                        .IsUnique()
-                        .HasDatabaseName("UserNameIndex")
-                        .HasFilter("[NormalizedUserName] IS NOT NULL");
+                b.HasIndex("NormalizedUserName")
+                    .IsUnique()
+                    .HasDatabaseName("UserNameIndex")
+                    .HasFilter("[NormalizedUserName] IS NOT NULL");
 
-                    b.HasIndex("PracticeId");
+                b.HasIndex("PracticeId");
 
-                    b.ToTable("AspNetUsers", (string)null);
-                });
+                b.ToTable("AspNetUsers", (string)null);
+            });
 
-            modelBuilder.Entity("ProScheduleAPI.Models.Appointment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+        modelBuilder.Entity("ProScheduleAPI.Models.Appointment", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AppointmentTypeId")
-                        .HasColumnType("int");
+                b.Property<int>("AppointmentTypeId")
+                    .HasColumnType("int");
 
-                    b.Property<string>("CancellationToken")
-                        .HasColumnType("nvarchar(450)");
+                b.Property<string>("CancellationToken")
+                    .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("ClientId")
-                        .HasColumnType("int");
+                b.Property<int>("ClientId")
+                    .HasColumnType("int");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime>("CreatedAt")
+                    .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("EndTime")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime>("EndTime")
+                    .HasColumnType("datetime2");
 
-                    b.Property<string>("Notes")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Notes")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("PracticeId")
-                        .HasColumnType("int");
+                b.Property<int>("PracticeId")
+                    .HasColumnType("int");
 
-                    b.Property<int>("ProviderId")
-                        .HasColumnType("int");
+                b.Property<int>("ProviderId")
+                    .HasColumnType("int");
 
-                    b.Property<DateTime>("StartTime")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime>("StartTime")
+                    .HasColumnType("datetime2");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
+                b.Property<int>("Status")
+                    .HasColumnType("int");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("AppointmentTypeId");
+                b.HasIndex("AppointmentTypeId");
 
-                    b.HasIndex("CancellationToken")
-                        .IsUnique()
-                        .HasFilter("[CancellationToken] IS NOT NULL");
+                b.HasIndex("CancellationToken")
+                    .IsUnique()
+                    .HasFilter("[CancellationToken] IS NOT NULL");
 
-                    b.HasIndex("ClientId");
+                b.HasIndex("ClientId");
 
-                    b.HasIndex("ProviderId");
+                b.HasIndex("ProviderId");
 
-                    b.ToTable("Appointments");
-                });
+                b.ToTable("Appointments");
+            });
 
-            modelBuilder.Entity("ProScheduleAPI.Models.AppointmentType", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+        modelBuilder.Entity("ProScheduleAPI.Models.AppointmentType", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("BufferAfterMinutes")
-                        .HasColumnType("int");
+                b.Property<int>("BufferAfterMinutes")
+                    .HasColumnType("int");
 
-                    b.Property<int>("BufferBeforeMinutes")
-                        .HasColumnType("int");
+                b.Property<int>("BufferBeforeMinutes")
+                    .HasColumnType("int");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime>("CreatedAt")
+                    .HasColumnType("datetime2");
 
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Description")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("DurationMinutes")
-                        .HasColumnType("int");
+                b.Property<int>("DurationMinutes")
+                    .HasColumnType("int");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                b.Property<bool>("IsActive")
+                    .HasColumnType("bit");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("PracticeId")
-                        .HasColumnType("int");
+                b.Property<int>("PracticeId")
+                    .HasColumnType("int");
 
-                    b.Property<bool>("RequiresIntakeForm")
-                        .HasColumnType("bit");
+                b.Property<bool>("RequiresIntakeForm")
+                    .HasColumnType("bit");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("PracticeId");
+                b.HasIndex("PracticeId");
 
-                    b.ToTable("AppointmentTypes");
-                });
+                b.ToTable("AppointmentTypes");
+            });
 
-            modelBuilder.Entity("ProScheduleAPI.Models.Client", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+        modelBuilder.Entity("ProScheduleAPI.Models.Client", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("AppUserId")
-                        .HasColumnType("int");
+                b.Property<int?>("AppUserId")
+                    .HasColumnType("int");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime>("CreatedAt")
+                    .HasColumnType("datetime2");
 
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Email")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("FirstName")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("LastName")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Phone")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Phone")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("PracticeId")
-                        .HasColumnType("int");
+                b.Property<int>("PracticeId")
+                    .HasColumnType("int");
 
-                    b.Property<bool>("PushOptIn")
-                        .HasColumnType("bit");
+                b.Property<bool>("PushOptIn")
+                    .HasColumnType("bit");
 
-                    b.Property<bool>("SmsOptIn")
-                        .HasColumnType("bit");
+                b.Property<bool>("SmsOptIn")
+                    .HasColumnType("bit");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("AppUserId");
+                b.HasIndex("AppUserId");
 
-                    b.HasIndex("PracticeId");
+                b.HasIndex("PracticeId");
 
-                    b.ToTable("Clients");
-                });
+                b.ToTable("Clients");
+            });
 
-            modelBuilder.Entity("ProScheduleAPI.Models.IntakeForm", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+        modelBuilder.Entity("ProScheduleAPI.Models.IntakeForm", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AppointmentTypeId")
-                        .HasColumnType("int");
+                b.Property<int>("AppointmentTypeId")
+                    .HasColumnType("int");
 
-                    b.Property<string>("FieldsJson")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("FieldsJson")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Title")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime>("UpdatedAt")
+                    .HasColumnType("datetime2");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("AppointmentTypeId")
-                        .IsUnique();
+                b.HasIndex("AppointmentTypeId")
+                    .IsUnique();
 
-                    b.ToTable("IntakeForms");
-                });
+                b.ToTable("IntakeForms");
+            });
 
-            modelBuilder.Entity("ProScheduleAPI.Models.IntakeFormResponse", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+        modelBuilder.Entity("ProScheduleAPI.Models.IntakeFormResponse", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AppointmentId")
-                        .HasColumnType("int");
+                b.Property<int>("AppointmentId")
+                    .HasColumnType("int");
 
-                    b.Property<string>("ResponsesJson")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("ResponsesJson")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("SubmittedAt")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime>("SubmittedAt")
+                    .HasColumnType("datetime2");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("AppointmentId")
-                        .IsUnique();
+                b.HasIndex("AppointmentId")
+                    .IsUnique();
 
-                    b.ToTable("IntakeFormResponses");
-                });
+                b.ToTable("IntakeFormResponses");
+            });
 
-            modelBuilder.Entity("ProScheduleAPI.Models.NotificationSettings", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+        modelBuilder.Entity("ProScheduleAPI.Models.NotificationSettings", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<bool>("EmailEnabled")
-                        .HasColumnType("bit");
+                b.Property<bool>("EmailEnabled")
+                    .HasColumnType("bit");
 
-                    b.Property<string>("FromEmail")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("FromEmail")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("FromName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("FromName")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("PracticeId")
-                        .HasColumnType("int");
+                b.Property<int>("PracticeId")
+                    .HasColumnType("int");
 
-                    b.Property<int>("Reminder1Hours")
-                        .HasColumnType("int");
+                b.Property<int>("Reminder1Hours")
+                    .HasColumnType("int");
 
-                    b.Property<int>("Reminder2Hours")
-                        .HasColumnType("int");
+                b.Property<int>("Reminder2Hours")
+                    .HasColumnType("int");
 
-                    b.Property<bool>("SmsEnabled")
-                        .HasColumnType("bit");
+                b.Property<bool>("SmsEnabled")
+                    .HasColumnType("bit");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("PracticeId")
-                        .IsUnique();
+                b.HasIndex("PracticeId")
+                    .IsUnique();
 
-                    b.ToTable("NotificationSettings");
-                });
+                b.ToTable("NotificationSettings");
+            });
 
-            modelBuilder.Entity("ProScheduleAPI.Models.Practice", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+        modelBuilder.Entity("ProScheduleAPI.Models.Practice", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Address")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Address")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("AddressLine1")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("AddressLine1")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("AdminEmail")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("AdminEmail")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("BannerColor")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("BannerColor")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("CancellationWindowHours")
-                        .HasColumnType("int");
+                b.Property<int>("CancellationWindowHours")
+                    .HasColumnType("int");
 
-                    b.Property<string>("City")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("City")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime>("CreatedAt")
+                    .HasColumnType("datetime2");
 
-                    b.Property<string>("LogoUrl")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("LogoUrl")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Phone")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Phone")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PostalCode")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("PostalCode")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Slug")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                b.Property<string>("Slug")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("State")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("State")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("TimeZone")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("TimeZone")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Website")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Website")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("Slug")
-                        .IsUnique();
+                b.HasIndex("Slug")
+                    .IsUnique();
 
-                    b.ToTable("Practices");
-                });
+                b.ToTable("Practices");
+            });
 
-            modelBuilder.Entity("ProScheduleAPI.Models.Provider", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+        modelBuilder.Entity("ProScheduleAPI.Models.Provider", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Description")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime>("CreatedAt")
+                    .HasColumnType("datetime2");
 
-                    b.Property<string>("DisplayName")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("DisplayName")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Email")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Email")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("FirstName")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                b.Property<bool>("IsActive")
+                    .HasColumnType("bit");
 
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("LastName")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Phone")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Phone")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("PracticeId")
-                        .HasColumnType("int");
+                b.Property<int>("PracticeId")
+                    .HasColumnType("int");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("PracticeId");
+                b.HasIndex("PracticeId");
 
-                    b.ToTable("Providers");
-                });
+                b.ToTable("Providers");
+            });
 
-            modelBuilder.Entity("ProScheduleAPI.Models.ProviderAppointmentType", b =>
-                {
-                    b.Property<int>("ProviderId")
-                        .HasColumnType("int");
+        modelBuilder.Entity("ProScheduleAPI.Models.ProviderAppointmentType", b =>
+            {
+                b.Property<int>("ProviderId")
+                    .HasColumnType("int");
 
-                    b.Property<int>("AppointmentTypeId")
-                        .HasColumnType("int");
+                b.Property<int>("AppointmentTypeId")
+                    .HasColumnType("int");
 
-                    b.HasKey("ProviderId", "AppointmentTypeId");
+                b.HasKey("ProviderId", "AppointmentTypeId");
 
-                    b.HasIndex("AppointmentTypeId");
+                b.HasIndex("AppointmentTypeId");
 
-                    b.ToTable("ProviderAppointmentTypes");
-                });
+                b.ToTable("ProviderAppointmentTypes");
+            });
 
-            modelBuilder.Entity("ProScheduleAPI.Models.ProviderAvailability", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+        modelBuilder.Entity("ProScheduleAPI.Models.ProviderAvailability", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("DayOfWeek")
-                        .HasColumnType("int");
+                b.Property<int>("DayOfWeek")
+                    .HasColumnType("int");
 
-                    b.Property<TimeOnly>("EndTime")
-                        .HasColumnType("time");
+                b.Property<TimeOnly>("EndTime")
+                    .HasColumnType("time");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                b.Property<bool>("IsActive")
+                    .HasColumnType("bit");
 
-                    b.Property<int>("ProviderId")
-                        .HasColumnType("int");
+                b.Property<int>("ProviderId")
+                    .HasColumnType("int");
 
-                    b.Property<TimeOnly>("StartTime")
-                        .HasColumnType("time");
+                b.Property<TimeOnly>("StartTime")
+                    .HasColumnType("time");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("ProviderId");
+                b.HasIndex("ProviderId");
 
-                    b.ToTable("ProviderAvailabilities");
-                });
+                b.ToTable("ProviderAvailabilities");
+            });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
-                {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
-                        .WithMany()
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
+        modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
+            {
+                b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
+                    .WithMany()
+                    .HasForeignKey("RoleId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+            });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
-                {
-                    b.HasOne("ProScheduleAPI.Models.AppUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
+        modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
+            {
+                b.HasOne("ProScheduleAPI.Models.AppUser", null)
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+            });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
-                {
-                    b.HasOne("ProScheduleAPI.Models.AppUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
+        modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
+            {
+                b.HasOne("ProScheduleAPI.Models.AppUser", null)
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+            });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
-                {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
-                        .WithMany()
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+        modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
+            {
+                b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
+                    .WithMany()
+                    .HasForeignKey("RoleId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("ProScheduleAPI.Models.AppUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
+                b.HasOne("ProScheduleAPI.Models.AppUser", null)
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+            });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
-                {
-                    b.HasOne("ProScheduleAPI.Models.AppUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
+        modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
+            {
+                b.HasOne("ProScheduleAPI.Models.AppUser", null)
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+            });
 
-            modelBuilder.Entity("ProScheduleAPI.Models.AppUser", b =>
-                {
-                    b.HasOne("ProScheduleAPI.Models.Practice", "Practice")
-                        .WithMany("Users")
-                        .HasForeignKey("PracticeId")
-                        .OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity("ProScheduleAPI.Models.AppUser", b =>
+            {
+                b.HasOne("ProScheduleAPI.Models.Practice", "Practice")
+                    .WithMany("Users")
+                    .HasForeignKey("PracticeId")
+                    .OnDelete(DeleteBehavior.Restrict);
 
-                    b.Navigation("Practice");
-                });
+                b.Navigation("Practice");
+            });
 
-            modelBuilder.Entity("ProScheduleAPI.Models.Appointment", b =>
-                {
-                    b.HasOne("ProScheduleAPI.Models.AppointmentType", "AppointmentType")
-                        .WithMany("Appointments")
-                        .HasForeignKey("AppointmentTypeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+        modelBuilder.Entity("ProScheduleAPI.Models.Appointment", b =>
+            {
+                b.HasOne("ProScheduleAPI.Models.AppointmentType", "AppointmentType")
+                    .WithMany("Appointments")
+                    .HasForeignKey("AppointmentTypeId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
 
-                    b.HasOne("ProScheduleAPI.Models.Client", "Client")
-                        .WithMany("Appointments")
-                        .HasForeignKey("ClientId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                b.HasOne("ProScheduleAPI.Models.Client", "Client")
+                    .WithMany("Appointments")
+                    .HasForeignKey("ClientId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
 
-                    b.HasOne("ProScheduleAPI.Models.Provider", "Provider")
-                        .WithMany("Appointments")
-                        .HasForeignKey("ProviderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                b.HasOne("ProScheduleAPI.Models.Provider", "Provider")
+                    .WithMany("Appointments")
+                    .HasForeignKey("ProviderId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
 
-                    b.Navigation("AppointmentType");
+                b.Navigation("AppointmentType");
 
-                    b.Navigation("Client");
+                b.Navigation("Client");
 
-                    b.Navigation("Provider");
-                });
+                b.Navigation("Provider");
+            });
 
-            modelBuilder.Entity("ProScheduleAPI.Models.AppointmentType", b =>
-                {
-                    b.HasOne("ProScheduleAPI.Models.Practice", "Practice")
-                        .WithMany("AppointmentTypes")
-                        .HasForeignKey("PracticeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+        modelBuilder.Entity("ProScheduleAPI.Models.AppointmentType", b =>
+            {
+                b.HasOne("ProScheduleAPI.Models.Practice", "Practice")
+                    .WithMany("AppointmentTypes")
+                    .HasForeignKey("PracticeId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Practice");
-                });
+                b.Navigation("Practice");
+            });
 
-            modelBuilder.Entity("ProScheduleAPI.Models.Client", b =>
-                {
-                    b.HasOne("ProScheduleAPI.Models.AppUser", "AppUser")
-                        .WithMany()
-                        .HasForeignKey("AppUserId")
-                        .OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity("ProScheduleAPI.Models.Client", b =>
+            {
+                b.HasOne("ProScheduleAPI.Models.AppUser", "AppUser")
+                    .WithMany()
+                    .HasForeignKey("AppUserId")
+                    .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("ProScheduleAPI.Models.Practice", "Practice")
-                        .WithMany("Clients")
-                        .HasForeignKey("PracticeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("ProScheduleAPI.Models.Practice", "Practice")
+                    .WithMany("Clients")
+                    .HasForeignKey("PracticeId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("AppUser");
+                b.Navigation("AppUser");
 
-                    b.Navigation("Practice");
-                });
+                b.Navigation("Practice");
+            });
 
-            modelBuilder.Entity("ProScheduleAPI.Models.IntakeForm", b =>
-                {
-                    b.HasOne("ProScheduleAPI.Models.AppointmentType", "AppointmentType")
-                        .WithOne("IntakeForm")
-                        .HasForeignKey("ProScheduleAPI.Models.IntakeForm", "AppointmentTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+        modelBuilder.Entity("ProScheduleAPI.Models.IntakeForm", b =>
+            {
+                b.HasOne("ProScheduleAPI.Models.AppointmentType", "AppointmentType")
+                    .WithOne("IntakeForm")
+                    .HasForeignKey("ProScheduleAPI.Models.IntakeForm", "AppointmentTypeId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("AppointmentType");
-                });
+                b.Navigation("AppointmentType");
+            });
 
-            modelBuilder.Entity("ProScheduleAPI.Models.IntakeFormResponse", b =>
-                {
-                    b.HasOne("ProScheduleAPI.Models.Appointment", "Appointment")
-                        .WithOne("IntakeFormResponse")
-                        .HasForeignKey("ProScheduleAPI.Models.IntakeFormResponse", "AppointmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+        modelBuilder.Entity("ProScheduleAPI.Models.IntakeFormResponse", b =>
+            {
+                b.HasOne("ProScheduleAPI.Models.Appointment", "Appointment")
+                    .WithOne("IntakeFormResponse")
+                    .HasForeignKey("ProScheduleAPI.Models.IntakeFormResponse", "AppointmentId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Appointment");
-                });
+                b.Navigation("Appointment");
+            });
 
-            modelBuilder.Entity("ProScheduleAPI.Models.NotificationSettings", b =>
-                {
-                    b.HasOne("ProScheduleAPI.Models.Practice", "Practice")
-                        .WithOne("NotificationSettings")
-                        .HasForeignKey("ProScheduleAPI.Models.NotificationSettings", "PracticeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+        modelBuilder.Entity("ProScheduleAPI.Models.NotificationSettings", b =>
+            {
+                b.HasOne("ProScheduleAPI.Models.Practice", "Practice")
+                    .WithOne("NotificationSettings")
+                    .HasForeignKey("ProScheduleAPI.Models.NotificationSettings", "PracticeId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Practice");
-                });
+                b.Navigation("Practice");
+            });
 
-            modelBuilder.Entity("ProScheduleAPI.Models.Provider", b =>
-                {
-                    b.HasOne("ProScheduleAPI.Models.Practice", "Practice")
-                        .WithMany("Providers")
-                        .HasForeignKey("PracticeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+        modelBuilder.Entity("ProScheduleAPI.Models.Provider", b =>
+            {
+                b.HasOne("ProScheduleAPI.Models.Practice", "Practice")
+                    .WithMany("Providers")
+                    .HasForeignKey("PracticeId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Practice");
-                });
+                b.Navigation("Practice");
+            });
 
-            modelBuilder.Entity("ProScheduleAPI.Models.ProviderAppointmentType", b =>
-                {
-                    b.HasOne("ProScheduleAPI.Models.AppointmentType", "AppointmentType")
-                        .WithMany("ProviderAppointmentTypes")
-                        .HasForeignKey("AppointmentTypeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+        modelBuilder.Entity("ProScheduleAPI.Models.ProviderAppointmentType", b =>
+            {
+                b.HasOne("ProScheduleAPI.Models.AppointmentType", "AppointmentType")
+                    .WithMany("ProviderAppointmentTypes")
+                    .HasForeignKey("AppointmentTypeId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
 
-                    b.HasOne("ProScheduleAPI.Models.Provider", "Provider")
-                        .WithMany("ProviderAppointmentTypes")
-                        .HasForeignKey("ProviderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                b.HasOne("ProScheduleAPI.Models.Provider", "Provider")
+                    .WithMany("ProviderAppointmentTypes")
+                    .HasForeignKey("ProviderId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
 
-                    b.Navigation("AppointmentType");
+                b.Navigation("AppointmentType");
 
-                    b.Navigation("Provider");
-                });
+                b.Navigation("Provider");
+            });
 
-            modelBuilder.Entity("ProScheduleAPI.Models.ProviderAvailability", b =>
-                {
-                    b.HasOne("ProScheduleAPI.Models.Provider", "Provider")
-                        .WithMany("Availabilities")
-                        .HasForeignKey("ProviderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+        modelBuilder.Entity("ProScheduleAPI.Models.ProviderAvailability", b =>
+            {
+                b.HasOne("ProScheduleAPI.Models.Provider", "Provider")
+                    .WithMany("Availabilities")
+                    .HasForeignKey("ProviderId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Provider");
-                });
+                b.Navigation("Provider");
+            });
 
-            modelBuilder.Entity("ProScheduleAPI.Models.Appointment", b =>
-                {
-                    b.Navigation("IntakeFormResponse");
-                });
+        modelBuilder.Entity("ProScheduleAPI.Models.Appointment", b =>
+            {
+                b.Navigation("IntakeFormResponse");
+            });
 
-            modelBuilder.Entity("ProScheduleAPI.Models.AppointmentType", b =>
-                {
-                    b.Navigation("Appointments");
+        modelBuilder.Entity("ProScheduleAPI.Models.AppointmentType", b =>
+            {
+                b.Navigation("Appointments");
 
-                    b.Navigation("IntakeForm");
+                b.Navigation("IntakeForm");
 
-                    b.Navigation("ProviderAppointmentTypes");
-                });
+                b.Navigation("ProviderAppointmentTypes");
+            });
 
-            modelBuilder.Entity("ProScheduleAPI.Models.Client", b =>
-                {
-                    b.Navigation("Appointments");
-                });
+        modelBuilder.Entity("ProScheduleAPI.Models.Client", b =>
+            {
+                b.Navigation("Appointments");
+            });
 
-            modelBuilder.Entity("ProScheduleAPI.Models.Practice", b =>
-                {
-                    b.Navigation("AppointmentTypes");
+        modelBuilder.Entity("ProScheduleAPI.Models.Practice", b =>
+            {
+                b.Navigation("AppointmentTypes");
 
-                    b.Navigation("Clients");
+                b.Navigation("Clients");
 
-                    b.Navigation("NotificationSettings");
+                b.Navigation("NotificationSettings");
 
-                    b.Navigation("Providers");
+                b.Navigation("Providers");
 
-                    b.Navigation("Users");
-                });
+                b.Navigation("Users");
+            });
 
- 
+        modelBuilder.Entity("ProScheduleAPI.Models.Provider", b =>
+            {
+                b.Navigation("Appointments");
+
+                b.Navigation("Availabilities");
+
+                b.Navigation("ProviderAppointmentTypes");
+            });
+#pragma warning restore 612, 618
+    }
+}
+

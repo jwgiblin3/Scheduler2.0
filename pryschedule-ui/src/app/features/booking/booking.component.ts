@@ -36,6 +36,25 @@ export class BookingComponent implements OnInit {
   displayName = computed(() => this.practice()?.name || 'ProSchedule');
   /** Website link to surface in the header (external, so use href). */
   website = computed(() => this.practice()?.website || null);
+  /**
+   * Formatted "123 Main St · City, ST 12345" address string for the header.
+   * Returns null when the practice hasn't entered any address fields, so the
+   * header can hide the row entirely instead of showing stray punctuation.
+   */
+  addressLine = computed(() => {
+    const p = this.practice();
+    if (!p) return null;
+    const line1 = (p.addressLine1 ?? '').trim();
+    const city = (p.city ?? '').trim();
+    const state = (p.state ?? '').trim();
+    const zip = (p.postalCode ?? '').trim();
+    const cityStateZip = [
+      city,
+      [state, zip].filter(s => s.length > 0).join(' ').trim()
+    ].filter(s => s.length > 0).join(', ');
+    const parts = [line1, cityStateZip].filter(s => s.length > 0);
+    return parts.length === 0 ? null : parts.join(' · ');
+  });
 
   get slug(): string { return this.route.snapshot.paramMap.get('slug') ?? ''; }
 

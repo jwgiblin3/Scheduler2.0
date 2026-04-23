@@ -43,17 +43,27 @@ public class EmailService
         string clientEmail, string clientName,
         string providerName, string apptTypeName,
         DateTime startTime, string practiceSlug,
-        string cancellationToken, string? fromEmail = null, string? fromName = null)
+        string cancellationToken,
+        string? practiceName = null,
+        string? addressLine1 = null, string? city = null,
+        string? state = null, string? postalCode = null,
+        string? fromEmail = null, string? fromName = null)
     {
         var subject = $"Appointment Confirmed – {apptTypeName}";
         var cancelUrl = $"/book/{practiceSlug}/cancel?token={cancellationToken}";
         var rescheduleUrl = $"/book/{practiceSlug}?reschedule={cancellationToken}";
+
+        // Build the location block from whichever structured address fields the
+        // practice has filled in. If nothing is set, we simply skip the section
+        // rather than render empty lines or stray punctuation.
+        var addressBlock = BuildAddressBlock(practiceName, addressLine1, city, state, postalCode);
 
         var html = $"""
             <h2>Your appointment is confirmed!</h2>
             <p>Hi {clientName},</p>
             <p>Your <strong>{apptTypeName}</strong> with <strong>{providerName}</strong> is scheduled for:</p>
             <p style="font-size:18px;font-weight:bold">{startTime:dddd, MMMM d, yyyy 'at' h:mm tt}</p>
+            {addressBlock}
             <br/>
             <p>
               <a href="{rescheduleUrl}" style="margin-right:16px">Reschedule</a>
@@ -63,6 +73,38 @@ public class EmailService
             """;
 
         return SendAsync(clientEmail, clientName, subject, html, fromEmail, fromName);
+    }
+
+    // Composes the "Location" block for confirmation emails from the practice's
+    // structured address fields. Returns an empty string when the practice has
+    // no address set so the email doesn't show an empty heading.
+    private static string BuildAddressBlock(
+        string? practiceName, string? line1, string? city, string? state, string? postalCode)
+    {
+        var hasAny = !string.IsNullOrWhiteSpace(line1)
+                  || !string.IsNullOrWhiteSpace(city)
+                  || !string.IsNullOrWhiteSpace(state)
+                  || !string.IsNullOrWhiteSpace(postalCode);
+        if (!hasAny) return string.Empty;
+
+        var cityState = string.Join(", ", new[]
+        {
+            (city ?? "").Trim(),
+            string.Join(" ", new[] { (state ?? "").Trim(), (postalCode ?? "").Trim() }
+                .Where(s => s.Length > 0))
+        }.Where(s => s.Length > 0));
+
+        var lines = new List<string>();
+        if (!string.IsNullOrWhiteSpace(practiceName)) lines.Add($"<strong>{practiceName}</strong>");
+        if (!string.IsNullOrWhiteSpace(line1)) lines.Add(line1!.Trim());
+        if (!string.IsNullOrWhiteSpace(cityState)) lines.Add(cityState);
+
+        return $"""
+            <p style="margin-top:12px">
+              <span style="color:#666;font-size:12px;text-transform:uppercase;letter-spacing:.04em">Location</span><br/>
+              {string.Join("<br/>", lines)}
+            </p>
+            """;
     }
 
     public Task SendReminderAsync(

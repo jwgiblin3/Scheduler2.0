@@ -129,6 +129,98 @@ public class ProvidersController : ControllerBase
         return NoContent();
     }
 
+    // -------- Provider exceptions --------
+    //
+    // Per-provider out-of-office windows. Separate from practice-wide holidays.
+    // AvailabilityService layers both sets on top of the recurring weekly hours.
+
+    [HttpGet("{id:int}/exceptions")]
+    public async Task<ActionResult> GetExceptions(int id)
+    {
+        // Only allow reading exceptions for a provider in the caller's practice.
+        var exists = await _db.Providers
+            .AnyAsync(p => p.Id == id && p.PracticeId == PracticeId);
+        if (!exists) return NotFound();
+
+        var rows = await _db.ProviderExceptions
+            .Where(e => e.ProviderId == id)
+            .OrderBy(e => e.StartDate)
+            .Select(e => new
+            {
+                e.Id,
+                StartDate = e.StartDate.ToString("yyyy-MM-dd"),
+                EndDate = e.EndDate.ToString("yyyy-MM-dd"),
+                e.Reason
+            })
+            .ToListAsync();
+        return Ok(rows);
+    }
+
+    [HttpPost("{id:int}/exceptions")]
+    public async Task<ActionResult> CreateException(int id, [FromBody] ProviderExceptionRequest req)
+    {
+        var exists = await _db.Providers
+            .AnyAsync(p => p.Id == id && p.PracticeId == PracticeId);
+        if (!exists) return NotFound();
+
+        if (!DateOnly.TryParse(req.StartDate, out var start)) return BadRequest("Invalid start date.");
+        if (!DateOnly.TryParse(req.EndDate, out var end)) return BadRequest("Invalid end date.");
+        if (end < start) return BadRequest("End date must be on or after start date.");
+
+        var exception = new ProviderException
+        {
+            ProviderId = id,
+            StartDate = start,
+            EndDate = end,
+            Reason = string.IsNullOrWhiteSpace(req.Reason) ? null : req.Reason.Trim()
+        };
+        _db.ProviderExceptions.Add(exception);
+        await _db.SaveChangesAsync();
+
+        return Ok(new
+        {
+            exception.Id,
+            StartDate = exception.StartDate.ToString("yyyy-MM-dd"),
+            EndDate = exception.EndDate.ToString("yyyy-MM-dd"),
+            exception.Reason
+        });
+    }
+
+    [HttpPut("{id:int}/exceptions/{exceptionId:int}")]
+    public async Task<ActionResult> UpdateException(int id, int exceptionId, [FromBody] ProviderExceptionRequest req)
+    {
+        var exception = await _db.ProviderExceptions
+            .Include(e => e.Provider)
+            .FirstOrDefaultAsync(e => e.Id == exceptionId && e.ProviderId == id
+                                      && e.Provider.PracticeId == PracticeId);
+        if (exception is null) return NotFound();
+
+        if (!DateOnly.TryParse(req.StartDate, out var start)) return BadRequest("Invalid start date.");
+        if (!DateOnly.TryParse(req.EndDate, out var end)) return BadRequest("Invalid end date.");
+        if (end < start) return BadRequest("End date must be on or after start date.");
+
+        exception.StartDate = start;
+        exception.EndDate = end;
+        exception.Reason = string.IsNullOrWhiteSpace(req.Reason) ? null : req.Reason.Trim();
+
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
+
+    [HttpDelete("{id:int}/exceptions/{exceptionId:int}")]
+    public async Task<ActionResult> DeleteException(int id, int exceptionId)
+    {
+        var exception = await _db.ProviderExceptions
+            .Include(e => e.Provider)
+            .FirstOrDefaultAsync(e => e.Id == exceptionId && e.ProviderId == id
+                                      && e.Provider.PracticeId == PracticeId);
+        if (exception is null) return NotFound();
+
+        _db.ProviderExceptions.Remove(exception);
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
+
     private static ProviderDto ToDto(Provider p) => new(
         p.Id,
         ResolveDisplayName(p),
@@ -148,3 +240,9 @@ public class ProvidersController : ControllerBase
         return string.IsNullOrEmpty(legacy) ? "Unnamed Provider" : legacy;
     }
 }
+
+public record ProviderExceptionRequest(
+    string? StartDate,   // "yyyy-MM-dd"
+    string? EndDate,     // "yyyy-MM-dd"
+    string? Reason
+);

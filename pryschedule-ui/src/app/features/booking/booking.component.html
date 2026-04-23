@@ -8,7 +8,12 @@
         @if (logoUrl()) {
           <img class="practice-logo" [src]="logoUrl()" [alt]="displayName() + ' logo'" />
         }
-        <span class="practice-name">{{ displayName() }}</span>
+        <div class="practice-identity">
+          <span class="practice-name">{{ displayName() }}</span>
+          @if (addressLine(); as a) {
+            <span class="practice-address">{{ a }}</span>
+          }
+        </div>
       </a>
       <div class="header-spacer"></div>
       @if (auth.isLoggedIn()) {

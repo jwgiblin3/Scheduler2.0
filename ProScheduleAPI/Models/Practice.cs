@@ -50,5 +50,6 @@ public class Practice
     public ICollection<AppointmentType> AppointmentTypes { get; set; } = [];
     public ICollection<Client> Clients { get; set; } = [];
     public ICollection<AppUser> Users { get; set; } = [];
+    public ICollection<PracticeHoliday> Holidays { get; set; } = [];
     public NotificationSettings? NotificationSettings { get; set; }
 }

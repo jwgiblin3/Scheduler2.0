@@ -22,11 +22,6 @@
           <li><a routerLink="/appointments" routerLinkActive="active">
             <span class="nav-icon">📋</span> Appointments
           </a></li>
-          @if (auth.hasClientAppointments()) {
-            <li><a routerLink="/my/appointments" routerLinkActive="active">
-              <span class="nav-icon">📅</span> My Appointments
-            </a></li>
-          }
           @if (auth.isAdmin()) {
             <li><a routerLink="/providers" routerLinkActive="active">
               <span class="nav-icon">👤</span> Providers

@@ -161,6 +161,103 @@ public class SettingsController : ControllerBase
         return builder.ToString().Trim('-');
     }
 
+    // -------- Holidays --------
+    //
+    // Practice-level closures — blackout dates that apply to every provider.
+    // Used by AvailabilityService to suppress slot generation on those days.
+
+    [HttpGet("holidays")]
+    public async Task<ActionResult> GetHolidays()
+    {
+        var rows = await _db.PracticeHolidays
+            .Where(h => h.PracticeId == PracticeId)
+            .OrderBy(h => h.StartDate)
+            .Select(h => new
+            {
+                h.Id,
+                StartDate = h.StartDate.ToString("yyyy-MM-dd"),
+                EndDate = h.EndDate.ToString("yyyy-MM-dd"),
+                h.Name
+            })
+            .ToListAsync();
+        return Ok(rows);
+    }
+
+    [HttpPost("holidays")]
+    public async Task<ActionResult> CreateHoliday([FromBody] HolidayRequest req)
+    {
+        if (UserRole != "Admin") return Forbid();
+        if (!TryParseDateRange(req.StartDate, req.EndDate, out var start, out var end, out var err))
+            return BadRequest(err);
+
+        var holiday = new PracticeHoliday
+        {
+            PracticeId = PracticeId,
+            StartDate = start,
+            EndDate = end,
+            Name = Trim(req.Name)
+        };
+        _db.PracticeHolidays.Add(holiday);
+        await _db.SaveChangesAsync();
+
+        return Ok(new
+        {
+            holiday.Id,
+            StartDate = holiday.StartDate.ToString("yyyy-MM-dd"),
+            EndDate = holiday.EndDate.ToString("yyyy-MM-dd"),
+            holiday.Name
+        });
+    }
+
+    [HttpPut("holidays/{id:int}")]
+    public async Task<ActionResult> UpdateHoliday(int id, [FromBody] HolidayRequest req)
+    {
+        if (UserRole != "Admin") return Forbid();
+
+        var holiday = await _db.PracticeHolidays
+            .FirstOrDefaultAsync(h => h.Id == id && h.PracticeId == PracticeId);
+        if (holiday is null) return NotFound();
+
+        if (!TryParseDateRange(req.StartDate, req.EndDate, out var start, out var end, out var err))
+            return BadRequest(err);
+
+        holiday.StartDate = start;
+        holiday.EndDate = end;
+        holiday.Name = Trim(req.Name);
+
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
+
+    [HttpDelete("holidays/{id:int}")]
+    public async Task<ActionResult> DeleteHoliday(int id)
+    {
+        if (UserRole != "Admin") return Forbid();
+
+        var holiday = await _db.PracticeHolidays
+            .FirstOrDefaultAsync(h => h.Id == id && h.PracticeId == PracticeId);
+        if (holiday is null) return NotFound();
+
+        _db.PracticeHolidays.Remove(holiday);
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
+
+    // Shared parser — both holidays and provider exceptions receive dates as
+    // "yyyy-MM-dd" strings (the ISO format the Angular date input emits) and
+    // must always satisfy StartDate <= EndDate.
+    private static bool TryParseDateRange(string? startIn, string? endIn,
+        out DateOnly start, out DateOnly end, out string error)
+    {
+        start = default;
+        end = default;
+        error = "";
+        if (!DateOnly.TryParse(startIn, out start)) { error = "Invalid start date."; return false; }
+        if (!DateOnly.TryParse(endIn, out end)) { error = "Invalid end date."; return false; }
+        if (end < start) { error = "End date must be on or after start date."; return false; }
+        return true;
+    }
+
     [HttpPut("notifications")]
     public async Task<ActionResult> UpdateNotificationSettings([FromBody] UpdateNotificationSettingsRequest req)
     {
@@ -213,4 +310,10 @@ public record UpdateNotificationSettingsRequest(
     bool SmsEnabled,
     string FromEmail,
     string FromName
+);
+
+public record HolidayRequest(
+    string? StartDate,   // "yyyy-MM-dd"
+    string? EndDate,     // "yyyy-MM-dd"
+    string? Name
 );

@@ -19,6 +19,8 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<int>, int>
     public DbSet<IntakeForm> IntakeForms => Set<IntakeForm>();
     public DbSet<IntakeFormResponse> IntakeFormResponses => Set<IntakeFormResponse>();
     public DbSet<NotificationSettings> NotificationSettings => Set<NotificationSettings>();
+    public DbSet<PracticeHoliday> PracticeHolidays => Set<PracticeHoliday>();
+    public DbSet<ProviderException> ProviderExceptions => Set<ProviderException>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -87,5 +89,27 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<int>, int>
             .WithMany(at => at.Appointments)
             .HasForeignKey(a => a.AppointmentTypeId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Practice holidays cascade with the practice — if a practice is deleted,
+        // its holiday rows go with it. Index by practice + date range so the
+        // "is date X blocked?" query is fast.
+        builder.Entity<PracticeHoliday>()
+            .HasOne(h => h.Practice)
+            .WithMany(p => p.Holidays)
+            .HasForeignKey(h => h.PracticeId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<PracticeHoliday>()
+            .HasIndex(h => new { h.PracticeId, h.StartDate, h.EndDate });
+
+        // Provider exceptions cascade with the provider.
+        builder.Entity<ProviderException>()
+            .HasOne(e => e.Provider)
+            .WithMany(p => p.Exceptions)
+            .HasForeignKey(e => e.ProviderId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<ProviderException>()
+            .HasIndex(e => new { e.ProviderId, e.StartDate, e.EndDate });
     }
 }

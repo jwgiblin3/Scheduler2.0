@@ -152,6 +152,11 @@ export interface BookingInfo {
   logoUrl?: string | null;
   /** Hex color used as the booking page banner / accent. */
   bannerColor?: string | null;
+  /** Structured address shown on the booking page so clients know where to go. */
+  addressLine1?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postalCode?: string | null;
   providers: PublicProvider[];
   appointmentTypes: AppointmentType[];
 }

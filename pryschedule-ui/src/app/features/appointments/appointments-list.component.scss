@@ -23,3 +23,9 @@
     .badge-green { background: #f0fff4; color: #276749; }
     .badge-gray { background: #f7f8fc; color: #718096; }
     .link { color: #667eea; text-decoration: none; font-size: .85rem; }
+
+    .view-tabs { display: inline-flex; background: #fff; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 3px; margin: 0 0 1rem; gap: 2px; }
+    .view-tab { background: transparent; border: none; padding: .4rem .9rem; border-radius: 6px; font-size: .85rem; color: #4a5568; cursor: pointer; }
+    .view-tab:hover { color: #667eea; }
+    .view-tab.active { background: #667eea; color: #fff; }
+    .scheduler-wrap { background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,.06); padding: .5rem; overflow: hidden; }

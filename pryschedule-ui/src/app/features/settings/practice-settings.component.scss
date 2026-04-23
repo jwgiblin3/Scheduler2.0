@@ -35,3 +35,16 @@
     }
     .branding-preview img { height: 36px; width: auto; max-width: 140px; border-radius: 4px; background: rgba(255,255,255,.9); padding: 2px 4px; object-fit: contain; }
     .branding-preview__name { font-weight: 600; font-size: 1rem; letter-spacing: .2px; }
+
+    .section-desc { font-size: .85rem; color: #718096; margin: 0 0 1rem; }
+    .form-row-holiday { grid-template-columns: 1fr 1fr 2fr auto; align-items: end; }
+    .form-group-grow { flex: 1; }
+    .form-group-action { margin-bottom: 1rem; }
+    .form-group-action .btn { width: 100%; }
+    .empty-hint { font-size: .85rem; color: #a0aec0; margin: .5rem 0 0; }
+    .holiday-table { width: 100%; border-collapse: collapse; margin-top: .75rem; font-size: .88rem; }
+    .holiday-table th, .holiday-table td { padding: .6rem .5rem; text-align: left; border-bottom: 1px solid #edf2f7; }
+    .holiday-table th { color: #718096; font-weight: 600; font-size: .8rem; text-transform: uppercase; letter-spacing: .4px; }
+    .holiday-table td.right { text-align: right; }
+    .btn-link { background: transparent; border: none; padding: .2rem .4rem; color: #667eea; cursor: pointer; font-size: .85rem; }
+    .btn-danger { color: #c53030; }

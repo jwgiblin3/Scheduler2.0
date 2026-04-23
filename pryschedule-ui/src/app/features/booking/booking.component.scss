@@ -24,7 +24,14 @@
   border-radius: 4px; padding: 2px 4px;
   object-fit: contain;
 }
+.practice-identity { display: flex; flex-direction: column; line-height: 1.2; }
 .practice-name { font-size: 1.1rem; font-weight: 700; letter-spacing: .2px; }
+.practice-address {
+  font-size: .78rem;
+  color: rgba(255, 255, 255, .8);
+  margin-top: 2px;
+  letter-spacing: .2px;
+}
 
 .header-spacer { flex: 1; }
 .header-link {

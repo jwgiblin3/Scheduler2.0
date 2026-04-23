@@ -3,8 +3,10 @@
     <div class="my-appts-header-inner">
       <div class="logo">📅 ProSchedule</div>
       <div class="spacer"></div>
+      @if (bookingHref(); as href) {
+        <a class="header-link" [routerLink]="href">Book an Appointment</a>
+      }
       @if (auth.hasPractice()) {
-        <a class="header-link" routerLink="/dashboard">My Practice</a>
         <a class="header-link" routerLink="/home">Switch View</a>
       }
       <div class="user-chip">

@@ -18,8 +18,49 @@
         </div>
       </div>
 
+      <div class="view-tabs" role="tablist">
+        <button
+          class="view-tab"
+          [class.active]="viewMode() === 'list'"
+          (click)="setViewMode('list')"
+          role="tab"
+          [attr.aria-selected]="viewMode() === 'list'"
+        >List</button>
+        <button
+          class="view-tab"
+          [class.active]="viewMode() === 'day'"
+          (click)="setViewMode('day')"
+          role="tab"
+          [attr.aria-selected]="viewMode() === 'day'"
+        >Day</button>
+        <button
+          class="view-tab"
+          [class.active]="viewMode() === 'week'"
+          (click)="setViewMode('week')"
+          role="tab"
+          [attr.aria-selected]="viewMode() === 'week'"
+        >Week</button>
+      </div>
+
       @if (loading()) {
         <div class="loading">Loading...</div>
+      } @else if (viewMode() !== 'list') {
+        <div class="scheduler-wrap">
+          <kendo-scheduler
+            [kendoSchedulerBinding]="schedulerEvents()"
+            [selectedDate]="schedulerDate()"
+            (dateChange)="onSchedulerDateChange($event.selectedDate)"
+            (eventClick)="onSchedulerSelect($event.event)"
+            style="height: 720px;"
+          >
+            @if (viewMode() === 'day') {
+              <kendo-scheduler-day-view [startTime]="'07:00'" [endTime]="'20:00'"></kendo-scheduler-day-view>
+            }
+            @if (viewMode() === 'week') {
+              <kendo-scheduler-week-view [startTime]="'07:00'" [endTime]="'20:00'"></kendo-scheduler-week-view>
+            }
+          </kendo-scheduler>
+        </div>
       } @else if (appointments().length === 0) {
         <div class="empty-state">No appointments found for selected filters.</div>
       } @else {

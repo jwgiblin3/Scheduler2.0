@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
 import { AppointmentType } from '../../core/models/models';
@@ -9,7 +9,7 @@ const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 
 @Component({
   selector: 'app-provider-form',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, FormsModule, RouterLink],
   templateUrl: './provider-form.component.html',
   styleUrls: ['./provider-form.component.scss']
 })
@@ -26,6 +26,16 @@ export class ProviderFormComponent implements OnInit {
   saving = signal(false);
   error = signal('');
 
+  // --- Exceptions editor ---
+  // Loaded on entry to the edit form; new exceptions can only be added after
+  // the provider has been created and has an id.
+  exceptions = signal<{ id: number; startDate: string; endDate: string; reason: string | null }[]>([]);
+  newExceptionStart = '';
+  newExceptionEnd = '';
+  newExceptionReason = '';
+  savingException = signal(false);
+  exceptionError = signal('');
+
   dayOptions = [0,1,2,3,4,5,6].map(v => ({ value: v, label: DAYS[v] }));
 
   form = this.fb.group({
@@ -40,18 +50,27 @@ export class ProviderFormComponent implements OnInit {
   get availabilitiesArray() { return this.form.get('availabilities') as FormArray; }
 
   getSlotsForDay(day: number): FormGroup[] {
-    return this.availabilitiesArray.controls
-      .filter((c: any) => c.get('dayOfWeek')?.value === day) as FormGroup[];
+    // Sort by startTime so the UI always renders slots in chronological order,
+    // regardless of the order the user added them or the server returned them.
+    return (this.availabilitiesArray.controls
+      .filter((c: any) => c.get('dayOfWeek')?.value === day) as FormGroup[])
+      .slice()
+      .sort((a, b) => {
+        const aStart = (a.get('startTime')?.value ?? '') as string;
+        const bStart = (b.get('startTime')?.value ?? '') as string;
+        return aStart.localeCompare(bStart);
+      });
   }
 
   getSlotIndex(day: number, slotIdx: number): number {
-    let count = 0;
+    // slotIdx is an index into the *sorted* slots for this day (the UI's view).
+    // Walk the same sorted list, then find that FormGroup's index in the raw
+    // FormArray so add/remove still target the right control.
+    const sorted = this.getSlotsForDay(day);
+    if (slotIdx < 0 || slotIdx >= sorted.length) return -1;
+    const target = sorted[slotIdx];
     for (let i = 0; i < this.availabilitiesArray.length; i++) {
-      const c = this.availabilitiesArray.at(i) as FormGroup;
-      if (c.get('dayOfWeek')?.value === day) {
-        if (count === slotIdx) return i;
-        count++;
-      }
+      if (this.availabilitiesArray.at(i) === target) return i;
     }
     return -1;
   }
@@ -102,6 +121,44 @@ export class ProviderFormComponent implements OnInit {
     });
   }
 
+  // --- Exceptions actions ---
+
+  addException() {
+    this.exceptionError.set('');
+    if (!this.newExceptionStart) { this.exceptionError.set('Start date is required.'); return; }
+    if (!this.isEdit || !this.providerId) {
+      this.exceptionError.set('Save the provider first before adding exceptions.');
+      return;
+    }
+    const end = this.newExceptionEnd || this.newExceptionStart;
+    this.savingException.set(true);
+    this.api.createProviderException(this.providerId, {
+      startDate: this.newExceptionStart,
+      endDate: end,
+      reason: this.newExceptionReason || null
+    }).subscribe({
+      next: row => {
+        this.exceptions.update(rows => [...rows, row].sort((a, b) => a.startDate.localeCompare(b.startDate)));
+        this.newExceptionStart = '';
+        this.newExceptionEnd = '';
+        this.newExceptionReason = '';
+        this.savingException.set(false);
+      },
+      error: err => {
+        this.exceptionError.set(typeof err.error === 'string' ? err.error : 'Could not add exception.');
+        this.savingException.set(false);
+      }
+    });
+  }
+
+  removeException(id: number) {
+    if (!confirm('Remove this out-of-office entry?')) return;
+    this.api.deleteProviderException(this.providerId, id).subscribe({
+      next: () => this.exceptions.update(rows => rows.filter(r => r.id !== id)),
+      error: () => this.exceptionError.set('Could not delete.')
+    });
+  }
+
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
     this.isEdit = !!id;
@@ -110,6 +167,7 @@ export class ProviderFormComponent implements OnInit {
     this.api.getAppointmentTypes().subscribe(types => this.apptTypes.set(types));
 
     if (this.isEdit) {
+      this.api.getProviderExceptions(this.providerId).subscribe(rows => this.exceptions.set(rows));
       this.api.getProvider(this.providerId).subscribe(p => {
         this.form.patchValue({ displayName: p.displayName, email: p.email ?? '', phone: p.phone, description: p.description, isActive: p.isActive });
         this.selectedApptTypeIds = [...p.appointmentTypeIds];

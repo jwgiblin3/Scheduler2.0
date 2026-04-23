@@ -72,4 +72,65 @@
           </button>
         </div>
       </form>
+
+      @if (isEdit) {
+        <div class="card exceptions-card">
+          <div class="section-title">Out of Office / Exceptions</div>
+          <p class="exceptions-desc">
+            Dates this provider is unavailable (vacation, CE, sick leave). Applied on
+            top of the weekly schedule — no slots will be offered on these days.
+          </p>
+
+          <div class="exception-form">
+            <div class="form-group">
+              <label>Start date</label>
+              <input type="date" [(ngModel)]="newExceptionStart" [ngModelOptions]="{ standalone: true }" />
+            </div>
+            <div class="form-group">
+              <label>End date</label>
+              <input type="date" [(ngModel)]="newExceptionEnd" [ngModelOptions]="{ standalone: true }" />
+              <small>Leave blank for a single day.</small>
+            </div>
+            <div class="form-group grow">
+              <label>Reason (optional)</label>
+              <input [(ngModel)]="newExceptionReason" [ngModelOptions]="{ standalone: true }" placeholder="Paris trip, sick, ..." />
+            </div>
+            <div class="form-group action">
+              <label>&nbsp;</label>
+              <button type="button" class="btn btn-primary" [disabled]="savingException()" (click)="addException()">
+                {{ savingException() ? 'Adding...' : 'Add' }}
+              </button>
+            </div>
+          </div>
+
+          @if (exceptionError()) { <div class="alert-error">{{ exceptionError() }}</div> }
+
+          @if (exceptions().length === 0) {
+            <p class="empty-hint">No exceptions scheduled.</p>
+          } @else {
+            <table class="exception-table">
+              <thead>
+                <tr>
+                  <th>Start</th>
+                  <th>End</th>
+                  <th>Reason</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (e of exceptions(); track e.id) {
+                  <tr>
+                    <td>{{ e.startDate }}</td>
+                    <td>{{ e.endDate }}</td>
+                    <td>{{ e.reason || '—' }}</td>
+                    <td class="right">
+                      <button type="button" class="btn-link-danger" (click)="removeException(e.id)">Remove</button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </div>
+      }
     </div>

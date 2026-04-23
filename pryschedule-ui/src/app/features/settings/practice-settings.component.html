@@ -133,6 +133,65 @@
           </div>
         </div>
 
+        <!-- Holidays / Days Off -->
+        <div class="card">
+          <h2>Holidays & Days Off</h2>
+          <p class="section-desc">
+            Dates on this list are blocked for every provider. Clients won't be
+            able to book appointments on these days.
+          </p>
+
+          <div class="form-row form-row-holiday">
+            <div class="form-group">
+              <label>Start date</label>
+              <input type="date" [(ngModel)]="newHolidayStart" />
+            </div>
+            <div class="form-group">
+              <label>End date</label>
+              <input type="date" [(ngModel)]="newHolidayEnd" />
+              <small>Leave blank for a single day.</small>
+            </div>
+            <div class="form-group form-group-grow">
+              <label>Name (optional)</label>
+              <input [(ngModel)]="newHolidayName" placeholder="Christmas, Office retreat, ..." />
+            </div>
+            <div class="form-group form-group-action">
+              <label>&nbsp;</label>
+              <button class="btn btn-primary" [disabled]="savingHoliday()" (click)="addHoliday()">
+                {{ savingHoliday() ? 'Adding...' : 'Add' }}
+              </button>
+            </div>
+          </div>
+          @if (holidayError()) { <div class="alert-error">{{ holidayError() }}</div> }
+
+          @if (holidays().length === 0) {
+            <p class="empty-hint">No closures scheduled.</p>
+          } @else {
+            <table class="holiday-table">
+              <thead>
+                <tr>
+                  <th>Start</th>
+                  <th>End</th>
+                  <th>Name</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (h of holidays(); track h.id) {
+                  <tr>
+                    <td>{{ h.startDate }}</td>
+                    <td>{{ h.endDate }}</td>
+                    <td>{{ h.name || '—' }}</td>
+                    <td class="right">
+                      <button class="btn btn-link btn-danger" (click)="removeHoliday(h.id)">Remove</button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </div>
+
         <!-- Booking Link -->
         <div class="card">
           <h2>Your Booking Link</h2>
