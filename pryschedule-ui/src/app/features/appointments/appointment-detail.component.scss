@@ -2,10 +2,16 @@
     .page { padding: 2rem; max-width: 900px; }
     .back { color: #667eea; text-decoration: none; font-size: .85rem; display: block; margin-bottom: 1.5rem; }
     .loading { color: #718096; }
-    .detail-layout { display: grid; grid-template-columns: 1fr 280px; gap: 1.5rem; }
+
+    /* Stack the appointment card and the intake-response card vertically.
+       The old side-car layout pushed the response content into a 280px
+       column where long answers wrapped awkwardly. */
+    .detail-stack { display: flex; flex-direction: column; gap: 1.5rem; }
+
     .card { background: #fff; border-radius: 10px; padding: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
-    .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }
+    .card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem; }
     h1 { margin: 0; font-size: 1.3rem; color: #1a1f36; }
+    h2 { margin: 0; font-size: 1.05rem; color: #1a1f36; }
     .meta { font-size: .85rem; color: #718096; margin-top: .25rem; }
     .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1rem; }
     .info-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; color: #a0aec0; margin-bottom: .25rem; }
@@ -25,5 +31,36 @@
     .status-3 { background: #fffaf0; color: #c05621; }
     .badge-green { background: #f0fff4; color: #276749; }
     .badge-gray { background: #f7f8fc; color: #718096; }
-    h3 { margin: 0 0 1rem; font-size: 1rem; }
-    .intake-data pre { background: #f7f8fc; border-radius: 6px; padding: .75rem; font-size: .78rem; overflow: auto; margin-top: .75rem; }
+
+    /* ---- Rendered intake responses ----
+       Definition-list layout: question on the left, answer on the right.
+       Each row has its own divider so long answers stay visually grouped. */
+    .response-list { margin: 0; padding: 0; display: flex; flex-direction: column; }
+    .response-row {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 1rem;
+      padding: .75rem 0;
+      border-bottom: 1px solid #edf2f7;
+    }
+    .response-row:last-child { border-bottom: none; }
+    .response-label { margin: 0; font-size: .85rem; font-weight: 600; color: #4a5568; }
+    .response-value { margin: 0; font-size: .9rem; color: #1a1f36; word-break: break-word; }
+    .response-text { white-space: pre-wrap; }
+    .response-empty { color: #a0aec0; }
+    .response-checklist { margin: 0; padding: 0 0 0 1rem; }
+    .response-checklist li { margin: 2px 0; }
+    .response-signature {
+      max-width: 320px; max-height: 120px;
+      border: 1px solid #e2e8f0; border-radius: 6px;
+      background: #fff;
+    }
+    .response-raw {
+      background: #f7f8fc; border-radius: 6px; padding: .75rem;
+      font-size: .78rem; overflow: auto; margin-top: .75rem;
+    }
+
+    @media (max-width: 640px) {
+      .response-row { grid-template-columns: 1fr; gap: .25rem; }
+      .info-grid { grid-template-columns: 1fr; }
+    }

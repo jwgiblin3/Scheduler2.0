@@ -64,7 +64,7 @@ public class AppointmentsController : ControllerBase
             .Include(a => a.Client)
             .Include(a => a.Provider)
             .Include(a => a.AppointmentType)
-            .Include(a => a.IntakeFormResponse)
+            .Include(a => a.IntakeFormResponses)
             .AsQueryable();
 
         if (from.HasValue) query = query.Where(a => a.StartTime >= from.Value);
@@ -84,7 +84,7 @@ public class AppointmentsController : ControllerBase
             a.StartTime,
             a.EndTime,
             a.Status,
-            a.IntakeFormResponse is not null
+            a.IntakeFormResponses.Any()
         )));
     }
 
@@ -131,7 +131,7 @@ public class AppointmentsController : ControllerBase
             .Include(x => x.Client)
             .Include(x => x.Provider)
             .Include(x => x.AppointmentType)
-            .Include(x => x.IntakeFormResponse)
+            .Include(x => x.IntakeFormResponses).ThenInclude(r => r.PracticeForm)
             .FirstOrDefaultAsync();
 
         if (a is null) return NotFound();
@@ -151,11 +151,17 @@ public class AppointmentsController : ControllerBase
             a.EndTime,
             a.Status,
             a.Notes,
-            a.IntakeFormResponse is not null,
-            a.IntakeFormResponse is null ? null : new IntakeFormResponseDto(
-                a.IntakeFormResponse.Id,
-                a.IntakeFormResponse.ResponsesJson,
-                a.IntakeFormResponse.SubmittedAt)
+            // "hasIntakeResponse" is true when at least one form has been submitted.
+            a.IntakeFormResponses.Any(),
+            // Surface the most recent response for backwards-compatibility — the
+            // detail page used to render a single intake blob. Multi-form
+            // display is a later UI follow-up.
+            a.IntakeFormResponses.Any()
+                ? new IntakeFormResponseDto(
+                    a.IntakeFormResponses.OrderByDescending(r => r.SubmittedAt).First().Id,
+                    a.IntakeFormResponses.OrderByDescending(r => r.SubmittedAt).First().ResponsesJson,
+                    a.IntakeFormResponses.OrderByDescending(r => r.SubmittedAt).First().SubmittedAt)
+                : null
         ));
     }
 
@@ -434,7 +440,7 @@ public class AppointmentsController : ControllerBase
             .Include(a => a.Client)
             .Include(a => a.Provider)
             .Include(a => a.AppointmentType)
-            .Include(a => a.IntakeFormResponse)
+            .Include(a => a.IntakeFormResponses)
             .OrderByDescending(a => a.StartTime)
             .ToListAsync();
 
@@ -447,7 +453,7 @@ public class AppointmentsController : ControllerBase
             a.StartTime,
             a.EndTime,
             a.Status,
-            a.IntakeFormResponse is not null
+            a.IntakeFormResponses.Any()
         )));
     }
 }

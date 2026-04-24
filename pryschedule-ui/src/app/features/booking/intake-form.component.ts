@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal, AfterViewInit, ElementRef, ViewChild
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
-import { IntakeForm, IntakeFormField } from '../../core/models/models';
+import { PracticeForm, IntakeFormField } from '../../core/models/models';
 
 @Component({
   selector: 'app-intake-form',
@@ -17,7 +17,7 @@ export class IntakeFormComponent implements OnInit {
   private router = inject(Router);
 
   loading = signal(true);
-  form = signal<IntakeForm | null>(null);
+  form = signal<PracticeForm | null>(null);
   fields = signal<IntakeFormField[]>([]);
   responses: Record<string, any> = {};
   submitting = signal(false);

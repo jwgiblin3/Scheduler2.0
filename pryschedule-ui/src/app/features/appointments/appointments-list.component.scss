@@ -28,4 +28,88 @@
     .view-tab { background: transparent; border: none; padding: .4rem .9rem; border-radius: 6px; font-size: .85rem; color: #4a5568; cursor: pointer; }
     .view-tab:hover { color: #667eea; }
     .view-tab.active { background: #667eea; color: #fff; }
-    .scheduler-wrap { background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,.06); padding: .5rem; overflow: hidden; }
+
+    /* ---- Day / Week time-grid (custom, no Kendo) ----
+       Layout: `.grid` is a CSS grid row with one "hours" column on the left
+       and one column per day on the right. Each column is position-relative
+       so events can absolutely-position themselves by pixel offset. */
+    .grid-card { background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,.06); overflow: hidden; }
+    .grid-toolbar {
+      display: flex; align-items: center; gap: .5rem;
+      padding: .75rem 1rem; border-bottom: 1px solid #edf2f7;
+    }
+    .btn-nav {
+      width: 32px; height: 32px; border-radius: 6px; border: 1px solid #e2e8f0;
+      background: #fff; color: #4a5568; cursor: pointer; font-size: 1.1rem; line-height: 1;
+    }
+    .btn-nav:hover { border-color: #667eea; color: #667eea; }
+    .btn-today {
+      padding: .35rem .9rem; border-radius: 6px; border: 1px solid #e2e8f0;
+      background: #fff; color: #4a5568; font-size: .82rem; cursor: pointer;
+    }
+    .btn-today:hover { border-color: #667eea; color: #667eea; }
+    .grid-heading { margin-left: .75rem; font-size: .95rem; font-weight: 500; color: #1a1f36; }
+
+    .week-day-headers {
+      display: grid;
+      grid-template-columns: 68px repeat(7, minmax(0, 1fr));
+      border-bottom: 1px solid #edf2f7; background: #fafbff;
+    }
+    .week-day-gutter { border-right: 1px solid #edf2f7; }
+    .week-day-header {
+      padding: .5rem .25rem; text-align: center; font-size: .8rem; color: #4a5568;
+      border-right: 1px solid #edf2f7;
+    }
+    .week-day-header:last-child { border-right: none; }
+    .week-day-header.is-today { background: #ebf4ff; }
+    .week-day-name { font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: #718096; font-size: .72rem; }
+    .week-day-num { font-size: 1.1rem; color: #1a1f36; margin-top: 2px; }
+
+    .grid-scroll { max-height: 720px; overflow: auto; }
+    .grid {
+      display: grid;
+      grid-template-columns: 68px minmax(0, 1fr);
+      position: relative;
+    }
+    .grid-week {
+      grid-template-columns: 68px repeat(7, minmax(0, 1fr));
+    }
+    .grid-hours {
+      border-right: 1px solid #edf2f7;
+      background: #fafbff;
+    }
+    .hour-row {
+      position: relative;
+      border-bottom: 1px solid #edf2f7;
+    }
+    .hour-label {
+      position: absolute; top: -8px; right: 8px;
+      font-size: .72rem; color: #a0aec0;
+      background: #fafbff; padding: 0 4px;
+    }
+    .grid-column {
+      position: relative;
+      border-right: 1px solid #edf2f7;
+    }
+    .grid-column:last-child { border-right: none; }
+    .hour-slot {
+      border-bottom: 1px solid #edf2f7;
+    }
+
+    .event {
+      position: absolute; left: 4px; right: 4px;
+      background: #667eea; color: #fff;
+      border-radius: 6px; padding: 4px 6px;
+      font-size: .78rem; line-height: 1.25;
+      cursor: pointer;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,.12);
+    }
+    .event:hover { filter: brightness(1.05); }
+    .event-time { font-weight: 600; font-size: .72rem; opacity: .9; }
+    .event-title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .event-subtitle { font-size: .7rem; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .event-status-0 { background: #667eea; }
+    .event-status-1 { background: #38a169; }
+    .event-status-2 { background: #a0aec0; }
+    .event-status-3 { background: #dd6b20; }

@@ -1,0 +1,128 @@
+
+    <div class="page">
+      <div class="page-header">
+        <h1>Forms</h1>
+        <button class="btn btn-primary" (click)="openNew()">+ New Form</button>
+      </div>
+      <p class="page-desc">
+        Reusable forms (waivers, intakes, new-customer questionnaires, etc.)
+        your practice can attach to any appointment type.
+      </p>
+
+      <div class="layout">
+        <div class="list-col">
+          @if (loadingList()) {
+            <div class="empty">Loading...</div>
+          } @else if (forms().length === 0) {
+            <div class="empty">No forms yet. Click "+ New Form" to add one.</div>
+          } @else {
+            @for (f of forms(); track f.id) {
+              <div class="form-card" [class.selected]="selected()?.id === f.id" (click)="select(f)">
+                <div class="form-card-name">{{ f.name }}</div>
+                <div class="form-card-meta">Updated {{ f.updatedAt | date:'MMM d, y' }}</div>
+              </div>
+            }
+          }
+        </div>
+
+        <div class="edit-col">
+          @if (showEditor()) {
+            <div class="card">
+              <h2>{{ isNew() ? 'New Form' : 'Edit Form' }}</h2>
+              <div class="form-group">
+                <label>Form Name *</label>
+                <input
+                  [ngModel]="editName()"
+                  (ngModelChange)="editName.set($event); formSaved.set(false)"
+                  placeholder="e.g. Waiver, Intake, New Customer"
+                />
+              </div>
+
+              @if (editFields().length === 0) {
+                <div class="empty-fields">No fields yet. Add one below to get started.</div>
+              } @else {
+                <div class="field-list">
+                  @for (field of editFields(); track field.id; let i = $index; let last = $last) {
+                    <div class="field-row">
+                      <div class="field-row-head">
+                        <span class="field-index">#{{ i + 1 }}</span>
+                        <div class="field-reorder">
+                          <button type="button" class="btn-icon" [disabled]="i === 0" (click)="moveField(field.id, -1)" aria-label="Move up">↑</button>
+                          <button type="button" class="btn-icon" [disabled]="last" (click)="moveField(field.id, 1)" aria-label="Move down">↓</button>
+                        </div>
+                        <button type="button" class="btn-remove" (click)="removeField(field.id)">Remove</button>
+                      </div>
+                      <div class="field-row-body">
+                        <div class="form-group field-label">
+                          <label>Question *</label>
+                          <input
+                            [ngModel]="field.label"
+                            (ngModelChange)="updateField(field.id, { label: $event })"
+                            placeholder="e.g. What brings you in today?"
+                          />
+                        </div>
+                        <div class="form-group field-type">
+                          <label>Field type</label>
+                          <select
+                            [ngModel]="field.type"
+                            (ngModelChange)="updateField(field.id, { type: $event })"
+                          >
+                            @for (opt of fieldTypes; track opt.value) {
+                              <option [value]="opt.value">{{ opt.label }}</option>
+                            }
+                          </select>
+                        </div>
+                        <div class="form-group field-required">
+                          <label>&nbsp;</label>
+                          <label class="checkbox-label">
+                            <input
+                              type="checkbox"
+                              [ngModel]="field.required"
+                              (ngModelChange)="updateField(field.id, { required: $event })"
+                            />
+                            Required
+                          </label>
+                        </div>
+                      </div>
+                      @if (field.type === 'radio' || field.type === 'checkbox') {
+                        <div class="field-options">
+                          <label>Options (one per line)</label>
+                          <textarea
+                            rows="3"
+                            [ngModel]="getOptionsText(field)"
+                            (ngModelChange)="setOptionsText(field.id, $event)"
+                            placeholder="Option 1&#10;Option 2&#10;Option 3"
+                          ></textarea>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+
+              <div class="designer-add">
+                <button type="button" class="btn btn-secondary" (click)="addField('text')">+ Add field</button>
+                <span class="designer-hint">Field types: short/long text, single/multi-choice, date, signature.</span>
+              </div>
+
+              @if (error()) { <div class="alert-error">{{ error() }}</div> }
+              @if (formSaved()) { <div class="alert-success">Form saved.</div> }
+
+              <div class="form-actions">
+                @if (!isNew() && selected()) {
+                  <button type="button" class="btn btn-danger" [disabled]="deleting()" (click)="deleteForm()">
+                    {{ deleting() ? 'Deleting...' : 'Delete' }}
+                  </button>
+                }
+                <button type="button" class="btn btn-secondary" (click)="cancel()">Cancel</button>
+                <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="save()">
+                  {{ saving() ? 'Saving...' : 'Save Form' }}
+                </button>
+              </div>
+            </div>
+          } @else {
+            <div class="empty-detail">Select a form to edit, or click "+ New Form".</div>
+          }
+        </div>
+      </div>
+    </div>

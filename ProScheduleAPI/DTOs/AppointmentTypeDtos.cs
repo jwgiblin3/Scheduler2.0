@@ -8,7 +8,9 @@ public record AppointmentTypeDto(
     int BufferBeforeMinutes,
     int BufferAfterMinutes,
     bool RequiresIntakeForm,
-    bool IsActive
+    bool IsActive,
+    /// <summary>IDs of forms from the practice library attached to this type, in display order.</summary>
+    int[] FormIds
 );
 
 public record CreateAppointmentTypeRequest(
@@ -27,5 +29,11 @@ public record UpdateAppointmentTypeRequest(
     int BufferBeforeMinutes,
     int BufferAfterMinutes,
     bool RequiresIntakeForm,
-    bool IsActive
+    bool IsActive,
+    /// <summary>
+    /// Full replacement of the attached forms list, in the order they should
+    /// be presented to the client. Omit (null) to leave the current attachments
+    /// untouched — useful when only the basic type fields changed.
+    /// </summary>
+    int[]? FormIds = null
 );

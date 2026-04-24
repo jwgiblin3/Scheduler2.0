@@ -76,6 +76,16 @@ export const routes: Routes = [
         loadComponent: () => import('./features/appointment-types/appointment-types-list.component').then(m => m.AppointmentTypesListComponent)
       },
       {
+        path: 'forms',
+        canActivate: [adminGuard],
+        loadComponent: () => import('./features/forms/forms-list.component').then(m => m.FormsListComponent)
+      },
+      {
+        path: 'clients',
+        canActivate: [adminGuard],
+        loadComponent: () => import('./features/clients/clients-list.component').then(m => m.ClientsListComponent)
+      },
+      {
         path: 'settings',
         canActivate: [adminGuard],
         loadComponent: () => import('./features/settings/practice-settings.component').then(m => m.PracticeSettingsComponent)

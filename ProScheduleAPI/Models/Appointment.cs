@@ -17,7 +17,12 @@ public class Appointment
     public string? CancellationToken { get; set; } // unique token for client-facing cancel/reschedule links
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    public IntakeFormResponse? IntakeFormResponse { get; set; }
+    /// <summary>
+    /// Submitted form responses. One row per form the client completes — an
+    /// appointment tied to a type with both a Waiver and Intake form attached
+    /// will have two rows here once both are filled in.
+    /// </summary>
+    public ICollection<IntakeFormResponse> IntakeFormResponses { get; set; } = [];
 }
 
 public enum AppointmentStatus

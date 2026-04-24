@@ -16,7 +16,8 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<int>, int>
     public DbSet<ProviderAppointmentType> ProviderAppointmentTypes => Set<ProviderAppointmentType>();
     public DbSet<Client> Clients => Set<Client>();
     public DbSet<Appointment> Appointments => Set<Appointment>();
-    public DbSet<IntakeForm> IntakeForms => Set<IntakeForm>();
+    public DbSet<PracticeForm> PracticeForms => Set<PracticeForm>();
+    public DbSet<AppointmentTypeForm> AppointmentTypeForms => Set<AppointmentTypeForm>();
     public DbSet<IntakeFormResponse> IntakeFormResponses => Set<IntakeFormResponse>();
     public DbSet<NotificationSettings> NotificationSettings => Set<NotificationSettings>();
     public DbSet<PracticeHoliday> PracticeHolidays => Set<PracticeHoliday>();
@@ -111,5 +112,55 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<int>, int>
 
         builder.Entity<ProviderException>()
             .HasIndex(e => new { e.ProviderId, e.StartDate, e.EndDate });
+
+        // --- Forms library ---
+        //
+        // PracticeForms belong to a practice and cascade on delete.
+        builder.Entity<PracticeForm>()
+            .HasOne(f => f.Practice)
+            .WithMany(p => p.Forms)
+            .HasForeignKey(f => f.PracticeId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<PracticeForm>()
+            .HasIndex(f => f.PracticeId);
+
+        // Join table: composite PK, and both sides cascade so removing either
+        // end cleanly tears down the attachment row.
+        builder.Entity<AppointmentTypeForm>()
+            .HasKey(x => new { x.AppointmentTypeId, x.PracticeFormId });
+
+        builder.Entity<AppointmentTypeForm>()
+            .HasOne(x => x.AppointmentType)
+            .WithMany(at => at.AppointmentTypeForms)
+            .HasForeignKey(x => x.AppointmentTypeId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // PracticeForm ↔ AppointmentType both chain back to Practice, which
+        // would produce a multi-cascade path. Restrict here and rely on the
+        // AppointmentType cascade (or manual cleanup) when a form is deleted.
+        builder.Entity<AppointmentTypeForm>()
+            .HasOne(x => x.PracticeForm)
+            .WithMany(f => f.AppointmentTypeForms)
+            .HasForeignKey(x => x.PracticeFormId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Response now optionally references the form it was submitted for.
+        // An appointment can have many responses — one per completed form.
+        builder.Entity<IntakeFormResponse>()
+            .HasOne(r => r.Appointment)
+            .WithMany(a => a.IntakeFormResponses)
+            .HasForeignKey(r => r.AppointmentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<IntakeFormResponse>()
+            .HasOne(r => r.PracticeForm)
+            .WithMany()
+            .HasForeignKey(r => r.PracticeFormId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .IsRequired(false);
+
+        builder.Entity<IntakeFormResponse>()
+            .HasIndex(r => new { r.AppointmentId, r.PracticeFormId });
     }
 }

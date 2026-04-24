@@ -15,7 +15,7 @@
           </div>
         } @else {
           <div class="card">
-            <h2>{{ form()!.title }}</h2>
+            <h2>{{ form()!.name }}</h2>
             <p class="subtitle">Please complete this form before your appointment.</p>
 
             @for (field of fields(); track field.id) {

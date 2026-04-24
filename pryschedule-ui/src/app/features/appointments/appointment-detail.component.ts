@@ -1,9 +1,23 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
-import { AppointmentDetail, AppointmentStatus } from '../../core/models/models';
+import {
+  AppointmentDetail, AppointmentStatus,
+  IntakeFormField, PracticeForm
+} from '../../core/models/models';
+
+/** One row in the rendered intake responses — resolved from a fieldId to its label + value. */
+interface RenderedResponse {
+  fieldId: string;
+  label: string;
+  type: IntakeFormField['type'];
+  /** String for text/radio/date, string[] for checkbox, data: URL for signature. */
+  value: string | string[];
+  /** True when value is a base64 data URL for a signature. */
+  isSignature: boolean;
+}
 
 @Component({
   selector: 'app-appointment-detail',
@@ -19,10 +33,45 @@ export class AppointmentDetailComponent implements OnInit {
   loading = signal(true);
   appt = signal<AppointmentDetail | null>(null);
 
+  /**
+   * The field definitions for whichever form(s) are attached to this
+   * appointment's type. We join these against responsesJson keys to render
+   * human-readable labels instead of the raw "sgw95kb9": "John" shape.
+   */
+  formFields = signal<IntakeFormField[]>([]);
+
+  readonly renderedResponses = computed<RenderedResponse[]>(() => {
+    const a = this.appt();
+    if (!a?.intakeResponse?.responsesJson) return [];
+
+    let data: Record<string, any> = {};
+    try { data = JSON.parse(a.intakeResponse.responsesJson); }
+    catch { return []; }
+
+    const fields = this.formFields();
+    const byId = new Map(fields.map(f => [f.id, f]));
+    // Preserve the form's declared order; append any stray keys that don't
+    // match a known field at the end so nothing is silently dropped.
+    const rows: RenderedResponse[] = [];
+    for (const f of fields) {
+      if (!(f.id in data)) continue;
+      rows.push(this.buildRow(f.id, data[f.id], f));
+    }
+    for (const key of Object.keys(data)) {
+      if (byId.has(key)) continue;
+      rows.push(this.buildRow(key, data[key], null));
+    }
+    return rows;
+  });
+
   statusLabel(s: AppointmentStatus) {
     return ['Scheduled', 'Completed', 'Cancelled', 'No Show'][s];
   }
 
+  /** Template helper — Array.isArray isn't directly callable from Angular templates. */
+  isArray(v: unknown): boolean { return Array.isArray(v); }
+
+  /** Fallback for cases where we couldn't resolve field labels — show the raw JSON. */
   formatResponses(json: string) {
     try { return JSON.stringify(JSON.parse(json), null, 2); }
     catch { return json; }
@@ -38,8 +87,46 @@ export class AppointmentDetailComponent implements OnInit {
   ngOnInit() {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     this.api.getAppointment(id).subscribe({
-      next: data => { this.appt.set(data); this.loading.set(false); },
+      next: data => {
+        this.appt.set(data);
+        this.loading.set(false);
+        // Grab the forms attached to this appointment type so we can resolve
+        // field IDs to labels. Silent-fail on error — the template falls back
+        // to the raw JSON dump.
+        if (data.appointmentTypeId) this.loadFormFields(data.appointmentTypeId);
+      },
       error: () => this.loading.set(false)
     });
+  }
+
+  private loadFormFields(apptTypeId: number) {
+    this.api.getPublicFormsForType(apptTypeId).subscribe({
+      next: (forms: PracticeForm[]) => {
+        // Flatten fields from every attached form. Field IDs are random 8-char
+        // strings and realistically won't collide across forms, so a flat list
+        // is fine — we just need to know "which label matches this key?".
+        const all: IntakeFormField[] = [];
+        for (const f of forms) {
+          try {
+            const parsed = JSON.parse(f.fieldsJson);
+            if (Array.isArray(parsed)) all.push(...parsed);
+          } catch { /* ignore malformed fieldsJson */ }
+        }
+        this.formFields.set(all);
+      },
+      error: () => { /* leave fields empty; template shows raw JSON */ }
+    });
+  }
+
+  private buildRow(fieldId: string, raw: any, field: IntakeFormField | null): RenderedResponse {
+    const label = field?.label?.trim() || fieldId;
+    const type = field?.type ?? 'text';
+    const isSig = type === 'signature'
+      || (typeof raw === 'string' && raw.startsWith('data:image'));
+    let value: string | string[];
+    if (Array.isArray(raw)) value = raw.map(String);
+    else if (raw === null || raw === undefined) value = '';
+    else value = String(raw);
+    return { fieldId, label, type, value, isSignature: isSig };
   }
 }

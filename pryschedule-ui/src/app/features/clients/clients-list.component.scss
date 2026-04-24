@@ -1,0 +1,118 @@
+
+    .page { padding: 2rem; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    h1 { margin: 0; font-size: 1.6rem; color: #1a1f36; }
+    h2 { margin: 0 0 1rem; font-size: 1.05rem; color: #1a1f36; }
+
+    .btn { padding: .5rem 1rem; border-radius: 6px; font-size: .85rem; cursor: pointer; border: none; }
+    .btn-primary { background: #667eea; color: #fff; }
+    .btn-primary:disabled { opacity: .6; }
+    .btn-secondary { border: 1.5px solid #e2e8f0; color: #4a5568; background: transparent; }
+
+    .layout { display: grid; grid-template-columns: 340px 1fr; gap: 1.5rem; align-items: start; }
+
+    .search { display: flex; gap: .5rem; margin-bottom: .75rem; }
+    .search input { flex: 1; padding: .5rem .75rem; border: 1.5px solid #e2e8f0; border-radius: 6px; font-size: .85rem; box-sizing: border-box; }
+    .btn-search { padding: .5rem .85rem; border: 1.5px solid #e2e8f0; background: #fff; color: #4a5568; border-radius: 6px; cursor: pointer; font-size: .82rem; }
+    .btn-search:hover { border-color: #667eea; color: #667eea; }
+
+    .list-col { display: flex; flex-direction: column; gap: .5rem; }
+    .empty, .empty-detail {
+      color: #a0aec0; text-align: center; padding: 1.5rem 1rem; font-size: .9rem;
+      background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    .empty-detail { padding: 3rem 1rem; }
+
+    .client-card {
+      background: #fff; border-radius: 8px; padding: .85rem 1rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+      cursor: pointer; border: 2px solid transparent;
+    }
+    .client-card.selected { border-color: #667eea; }
+    .client-name { font-weight: 600; font-size: .95rem; color: #1a1f36; }
+    .client-sub { font-size: .8rem; color: #718096; margin-top: 3px; }
+    .client-meta { font-size: .75rem; color: #a0aec0; margin-top: 4px; display: flex; gap: .25rem; }
+
+    .detail-col { display: flex; flex-direction: column; gap: 1.25rem; }
+
+    .card { background: #fff; border-radius: 10px; padding: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+    .card-header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      gap: 1rem; margin-bottom: 1rem;
+    }
+    .meta { font-size: .82rem; color: #718096; margin-top: 2px; }
+
+    .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .info-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; color: #a0aec0; margin-bottom: .25rem; }
+    .info-value { font-size: .95rem; font-weight: 500; color: #1a1f36; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-group { margin-bottom: 1rem; }
+    label { display: block; font-size: .85rem; font-weight: 500; color: #4a5568; margin-bottom: 4px; }
+    input { width: 100%; padding: .55rem .75rem; border: 1.5px solid #e2e8f0; border-radius: 6px; font-size: .9rem; box-sizing: border-box; }
+    .checkbox-label { display: inline-flex; align-items: center; gap: .4rem; cursor: pointer; font-size: .88rem; }
+    .checkbox-label input { width: auto; }
+    .form-actions { display: flex; gap: .6rem; justify-content: flex-end; margin-top: .5rem; }
+    .alert-error { background: #fff5f5; color: #c53030; padding: .55rem .75rem; border-radius: 6px; font-size: .85rem; margin-bottom: .75rem; }
+    .alert-success { background: #f0fff4; color: #276749; padding: .55rem .75rem; border-radius: 6px; font-size: .85rem; margin-top: .75rem; }
+
+    /* Appointments table */
+    .appts-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+    .appts-table th {
+      text-align: left; padding: .5rem .6rem;
+      font-size: .72rem; color: #718096; text-transform: uppercase; letter-spacing: .05em;
+      border-bottom: 1px solid #edf2f7;
+    }
+    .appts-table td { padding: .6rem .6rem; border-bottom: 1px solid #f7f8fc; vertical-align: middle; }
+    .appts-table tr:last-child td { border-bottom: none; }
+    .td-sub { color: #a0aec0; font-size: .78rem; margin-top: 2px; }
+    .link { color: #667eea; text-decoration: none; font-size: .82rem; }
+    .link:hover { text-decoration: underline; }
+
+    .badge { display: inline-block; font-size: .72rem; padding: 2px 8px; border-radius: 12px; }
+    .status-0 { background: #ebf8ff; color: #2b6cb0; }
+    .status-1 { background: #f0fff4; color: #276749; }
+    .status-2 { background: #fff5f5; color: #c53030; }
+    .status-3 { background: #fffaf0; color: #c05621; }
+
+    /* Responses */
+    .responses-stack { display: flex; flex-direction: column; gap: 1rem; }
+    .response-card {
+      background: #fafbff; border: 1px solid #edf2f7;
+      border-radius: 8px; padding: 1rem 1.25rem;
+    }
+    .response-head {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      gap: 1rem; margin-bottom: .75rem;
+    }
+    .response-name { font-weight: 600; font-size: .95rem; color: #1a1f36; }
+    .response-meta { font-size: .78rem; color: #718096; margin-top: 2px; }
+
+    .response-list { margin: 0; padding: 0; display: flex; flex-direction: column; }
+    .response-row {
+      display: grid; grid-template-columns: 200px 1fr; gap: 1rem;
+      padding: .6rem 0;
+      border-bottom: 1px dashed #edf2f7;
+    }
+    .response-row:last-child { border-bottom: none; }
+    .response-label { margin: 0; font-size: .84rem; font-weight: 600; color: #4a5568; }
+    .response-value { margin: 0; font-size: .88rem; color: #1a1f36; word-break: break-word; }
+    .response-text { white-space: pre-wrap; }
+    .response-empty { color: #a0aec0; }
+    .response-checklist { margin: 0; padding: 0 0 0 1rem; }
+    .response-checklist li { margin: 2px 0; }
+    .response-signature {
+      max-width: 300px; max-height: 110px;
+      border: 1px solid #e2e8f0; border-radius: 6px; background: #fff;
+    }
+    .response-raw {
+      background: #fff; border: 1px solid #edf2f7;
+      border-radius: 6px; padding: .75rem;
+      font-size: .78rem; overflow: auto; margin: 0;
+    }
+
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; }
+      .response-row { grid-template-columns: 1fr; gap: .25rem; }
+      .info-grid, .form-row { grid-template-columns: 1fr; }
+    }

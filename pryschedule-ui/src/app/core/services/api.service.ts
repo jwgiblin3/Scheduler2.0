@@ -3,7 +3,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import {
   Provider, AppointmentType, AppointmentSummary, AppointmentDetail,
-  AvailableSlot, IntakeForm, BookingInfo, MyAppointment
+  AvailableSlot, PracticeForm, BookingInfo, MyAppointment,
+  ClientSummary, ClientDetail
 } from '../models/models';
 
 @Injectable({ providedIn: 'root' })
@@ -80,16 +81,43 @@ export class ApiService {
     return this.http.get<AvailableSlot[]>(`${this.base}/appointments/availability`, { params });
   }
 
-  // --- Intake Forms ---
-  getIntakeForm(appointmentTypeId: number) {
-    return this.http.get<IntakeForm>(`${this.base}/intakeforms/appointment-type/${appointmentTypeId}`);
+  // --- Clients ---
+  getClients(search?: string) {
+    let params = new HttpParams();
+    if (search) params = params.set('search', search);
+    return this.http.get<ClientSummary[]>(`${this.base}/clients`, { params });
   }
 
-  saveIntakeForm(appointmentTypeId: number, title: string, fieldsJson: string) {
-    return this.http.put<IntakeForm>(
-      `${this.base}/intakeforms/appointment-type/${appointmentTypeId}`,
-      { title, fieldsJson }
-    );
+  getClient(id: number) {
+    return this.http.get<ClientDetail>(`${this.base}/clients/${id}`);
+  }
+
+  updateClient(id: number, body: {
+    firstName: string; lastName: string; email: string;
+    phone?: string | null; smsOptIn: boolean;
+  }) {
+    return this.http.put<ClientSummary>(`${this.base}/clients/${id}`, body);
+  }
+
+  // --- Forms library (practice-level) ---
+  getForms() {
+    return this.http.get<PracticeForm[]>(`${this.base}/forms`);
+  }
+
+  getForm(id: number) {
+    return this.http.get<PracticeForm>(`${this.base}/forms/${id}`);
+  }
+
+  createForm(name: string, fieldsJson: string) {
+    return this.http.post<PracticeForm>(`${this.base}/forms`, { name, fieldsJson });
+  }
+
+  updateForm(id: number, name: string, fieldsJson: string) {
+    return this.http.put<PracticeForm>(`${this.base}/forms/${id}`, { name, fieldsJson });
+  }
+
+  deleteForm(id: number) {
+    return this.http.delete(`${this.base}/forms/${id}`);
   }
 
   // --- Public Booking ---
@@ -97,8 +125,14 @@ export class ApiService {
     return this.http.get<BookingInfo>(`${this.base}/public/${slug}`);
   }
 
+  /** Public list of forms attached to an appointment type (used by the booking intake flow). */
+  getPublicFormsForType(appointmentTypeId: number) {
+    return this.http.get<PracticeForm[]>(`${this.base}/forms/public/appointment-type/${appointmentTypeId}`);
+  }
+
+  /** Legacy single-form fetch — returns the first form attached to the type. */
   getPublicIntakeForm(appointmentTypeId: number) {
-    return this.http.get<IntakeForm>(`${this.base}/intakeforms/public/${appointmentTypeId}`);
+    return this.http.get<PracticeForm>(`${this.base}/intakeforms/public/${appointmentTypeId}`);
   }
 
   bookAppointment(practiceSlug: string, body: object) {
@@ -107,7 +141,7 @@ export class ApiService {
     );
   }
 
-  submitIntakeForm(body: { appointmentId: number; cancellationToken: string; responsesJson: string }) {
+  submitIntakeForm(body: { appointmentId: number; cancellationToken: string; responsesJson: string; practiceFormId?: number }) {
     return this.http.post(`${this.base}/intakeforms/submit`, body);
   }
 

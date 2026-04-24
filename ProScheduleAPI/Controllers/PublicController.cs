@@ -30,6 +30,7 @@ public class PublicController : ControllerBase
 
         var apptTypes = await _db.AppointmentTypes
             .Where(a => a.PracticeId == practice.Id && a.IsActive)
+            .Include(a => a.AppointmentTypeForms)
             .ToListAsync();
 
         return Ok(new
@@ -55,7 +56,8 @@ public class PublicController : ControllerBase
             AppointmentTypes = apptTypes.Select(a => new AppointmentTypeDto(
                 a.Id, a.Name, a.Description, a.DurationMinutes,
                 a.BufferBeforeMinutes, a.BufferAfterMinutes,
-                a.RequiresIntakeForm, a.IsActive))
+                a.RequiresIntakeForm, a.IsActive,
+                a.AppointmentTypeForms.OrderBy(x => x.SortOrder).Select(x => x.PracticeFormId).ToArray()))
         });
     }
 
@@ -77,6 +79,7 @@ public class PublicController : ControllerBase
         var apptTypeIds = provider.ProviderAppointmentTypes.Select(x => x.AppointmentTypeId).ToList();
         var apptTypes = await _db.AppointmentTypes
             .Where(a => apptTypeIds.Contains(a.Id) && a.IsActive)
+            .Include(a => a.AppointmentTypeForms)
             .ToListAsync();
 
         return Ok(new
@@ -102,7 +105,8 @@ public class PublicController : ControllerBase
             AppointmentTypes = apptTypes.Select(a => new AppointmentTypeDto(
                 a.Id, a.Name, a.Description, a.DurationMinutes,
                 a.BufferBeforeMinutes, a.BufferAfterMinutes,
-                a.RequiresIntakeForm, a.IsActive))
+                a.RequiresIntakeForm, a.IsActive,
+                a.AppointmentTypeForms.OrderBy(x => x.SortOrder).Select(x => x.PracticeFormId).ToArray()))
         });
     }
 

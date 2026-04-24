@@ -1,0 +1,202 @@
+
+    <div class="page">
+      <div class="page-header">
+        <h1>Clients</h1>
+      </div>
+
+      <div class="layout">
+        <div class="list-col">
+          <div class="search">
+            <input
+              type="search"
+              placeholder="Search by name, email, or phone..."
+              [ngModel]="search()"
+              (ngModelChange)="search.set($event)"
+              (keyup.enter)="onSearchChange()"
+            />
+            <button type="button" class="btn-search" (click)="onSearchChange()">Search</button>
+          </div>
+
+          @if (loadingList()) {
+            <div class="empty">Loading...</div>
+          } @else if (clients().length === 0) {
+            <div class="empty">No clients found.</div>
+          } @else {
+            @for (c of clients(); track c.id) {
+              <div class="client-card" [class.selected]="selectedId() === c.id" (click)="select(c)">
+                <div class="client-name">{{ c.firstName }} {{ c.lastName }}</div>
+                <div class="client-sub">{{ c.email }}</div>
+                <div class="client-meta">
+                  <span>{{ c.appointmentCount }} appt{{ c.appointmentCount === 1 ? '' : 's' }}</span>
+                  @if (c.lastAppointment) {
+                    <span>· Last: {{ c.lastAppointment | date:'MMM d, y' }}</span>
+                  }
+                </div>
+              </div>
+            }
+          }
+        </div>
+
+        <div class="detail-col">
+          @if (loadingDetail()) {
+            <div class="empty-detail">Loading client...</div>
+          } @else if (!detail()) {
+            <div class="empty-detail">Select a client on the left to view and edit their details.</div>
+          } @else {
+            <!-- Profile card -->
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h2>{{ detail()!.firstName }} {{ detail()!.lastName }}</h2>
+                  <div class="meta">Client since {{ detail()!.createdAt | date:'MMM d, y' }}</div>
+                </div>
+                @if (!editing()) {
+                  <button type="button" class="btn btn-secondary" (click)="startEdit()">Edit</button>
+                }
+              </div>
+
+              @if (editing()) {
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>First Name *</label>
+                    <input [(ngModel)]="editFirstName" />
+                  </div>
+                  <div class="form-group">
+                    <label>Last Name *</label>
+                    <input [(ngModel)]="editLastName" />
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" [(ngModel)]="editEmail" />
+                  </div>
+                  <div class="form-group">
+                    <label>Phone</label>
+                    <input [(ngModel)]="editPhone" />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="checkbox-label">
+                    <input type="checkbox" [(ngModel)]="editSmsOptIn" /> SMS opt-in
+                  </label>
+                </div>
+                @if (error()) { <div class="alert-error">{{ error() }}</div> }
+                <div class="form-actions">
+                  <button type="button" class="btn btn-secondary" (click)="cancelEdit()">Cancel</button>
+                  <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="saveEdit()">
+                    {{ saving() ? 'Saving...' : 'Save' }}
+                  </button>
+                </div>
+              } @else {
+                <div class="info-grid">
+                  <div class="info-block">
+                    <div class="info-label">Email</div>
+                    <div class="info-value">{{ detail()!.email }}</div>
+                  </div>
+                  <div class="info-block">
+                    <div class="info-label">Phone</div>
+                    <div class="info-value">{{ detail()!.phone || '—' }}</div>
+                  </div>
+                  <div class="info-block">
+                    <div class="info-label">SMS Opt-in</div>
+                    <div class="info-value">{{ detail()!.smsOptIn ? 'Yes' : 'No' }}</div>
+                  </div>
+                </div>
+                @if (saved()) { <div class="alert-success">Saved.</div> }
+              }
+            </div>
+
+            <!-- Appointments -->
+            <div class="card">
+              <h2>Appointments ({{ detail()!.appointments.length }})</h2>
+              @if (detail()!.appointments.length === 0) {
+                <div class="empty">No appointments yet.</div>
+              } @else {
+                <table class="appts-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Type</th>
+                      <th>Provider</th>
+                      <th>Status</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (a of detail()!.appointments; track a.id) {
+                      <tr>
+                        <td>
+                          <div>{{ a.startTime | date:'MMM d, y' }}</div>
+                          <div class="td-sub">{{ a.startTime | date:'h:mm a' }}</div>
+                        </td>
+                        <td>{{ a.appointmentTypeName }}</td>
+                        <td>{{ a.providerName }}</td>
+                        <td><span class="badge status-{{ a.status }}">{{ statusLabel(a.status) }}</span></td>
+                        <td><a [routerLink]="['/appointments', a.id]" class="link">View →</a></td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              }
+            </div>
+
+            <!-- Form responses -->
+            <div class="card">
+              <h2>Submitted Forms ({{ renderedResponses().length }})</h2>
+              @if (renderedResponses().length === 0) {
+                <div class="empty">No forms submitted yet.</div>
+              } @else {
+                <div class="responses-stack">
+                  @for (r of renderedResponses(); track r.id) {
+                    <div class="response-card">
+                      <div class="response-head">
+                        <div>
+                          <div class="response-name">{{ r.formName }}</div>
+                          <div class="response-meta">
+                            Submitted {{ r.submittedAt | date:'MMM d, y · h:mm a' }}
+                            · For appointment on {{ r.appointmentStartTime | date:'MMM d, y' }}
+                          </div>
+                        </div>
+                        <a [routerLink]="['/appointments', r.appointmentId]" class="link">View appointment →</a>
+                      </div>
+
+                      @if (r.rows.length > 0) {
+                        <dl class="response-list">
+                          @for (row of r.rows; track row.label) {
+                            <div class="response-row">
+                              <dt class="response-label">{{ row.label }}</dt>
+                              <dd class="response-value">
+                                @if (row.isSignature) {
+                                  <img class="response-signature" [src]="row.value" alt="Signature" />
+                                } @else if (isArray(row.value)) {
+                                  @if ($any(row.value).length === 0) {
+                                    <span class="response-empty">—</span>
+                                  } @else {
+                                    <ul class="response-checklist">
+                                      @for (opt of $any(row.value); track opt) {
+                                        <li>{{ opt }}</li>
+                                      }
+                                    </ul>
+                                  }
+                                } @else if (!row.value) {
+                                  <span class="response-empty">—</span>
+                                } @else {
+                                  <span class="response-text">{{ row.value }}</span>
+                                }
+                              </dd>
+                            </div>
+                          }
+                        </dl>
+                      } @else if (r.rawJson) {
+                        <pre class="response-raw">{{ r.rawJson }}</pre>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>

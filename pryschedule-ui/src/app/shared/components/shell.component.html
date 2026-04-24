@@ -23,11 +23,17 @@
             <span class="nav-icon">📋</span> Appointments
           </a></li>
           @if (auth.isAdmin()) {
+            <li><a routerLink="/clients" routerLinkActive="active">
+              <span class="nav-icon">👥</span> Clients
+            </a></li>
             <li><a routerLink="/providers" routerLinkActive="active">
               <span class="nav-icon">👤</span> Providers
             </a></li>
             <li><a routerLink="/appointment-types" routerLinkActive="active">
               <span class="nav-icon">⚙️</span> Appointment Types
+            </a></li>
+            <li><a routerLink="/forms" routerLinkActive="active">
+              <span class="nav-icon">📝</span> Forms
             </a></li>
             <li><a routerLink="/settings" routerLinkActive="active">
               <span class="nav-icon">🔧</span> Settings

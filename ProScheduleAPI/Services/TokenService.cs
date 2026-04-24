@@ -27,7 +27,13 @@ public class TokenService
             new(ClaimTypes.Email, user.Email!),
             new(ClaimTypes.GivenName, user.FirstName),
             new(ClaimTypes.Surname, user.LastName),
-            new("role", user.Role.ToString())
+            // Emit BOTH the short-form "role" (the shape we've historically
+            // read in some places) and the standard ClaimTypes.Role. The JWT
+            // handler's default inbound map would convert "role" into
+            // ClaimTypes.Role anyway, but being explicit here removes any
+            // ambiguity if a caller ever disables that map.
+            new("role", user.Role.ToString()),
+            new(ClaimTypes.Role, user.Role.ToString())
         };
 
         // Only practice admins/staff have a practiceId. Client-only accounts omit it.

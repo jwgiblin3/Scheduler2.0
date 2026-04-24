@@ -1,17 +1,10 @@
-using System.Text.Json;
-
 namespace ProScheduleAPI.Models;
 
-public class IntakeForm
-{
-    public int Id { get; set; }
-    public int AppointmentTypeId { get; set; }
-    public AppointmentType AppointmentType { get; set; } = null!;
-    public string Title { get; set; } = string.Empty;
-    public string FieldsJson { get; set; } = "[]"; // JSON array of IntakeFormField
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-}
-
+/// <summary>
+/// Form field definition shared by both the legacy IntakeForm layout and the
+/// new PracticeForm library. The shape is serialized into FieldsJson on the
+/// owning form row.
+/// </summary>
 public class IntakeFormField
 {
     public string Id { get; set; } = Guid.NewGuid().ToString("N")[..8];

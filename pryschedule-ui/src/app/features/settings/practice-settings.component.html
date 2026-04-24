@@ -149,19 +149,19 @@
             <div class="form-group">
               <label>End date</label>
               <input type="date" [(ngModel)]="newHolidayEnd" />
-              <small>Leave blank for a single day.</small>
             </div>
-            <div class="form-group form-group-grow">
+            <div class="form-group">
               <label>Name (optional)</label>
               <input [(ngModel)]="newHolidayName" placeholder="Christmas, Office retreat, ..." />
             </div>
             <div class="form-group form-group-action">
-              <label>&nbsp;</label>
+              <label aria-hidden="true">&nbsp;</label>
               <button class="btn btn-primary" [disabled]="savingHoliday()" (click)="addHoliday()">
                 {{ savingHoliday() ? 'Adding...' : 'Add' }}
               </button>
             </div>
           </div>
+          <small class="form-row-hint">Leave the end date blank to block a single day.</small>
           @if (holidayError()) { <div class="alert-error">{{ holidayError() }}</div> }
 
           @if (holidays().length === 0) {

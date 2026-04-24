@@ -1,5 +1,3 @@
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProScheduleAPI.Data;
@@ -9,6 +7,12 @@ using ProScheduleAPI.Services;
 
 namespace ProScheduleAPI.Controllers;
 
+/// <summary>
+/// Client-facing submission endpoint for filled-in forms. Admin CRUD for form
+/// definitions lives in FormsController — this controller exists only for the
+/// public /submit endpoint (and the legacy /public endpoint kept as a
+/// compatibility shim for older booking confirmation pages).
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class IntakeFormsController : ControllerBase
@@ -17,60 +21,28 @@ public class IntakeFormsController : ControllerBase
     private readonly EmailService _email;
     public IntakeFormsController(AppDbContext db, EmailService email) { _db = db; _email = email; }
 
-    private int? PracticeId => User.Identity?.IsAuthenticated == true
-        ? int.Parse(User.FindFirstValue("practiceId")!)
-        : null;
-
-    [HttpGet("appointment-type/{appointmentTypeId}")]
-    [Authorize]
-    public async Task<ActionResult<IntakeFormDto>> GetByAppointmentType(int appointmentTypeId)
+    /// <summary>
+    /// Legacy compat: return the *first* form attached to an appointment type,
+    /// shaped like the old single-intake-form response. New clients should call
+    /// GET /api/forms/public/appointment-type/{id} to get the full list.
+    /// </summary>
+    [HttpGet("public/{appointmentTypeId:int}")]
+    public async Task<ActionResult<PracticeFormDto>> GetPublicLegacy(int appointmentTypeId)
     {
-        var form = await _db.IntakeForms
-            .Include(f => f.AppointmentType)
-            .FirstOrDefaultAsync(f => f.AppointmentTypeId == appointmentTypeId
-                && f.AppointmentType.PracticeId == PracticeId!.Value);
+        var first = await _db.AppointmentTypeForms
+            .Where(x => x.AppointmentTypeId == appointmentTypeId)
+            .OrderBy(x => x.SortOrder)
+            .Select(x => new PracticeFormDto(
+                x.PracticeForm.Id,
+                x.PracticeForm.Name,
+                x.PracticeForm.FieldsJson,
+                x.PracticeForm.UpdatedAt))
+            .FirstOrDefaultAsync();
 
-        if (form is null) return NotFound();
-        return Ok(new IntakeFormDto(form.Id, form.AppointmentTypeId, form.Title, form.FieldsJson));
+        if (first is null) return NotFound();
+        return Ok(first);
     }
 
-    // Public endpoint for client to retrieve the form before booking
-    [HttpGet("public/{appointmentTypeId}")]
-    public async Task<ActionResult<IntakeFormDto>> GetPublic(int appointmentTypeId)
-    {
-        var form = await _db.IntakeForms
-            .FirstOrDefaultAsync(f => f.AppointmentTypeId == appointmentTypeId);
-
-        if (form is null) return NotFound();
-        return Ok(new IntakeFormDto(form.Id, form.AppointmentTypeId, form.Title, form.FieldsJson));
-    }
-
-    [HttpPut("appointment-type/{appointmentTypeId}")]
-    [Authorize]
-    public async Task<ActionResult<IntakeFormDto>> Save(int appointmentTypeId, SaveIntakeFormRequest req)
-    {
-        var apptType = await _db.AppointmentTypes
-            .FirstOrDefaultAsync(a => a.Id == appointmentTypeId && a.PracticeId == PracticeId!.Value);
-
-        if (apptType is null) return NotFound();
-
-        var form = await _db.IntakeForms.FirstOrDefaultAsync(f => f.AppointmentTypeId == appointmentTypeId);
-
-        if (form is null)
-        {
-            form = new IntakeForm { AppointmentTypeId = appointmentTypeId };
-            _db.IntakeForms.Add(form);
-        }
-
-        form.Title = req.Title;
-        form.FieldsJson = req.FieldsJson;
-        form.UpdatedAt = DateTime.UtcNow;
-
-        await _db.SaveChangesAsync();
-        return Ok(new IntakeFormDto(form.Id, form.AppointmentTypeId, form.Title, form.FieldsJson));
-    }
-
-    // Public: client submits intake form
     [HttpPost("submit")]
     public async Task<IActionResult> Submit(SubmitIntakeFormRequest req)
     {
@@ -80,8 +52,12 @@ public class IntakeFormsController : ControllerBase
 
         if (appointment is null) return NotFound();
 
+        // Uniqueness is now (appointmentId, formId) — clients can re-submit the
+        // same form and we update in place, but different forms for the same
+        // appointment get their own rows.
         var existing = await _db.IntakeFormResponses
-            .FirstOrDefaultAsync(r => r.AppointmentId == req.AppointmentId);
+            .FirstOrDefaultAsync(r => r.AppointmentId == req.AppointmentId
+                && r.PracticeFormId == req.PracticeFormId);
 
         if (existing is not null)
         {
@@ -93,13 +69,14 @@ public class IntakeFormsController : ControllerBase
             _db.IntakeFormResponses.Add(new IntakeFormResponse
             {
                 AppointmentId = req.AppointmentId,
+                PracticeFormId = req.PracticeFormId,
                 ResponsesJson = req.ResponsesJson
             });
         }
 
         await _db.SaveChangesAsync();
 
-        // Notify provider that intake was submitted
+        // Notify provider that a form was submitted.
         _ = Task.Run(async () =>
         {
             var appt = await _db.Appointments
@@ -111,7 +88,6 @@ public class IntakeFormsController : ControllerBase
             if (appt?.Provider is null) return;
 
             var notifSettings = await _db.NotificationSettings.FirstOrDefaultAsync(n => n.PracticeId == appt.PracticeId);
-            // Provider email is now optional — only notify if one is on file.
             if (notifSettings?.EmailEnabled != false && !string.IsNullOrWhiteSpace(appt.Provider.Email))
             {
                 await _email.SendIntakeSubmittedToProviderAsync(

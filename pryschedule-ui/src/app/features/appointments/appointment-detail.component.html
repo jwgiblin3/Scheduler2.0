@@ -5,8 +5,8 @@
       @if (loading()) {
         <div class="loading">Loading...</div>
       } @else if (appt()) {
-        <div class="detail-layout">
-          <div class="main-card card">
+        <div class="detail-stack">
+          <div class="card">
             <div class="card-header">
               <div>
                 <h1>{{ appt()!.appointmentTypeName }}</h1>
@@ -48,19 +48,53 @@
             }
           </div>
 
-          <div class="side-card card">
-            <h3>Intake Form</h3>
-            @if (appt()!.hasIntakeResponse && appt()!.intakeResponse) {
-              <div class="intake-submitted">
-                <div class="badge badge-green">Submitted {{ appt()!.intakeResponse!.submittedAt | date:'MMM d, y' }}</div>
-                <div class="intake-data">
-                  <pre>{{ formatResponses(appt()!.intakeResponse!.responsesJson) }}</pre>
-                </div>
-              </div>
-            } @else {
-              <div class="intake-pending">
+          <!-- Intake / submitted form responses — rendered under the appointment
+               as a labeled list when we can resolve field IDs to labels,
+               otherwise falls back to raw JSON. -->
+          <div class="card">
+            <div class="card-header">
+              <h2>Intake Form</h2>
+              @if (appt()!.hasIntakeResponse && appt()!.intakeResponse) {
+                <span class="badge badge-green">
+                  Submitted {{ appt()!.intakeResponse!.submittedAt | date:'MMM d, y · h:mm a' }}
+                </span>
+              } @else {
                 <span class="badge badge-gray">Not yet submitted</span>
-              </div>
+              }
+            </div>
+
+            @if (appt()!.hasIntakeResponse && appt()!.intakeResponse) {
+              @if (renderedResponses().length > 0) {
+                <dl class="response-list">
+                  @for (r of renderedResponses(); track r.fieldId) {
+                    <div class="response-row">
+                      <dt class="response-label">{{ r.label }}</dt>
+                      <dd class="response-value">
+                        @if (r.isSignature) {
+                          <img class="response-signature" [src]="r.value" alt="Signature" />
+                        } @else if (isArray(r.value)) {
+                          @if ($any(r.value).length === 0) {
+                            <span class="response-empty">—</span>
+                          } @else {
+                            <ul class="response-checklist">
+                              @for (opt of $any(r.value); track opt) {
+                                <li>{{ opt }}</li>
+                              }
+                            </ul>
+                          }
+                        } @else if (!r.value) {
+                          <span class="response-empty">—</span>
+                        } @else {
+                          <span class="response-text">{{ r.value }}</span>
+                        }
+                      </dd>
+                    </div>
+                  }
+                </dl>
+              } @else {
+                <!-- Fallback when the form definition couldn't be loaded. -->
+                <pre class="response-raw">{{ formatResponses(appt()!.intakeResponse!.responsesJson) }}</pre>
+              }
             }
           </div>
         </div>

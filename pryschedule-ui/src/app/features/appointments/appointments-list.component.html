@@ -19,21 +19,21 @@
       </div>
 
       <div class="view-tabs" role="tablist">
-        <button
+        <button type="button"
           class="view-tab"
           [class.active]="viewMode() === 'list'"
           (click)="setViewMode('list')"
           role="tab"
           [attr.aria-selected]="viewMode() === 'list'"
         >List</button>
-        <button
+        <button type="button"
           class="view-tab"
           [class.active]="viewMode() === 'day'"
           (click)="setViewMode('day')"
           role="tab"
           [attr.aria-selected]="viewMode() === 'day'"
         >Day</button>
-        <button
+        <button type="button"
           class="view-tab"
           [class.active]="viewMode() === 'week'"
           (click)="setViewMode('week')"
@@ -44,22 +44,95 @@
 
       @if (loading()) {
         <div class="loading">Loading...</div>
-      } @else if (viewMode() !== 'list') {
-        <div class="scheduler-wrap">
-          <kendo-scheduler
-            [kendoSchedulerBinding]="schedulerEvents()"
-            [selectedDate]="schedulerDate()"
-            (dateChange)="onSchedulerDateChange($event.selectedDate)"
-            (eventClick)="onSchedulerSelect($event.event)"
-            style="height: 720px;"
-          >
-            @if (viewMode() === 'day') {
-              <kendo-scheduler-day-view [startTime]="'07:00'" [endTime]="'20:00'"></kendo-scheduler-day-view>
+      } @else if (viewMode() === 'day') {
+        <div class="grid-card">
+          <div class="grid-toolbar">
+            <button type="button" class="btn-nav" (click)="shiftGrid(-1)" aria-label="Previous day">‹</button>
+            <button type="button" class="btn-today" (click)="goToday()">Today</button>
+            <button type="button" class="btn-nav" (click)="shiftGrid(1)" aria-label="Next day">›</button>
+            <span class="grid-heading">{{ dayHeading() }}</span>
+          </div>
+          <div class="grid-scroll">
+            <div class="grid" [style.height.px]="gridHeight">
+              <div class="grid-hours">
+                @for (label of hourLabels(); track label) {
+                  <div class="hour-row" [style.height.px]="hourHeight">
+                    <span class="hour-label">{{ label }}</span>
+                  </div>
+                }
+              </div>
+              <div class="grid-column grid-column-day">
+                @for (_ of hourLabels(); track $index) {
+                  <div class="hour-slot" [style.height.px]="hourHeight"></div>
+                }
+                @for (e of dayEvents(); track e.id) {
+                  <div
+                    class="event event-status-{{ e.status }}"
+                    [style.top.px]="e.top"
+                    [style.height.px]="e.height"
+                    (click)="openEvent(e.id)"
+                    role="button"
+                    tabindex="0"
+                  >
+                    <div class="event-time">{{ e.timeLabel }}</div>
+                    <div class="event-title">{{ e.title }}</div>
+                    <div class="event-subtitle">{{ e.subtitle }}</div>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      } @else if (viewMode() === 'week') {
+        <div class="grid-card">
+          <div class="grid-toolbar">
+            <button type="button" class="btn-nav" (click)="shiftGrid(-1)" aria-label="Previous week">‹</button>
+            <button type="button" class="btn-today" (click)="goToday()">Today</button>
+            <button type="button" class="btn-nav" (click)="shiftGrid(1)" aria-label="Next week">›</button>
+            <span class="grid-heading">{{ weekHeading() }}</span>
+          </div>
+          <div class="week-day-headers">
+            <div class="week-day-gutter"></div>
+            @for (d of weekDays(); track d.getTime()) {
+              <div class="week-day-header" [class.is-today]="isToday(d)">
+                <div class="week-day-name">{{ d | date:'EEE' }}</div>
+                <div class="week-day-num">{{ d | date:'d' }}</div>
+              </div>
             }
-            @if (viewMode() === 'week') {
-              <kendo-scheduler-week-view [startTime]="'07:00'" [endTime]="'20:00'"></kendo-scheduler-week-view>
-            }
-          </kendo-scheduler>
+          </div>
+          <div class="grid-scroll">
+            <div class="grid grid-week" [style.height.px]="gridHeight">
+              <div class="grid-hours">
+                @for (label of hourLabels(); track label) {
+                  <div class="hour-row" [style.height.px]="hourHeight">
+                    <span class="hour-label">{{ label }}</span>
+                  </div>
+                }
+              </div>
+              @for (d of weekDays(); track d.getTime(); let dayIdx = $index) {
+                <div class="grid-column">
+                  @for (_ of hourLabels(); track $index) {
+                    <div class="hour-slot" [style.height.px]="hourHeight"></div>
+                  }
+                  @for (e of weekEvents(); track e.id) {
+                    @if (e.dayIndex === dayIdx) {
+                      <div
+                        class="event event-status-{{ e.status }}"
+                        [style.top.px]="e.top"
+                        [style.height.px]="e.height"
+                        (click)="openEvent(e.id)"
+                        role="button"
+                        tabindex="0"
+                      >
+                        <div class="event-time">{{ e.timeLabel }}</div>
+                        <div class="event-title">{{ e.title }}</div>
+                      </div>
+                    }
+                  }
+                </div>
+              }
+            </div>
+          </div>
         </div>
       } @else if (appointments().length === 0) {
         <div class="empty-state">No appointments found for selected filters.</div>

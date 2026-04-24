@@ -37,10 +37,24 @@
     .branding-preview__name { font-weight: 600; font-size: 1rem; letter-spacing: .2px; }
 
     .section-desc { font-size: .85rem; color: #718096; margin: 0 0 1rem; }
-    .form-row-holiday { grid-template-columns: 1fr 1fr 2fr auto; align-items: end; }
-    .form-group-grow { flex: 1; }
-    .form-group-action { margin-bottom: 1rem; }
-    .form-group-action .btn { width: 100%; }
+
+    /* Holiday add-row: [Start] [End] [Name (wider)] [Add button]
+       align-items: end so every column's bottom edge lines up — this only
+       works when every column is exactly "label + input" (no inline hints
+       that would otherwise push columns to different heights). */
+    .form-row-holiday {
+      grid-template-columns: minmax(140px, 1fr) minmax(140px, 1fr) minmax(180px, 2fr) auto;
+      align-items: end;
+      gap: .75rem;
+      margin-bottom: .25rem;
+    }
+    .form-row-holiday .form-group { margin-bottom: 0; }
+    /* The Add-button column reuses the label+input vertical rhythm via a
+       blank label spacer, so the button lands at the same baseline as the
+       other inputs in the row. */
+    .form-group-action { display: flex; flex-direction: column; }
+    .form-group-action .btn { width: 100%; white-space: nowrap; }
+    .form-row-hint { display: block; color: #a0aec0; font-size: .75rem; margin: 0 0 1rem; }
     .empty-hint { font-size: .85rem; color: #a0aec0; margin: .5rem 0 0; }
     .holiday-table { width: 100%; border-collapse: collapse; margin-top: .75rem; font-size: .88rem; }
     .holiday-table th, .holiday-table td { padding: .6rem .5rem; text-align: left; border-bottom: 1px solid #edf2f7; }

@@ -17,7 +17,16 @@ public class SettingsController : ControllerBase
     public SettingsController(AppDbContext db) => _db = db;
 
     private int PracticeId => int.Parse(User.FindFirstValue("practiceId")!);
-    private string UserRole => User.FindFirstValue("role") ?? "";
+
+    // The JWT bearer handler remaps the short "role" claim to the long-form
+    // ClaimTypes.Role ("http://schemas.microsoft.com/ws/2008/06/identity/claims/role")
+    // via JwtSecurityTokenHandler.DefaultInboundClaimTypeMap, so reading "role"
+    // alone returns null. Prefer the mapped claim; keep "role" as a fallback in
+    // case the map is ever disabled.
+    private string UserRole =>
+        User.FindFirstValue(ClaimTypes.Role)
+        ?? User.FindFirstValue("role")
+        ?? "";
 
     [HttpGet("practice")]
     public async Task<ActionResult> GetPracticeSettings()

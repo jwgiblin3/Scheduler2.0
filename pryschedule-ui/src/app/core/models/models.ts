@@ -84,6 +84,56 @@ export interface AppointmentType {
   bufferAfterMinutes: number;
   requiresIntakeForm: boolean;
   isActive: boolean;
+  /** IDs of Forms (from the practice Forms library) attached to this type, in display order. */
+  formIds?: number[];
+}
+
+/** Row in the practice Clients list. */
+export interface ClientSummary {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string | null;
+  smsOptIn: boolean;
+  createdAt: string;
+  appointmentCount: number;
+  lastAppointment?: string | null;
+}
+
+/** One submitted form response shown on a client's detail page. */
+export interface ClientFormResponse {
+  id: number;
+  appointmentId: number;
+  appointmentStartTime: string;
+  practiceFormId?: number | null;
+  formName: string;
+  submittedAt: string;
+  /** Raw JSON string — { fieldId: value }. Parsed on the client side. */
+  responsesJson: string;
+  /** Serialized IntakeFormField[] for the form this response was submitted against. */
+  fieldsJson: string;
+}
+
+/** Full detail including appointments + form responses. */
+export interface ClientDetail {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string | null;
+  smsOptIn: boolean;
+  createdAt: string;
+  appointments: Array<{
+    id: number;
+    startTime: string;
+    endTime: string;
+    providerName: string;
+    appointmentTypeName: string;
+    status: AppointmentStatus;
+    hasIntakeResponse: boolean;
+  }>;
+  formResponses: ClientFormResponse[];
 }
 
 export interface AppointmentSummary {
@@ -120,11 +170,16 @@ export interface AvailableSlot {
   end: string;
 }
 
-export interface IntakeForm {
+/**
+ * A reusable form definition from the practice's Forms library. A single form
+ * can be attached to any number of appointment types (e.g. one "Waiver"
+ * shared across Massage, Facial, Acupuncture).
+ */
+export interface PracticeForm {
   id: number;
-  appointmentTypeId: number;
-  title: string;
+  name: string;
   fieldsJson: string;
+  updatedAt: string;
 }
 
 export interface IntakeFormField {
