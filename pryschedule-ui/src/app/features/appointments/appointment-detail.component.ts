@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
 import {
   AppointmentDetail, AppointmentStatus,
-  IntakeFormField, PracticeForm
+  IntakeFormField, PracticeForm, ImageMapMarker, ImageMapPoint
 } from '../../core/models/models';
 
 /** One row in the rendered intake responses — resolved from a fieldId to its label + value. */
@@ -17,6 +17,12 @@ interface RenderedResponse {
   value: string | string[];
   /** True when value is a base64 data URL for a signature. */
   isSignature: boolean;
+  /** Image-map payload — present only when the field type is imagemap. */
+  imagemap?: {
+    imageUrl: string;
+    markers: ImageMapMarker[];
+    points: ImageMapPoint[];
+  };
 }
 
 @Component({
@@ -121,6 +127,24 @@ export class AppointmentDetailComponent implements OnInit {
   private buildRow(fieldId: string, raw: any, field: IntakeFormField | null): RenderedResponse {
     const label = field?.label?.trim() || fieldId;
     const type = field?.type ?? 'text';
+    if (type === 'imagemap') {
+      const points: ImageMapPoint[] = Array.isArray(raw)
+        ? raw.map((p: any) => ({
+            x: Number(p?.x) || 0,
+            y: Number(p?.y) || 0,
+            letter: String(p?.letter ?? '').slice(0, 1).toUpperCase()
+          }))
+        : [];
+      return {
+        fieldId, label, type,
+        value: '', isSignature: false,
+        imagemap: {
+          imageUrl: field?.imageUrl ?? '',
+          markers: Array.isArray(field?.markers) ? field!.markers! : [],
+          points
+        }
+      };
+    }
     const isSig = type === 'signature'
       || (typeof raw === 'string' && raw.startsWith('data:image'));
     let value: string | string[];

@@ -95,6 +95,59 @@
                           ></textarea>
                         </div>
                       }
+                      @if (field.type === 'imagemap') {
+                        <div class="field-imagemap">
+                          <div class="form-group">
+                            <label>Image URL</label>
+                            <input
+                              type="url"
+                              [ngModel]="field.imageUrl"
+                              (ngModelChange)="updateField(field.id, { imageUrl: $event })"
+                              placeholder="https://yourpractice.com/body-diagram.png"
+                            />
+                            <small>Clients click on this image to mark their symptoms. Use an SVG or transparent PNG for best results.</small>
+                          </div>
+
+                          @if (field.imageUrl) {
+                            <div class="imagemap-preview">
+                              <img [src]="field.imageUrl" alt="Diagram preview" />
+                            </div>
+                          }
+
+                          <div class="markers-header">
+                            <label>Marker key</label>
+                            <small>Each marker is stamped on the image as a single letter when the client picks it.</small>
+                          </div>
+                          <div class="markers-list">
+                            <div class="marker-row marker-row-head">
+                              <span>Letter</span>
+                              <span>Label</span>
+                              <span></span>
+                            </div>
+                            @for (m of field.markers; track $index; let mi = $index) {
+                              <div class="marker-row">
+                                <input
+                                  class="marker-letter"
+                                  maxlength="1"
+                                  [ngModel]="m.letter"
+                                  (ngModelChange)="updateMarker(field.id, mi, { letter: $event })"
+                                />
+                                <input
+                                  class="marker-label"
+                                  [ngModel]="m.label"
+                                  (ngModelChange)="updateMarker(field.id, mi, { label: $event })"
+                                  placeholder="e.g. Numbness"
+                                />
+                                <button type="button" class="btn-icon btn-icon-danger"
+                                        (click)="removeMarker(field.id, mi)"
+                                        aria-label="Remove marker">×</button>
+                              </div>
+                            }
+                          </div>
+                          <button type="button" class="btn btn-secondary btn-sm"
+                                  (click)="addMarker(field.id)">+ Add marker</button>
+                        </div>
+                      }
                     </div>
                   }
                 </div>

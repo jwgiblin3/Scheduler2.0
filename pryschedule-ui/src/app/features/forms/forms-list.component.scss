@@ -76,3 +76,36 @@
 
     .form-actions { display: flex; gap: .6rem; justify-content: flex-end; }
     .form-actions .btn-danger { margin-right: auto; }
+
+/* ---- Image map field configuration (designer side) ---- */
+.field-imagemap { margin-top: .75rem; padding-top: .75rem; border-top: 1px dashed #edf2f7; }
+.field-imagemap small { color: #a0aec0; font-size: .72rem; }
+.imagemap-preview {
+  margin: .5rem 0 1rem;
+  padding: .5rem;
+  background: #fafbff; border: 1px dashed #e2e8f0; border-radius: 6px;
+  text-align: center;
+}
+.imagemap-preview img { max-width: 100%; max-height: 220px; }
+
+.markers-header { margin: .25rem 0 .5rem; }
+.markers-header label { margin-bottom: 2px; }
+
+.markers-list { display: flex; flex-direction: column; gap: .35rem; margin-bottom: .75rem; }
+.marker-row {
+  display: grid;
+  grid-template-columns: 70px 1fr 32px;
+  gap: .5rem;
+  align-items: center;
+}
+.marker-row-head {
+  font-size: .72rem; font-weight: 600; color: #718096;
+  text-transform: uppercase; letter-spacing: .04em;
+  padding: 0 .25rem;
+}
+.marker-letter {
+  text-align: center; font-weight: 600; text-transform: uppercase;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+}
+.btn-icon-danger { color: #c53030; }
+.btn-sm { padding: .35rem .75rem; font-size: .8rem; }

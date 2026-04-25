@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal, AfterViewInit, ElementRef, ViewChild
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
-import { PracticeForm, IntakeFormField } from '../../core/models/models';
+import { PracticeForm, IntakeFormField, ImageMapPoint } from '../../core/models/models';
 
 @Component({
   selector: 'app-intake-form',
@@ -31,6 +31,20 @@ export class IntakeFormComponent implements OnInit {
   // Signature state
   private drawing: Record<string, boolean> = {};
   private lastPos: Record<string, { x: number; y: number }> = {};
+
+  // ---- Image-map state ----
+  //
+  // activeMarker[fieldId] — which marker letter is "armed" to be stamped on
+  // the next click. We don't auto-pick one; the client must choose explicitly
+  // so they never accidentally stamp the wrong letter.
+  activeMarker: Record<string, string> = {};
+  // imagemapViewBox[fieldId] — SVG viewBox dimensions, sized to the natural
+  // pixel dimensions of the loaded image so coordinate math is 1-to-1 with
+  // what the client sees. We default to 500x600 (body-chart proportions)
+  // until the image's <load> event fires and gives us real dimensions.
+  imagemapViewBox: Record<string, { w: number; h: number }> = {};
+  // Points are kept in responses[fieldId] as ImageMapPoint[] — reading/
+  // writing through helpers keeps Angular's change detection predictable.
 
   private getCanvas(fieldId: string): HTMLCanvasElement | null {
     return document.getElementById(`sig-${fieldId}`) as HTMLCanvasElement | null;
@@ -96,6 +110,62 @@ export class IntakeFormComponent implements OnInit {
     else this.responses[fieldId] = this.responses[fieldId].filter((x: string) => x !== opt);
   }
 
+  // ---- Image-map handlers ----
+
+  /** Initialize viewBox when the loaded image reports its natural dimensions. */
+  onImagemapImageLoad(fieldId: string, event: Event) {
+    const img = event.target as SVGImageElement & { naturalWidth?: number; naturalHeight?: number };
+    // SVG <image> doesn't directly expose natural dims the way HTMLImageElement
+    // does, so we fall back to a sensible default if we can't read them.
+    const w = (img as any).width?.baseVal?.value || 500;
+    const h = (img as any).height?.baseVal?.value || 600;
+    if (!this.imagemapViewBox[fieldId]) {
+      this.imagemapViewBox[fieldId] = { w, h };
+    }
+  }
+
+  selectMarker(fieldId: string, letter: string) {
+    // Toggle: clicking the armed marker again disarms it.
+    this.activeMarker[fieldId] = this.activeMarker[fieldId] === letter ? '' : letter;
+  }
+
+  /** Return the current points for a field, initializing storage on first access. */
+  getImagemapPoints(fieldId: string): ImageMapPoint[] {
+    const value = this.responses[fieldId];
+    if (Array.isArray(value)) return value as ImageMapPoint[];
+    this.responses[fieldId] = [];
+    return this.responses[fieldId];
+  }
+
+  /**
+   * Stamp a new point at the SVG-space coordinate of the click. We use the
+   * SVG's own coordinate transform matrix so placements survive rescaling
+   * across phones, tablets, and desktops.
+   */
+  recordImagemapPoint(field: IntakeFormField, event: MouseEvent) {
+    const letter = this.activeMarker[field.id];
+    if (!letter) return; // no marker armed — ignore the click
+    const svg = event.currentTarget as SVGSVGElement;
+    const pt = svg.createSVGPoint();
+    pt.x = event.clientX;
+    pt.y = event.clientY;
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return;
+    const local = pt.matrixTransform(ctm.inverse());
+    const points = this.getImagemapPoints(field.id);
+    points.push({ x: Math.round(local.x), y: Math.round(local.y), letter });
+    // Re-assign so Angular notices the change through the proxy.
+    this.responses[field.id] = [...points];
+  }
+
+  removeImagemapPoint(fieldId: string, index: number, event: MouseEvent) {
+    // Stop the click from bubbling to the SVG and creating a fresh point.
+    event.stopPropagation();
+    const points = this.getImagemapPoints(fieldId);
+    points.splice(index, 1);
+    this.responses[fieldId] = [...points];
+  }
+
   submit() {
     this.submitting.set(true);
     this.api.submitIntakeForm({
@@ -123,11 +193,31 @@ export class IntakeFormComponent implements OnInit {
     this.api.getPublicIntakeForm(this.apptTypeId).subscribe({
       next: f => {
         this.form.set(f);
-        try { this.fields.set(JSON.parse(f.fieldsJson)); }
-        catch { this.fields.set([]); }
+        try {
+          const parsed = JSON.parse(f.fieldsJson) as IntakeFormField[];
+          this.fields.set(Array.isArray(parsed) ? parsed : []);
+          this.seedImagemapDefaults();
+        } catch {
+          this.fields.set([]);
+        }
         this.loading.set(false);
       },
       error: () => { this.form.set(null); this.loading.set(false); }
     });
+  }
+
+  /** Make sure every imagemap field has a viewBox entry + empty point array. */
+  private seedImagemapDefaults() {
+    for (const f of this.fields()) {
+      if (f.type !== 'imagemap') continue;
+      // Default proportions match a standard body-chart; replaced as soon as
+      // the <image> load event reports real dimensions.
+      if (!this.imagemapViewBox[f.id]) {
+        this.imagemapViewBox[f.id] = { w: 500, h: 600 };
+      }
+      if (!Array.isArray(this.responses[f.id])) {
+        this.responses[f.id] = [];
+      }
+    }
   }
 }

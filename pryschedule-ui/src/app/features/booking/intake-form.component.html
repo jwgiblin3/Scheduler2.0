@@ -62,6 +62,53 @@
                       <button type="button" class="btn-clear-sig" (click)="clearSignature(field.id)">Clear</button>
                     </div>
                   }
+                  @case ('imagemap') {
+                    <div class="imagemap-field">
+                      @if ((field.markers?.length ?? 0) === 0 || !field.imageUrl) {
+                        <div class="imagemap-warning">This question isn't fully configured. Please let the practice know.</div>
+                      } @else {
+                        <div class="imagemap-marker-bar">
+                          <span class="imagemap-marker-bar-label">Pick a symptom, then click the diagram to mark it:</span>
+                          @for (m of field.markers ?? []; track m.letter) {
+                            <button type="button"
+                                    class="marker-btn"
+                                    [class.marker-btn-active]="activeMarker[field.id] === m.letter"
+                                    (click)="selectMarker(field.id, m.letter)">
+                              <span class="marker-btn-letter">{{ m.letter }}</span>
+                              <span class="marker-btn-label">{{ m.label }}</span>
+                            </button>
+                          }
+                        </div>
+
+                        <svg class="imagemap-svg"
+                             [attr.viewBox]="'0 0 ' + imagemapViewBox[field.id].w + ' ' + imagemapViewBox[field.id].h"
+                             preserveAspectRatio="xMidYMid meet"
+                             (click)="recordImagemapPoint(field, $event)">
+                          <image [attr.href]="field.imageUrl"
+                                 x="0" y="0"
+                                 [attr.width]="imagemapViewBox[field.id].w"
+                                 [attr.height]="imagemapViewBox[field.id].h"
+                                 (load)="onImagemapImageLoad(field.id, $event)" />
+                          @for (p of getImagemapPoints(field.id); track $index; let pi = $index) {
+                            <g class="imagemap-point" (click)="removeImagemapPoint(field.id, pi, $event)">
+                              <circle [attr.cx]="p.x" [attr.cy]="p.y" r="14" fill="#c53030" stroke="#fff" stroke-width="2" />
+                              <text [attr.x]="p.x" [attr.y]="p.y"
+                                    text-anchor="middle"
+                                    dominant-baseline="central"
+                                    fill="#fff" style="font: 700 13px sans-serif; pointer-events: none;">
+                                {{ p.letter }}
+                              </text>
+                            </g>
+                          }
+                        </svg>
+
+                        <small class="imagemap-hint">
+                          Tap a marker above to select it, then click on the diagram.
+                          Click any placed mark to remove it.
+                        </small>
+                      }
+                    </div>
+                  }
                   @default {
                     <input type="text" [(ngModel)]="responses[field.id]" />
                   }

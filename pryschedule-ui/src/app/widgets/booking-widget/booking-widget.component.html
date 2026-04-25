@@ -82,7 +82,7 @@
           @if (!selectedSlot()) {
             <!-- Week navigation -->
             <div class="week-nav">
-              <button class="week-nav-btn" type="button" (click)="prevWeek()" [disabled]="loadingSlots()">← Prev</button>
+              <button class="week-nav-btn" type="button" (click)="prevWeek()" [disabled]="loadingSlots() || atEarliestWeek()">← Prev</button>
               <div class="week-nav-label">
                 <strong>{{ providerName(selectedProvider()!) }}</strong>
                 <span class="week-nav-range">{{ dateRangeLabel() }}</span>
@@ -199,5 +199,108 @@
         </div>
       }
     </div>
+
+    <!-- Earlier-slot waitlist CTA — visible once the user has picked an
+         appointment type. Stays out of the way until it's relevant. -->
+    @if (selectedType()) {
+      <div class="alert-footer">
+        <button type="button" class="btn-alert" (click)="openAlertModal()">
+          🔔 Alert me if there is an earlier time
+        </button>
+      </div>
+    }
+
+    <!-- Alert preferences modal.
+         Rendered inside the widget so the scoped styles apply; `@if` below
+         keeps the DOM empty when closed so focus/scroll don't get trapped. -->
+    @if (alertModalOpen()) {
+      <div class="modal-backdrop" (click)="closeAlertModal()">
+        <div class="modal-card" (click)="$event.stopPropagation()" role="dialog" aria-labelledby="alert-modal-title">
+          <div class="modal-header">
+            <h3 id="alert-modal-title">Alert me if there's an earlier time</h3>
+            <button type="button" class="modal-close" aria-label="Close" (click)="closeAlertModal()">✕</button>
+          </div>
+
+          @if (alertSubmitted()) {
+            <div class="modal-body success-body">
+              <div class="success-icon">✓</div>
+              <p>You're on the list. We'll email <strong>{{ alertEmail }}</strong> if an earlier slot opens up that matches your preferences.</p>
+              <button type="button" class="btn-confirm" (click)="closeAlertModal()">Done</button>
+            </div>
+          } @else {
+            <div class="modal-body">
+              <p class="modal-desc">
+                Tell us when you're available and we'll email you the moment a
+                sooner slot opens up for
+                <strong>{{ selectedType()!.name }}</strong>.
+              </p>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Name *</label>
+                  <input [(ngModel)]="alertName" placeholder="Your name" />
+                </div>
+                <div class="form-group">
+                  <label>Email *</label>
+                  <input type="email" [(ngModel)]="alertEmail" placeholder="you@example.com" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Phone (optional)</label>
+                <input type="tel" [(ngModel)]="alertPhone" placeholder="For SMS alerts (coming soon)" />
+              </div>
+
+              <div class="form-group any-day-row">
+                <label class="checkbox-label">
+                  <input type="checkbox" [ngModel]="alertAnyDay" (ngModelChange)="toggleAnyDay($event)" />
+                  <strong>Any day, any time</strong> — notify me whenever an earlier slot opens up
+                </label>
+              </div>
+
+              @if (!alertAnyDay) {
+                <div class="day-grid">
+                  <div class="day-grid-head">
+                    <span>Day</span>
+                    <span>Start<br><small>earliest ok</small></span>
+                    <span>End<br><small>latest ok</small></span>
+                    <span>Specific Start<br><small>optional</small></span>
+                    <span>Specific End<br><small>optional</small></span>
+                  </div>
+                  @for (key of alertDayKeys; track key) {
+                    <div class="day-row" [class.day-row-enabled]="alertDays[key].enabled">
+                      <label class="day-label">
+                        <input type="checkbox" [(ngModel)]="alertDays[key].enabled" />
+                        {{ alertDayLabels[key] }}
+                      </label>
+                      <input type="time" class="time-input"
+                             [(ngModel)]="alertDays[key].startTime"
+                             [disabled]="!alertDays[key].enabled" />
+                      <input type="time" class="time-input"
+                             [(ngModel)]="alertDays[key].endTime"
+                             [disabled]="!alertDays[key].enabled" />
+                      <input type="time" class="time-input"
+                             [(ngModel)]="alertDays[key].specificStartTime"
+                             [disabled]="!alertDays[key].enabled" />
+                      <input type="time" class="time-input"
+                             [(ngModel)]="alertDays[key].specificEndTime"
+                             [disabled]="!alertDays[key].enabled" />
+                    </div>
+                  }
+                </div>
+              }
+
+              @if (alertError()) { <div class="alert-error">{{ alertError() }}</div> }
+
+              <div class="modal-actions">
+                <button type="button" class="btn-link" (click)="closeAlertModal()">Cancel</button>
+                <button type="button" class="btn-confirm" [disabled]="alertSubmitting()" (click)="submitAlert()">
+                  {{ alertSubmitting() ? 'Saving...' : 'Notify me' }}
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
   </div>
 }

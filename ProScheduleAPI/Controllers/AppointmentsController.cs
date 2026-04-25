@@ -157,10 +157,7 @@ public class AppointmentsController : ControllerBase
             // detail page used to render a single intake blob. Multi-form
             // display is a later UI follow-up.
             a.IntakeFormResponses.Any()
-                ? new IntakeFormResponseDto(
-                    a.IntakeFormResponses.OrderByDescending(r => r.SubmittedAt).First().Id,
-                    a.IntakeFormResponses.OrderByDescending(r => r.SubmittedAt).First().ResponsesJson,
-                    a.IntakeFormResponses.OrderByDescending(r => r.SubmittedAt).First().SubmittedAt)
+                ? BuildIntakeResponseDto(a.IntakeFormResponses.OrderByDescending(r => r.SubmittedAt).First())
                 : null
         ));
     }
@@ -455,5 +452,20 @@ public class AppointmentsController : ControllerBase
             a.Status,
             a.IntakeFormResponses.Any()
         )));
+    }
+
+    /**
+     * Build the (optional) intake-response DTO with SubmittedAt explicitly
+     * marked as UTC. SQL Server's datetime2 column drops the DateTimeKind,
+     * so values come back out of EF with Kind=Unspecified — which the JSON
+     * serializer emits without a "Z" suffix. The Angular DatePipe then
+     * interprets that string as local time and displays the UTC value
+     * verbatim. Marking it Utc here makes the API output correct, and the
+     * browser converts to the viewer's local timezone on render.
+     */
+    private static IntakeFormResponseDto BuildIntakeResponseDto(IntakeFormResponse r)
+    {
+        var submittedUtc = DateTime.SpecifyKind(r.SubmittedAt, DateTimeKind.Utc);
+        return new IntakeFormResponseDto(r.Id, r.ResponsesJson, submittedUtc);
     }
 }

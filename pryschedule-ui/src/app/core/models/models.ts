@@ -185,9 +185,32 @@ export interface PracticeForm {
 export interface IntakeFormField {
   id: string;
   label: string;
-  type: 'text' | 'textarea' | 'radio' | 'checkbox' | 'date' | 'signature';
+  type: 'text' | 'textarea' | 'radio' | 'checkbox' | 'date' | 'signature' | 'imagemap';
   required: boolean;
   options?: string[];
+
+  /** imagemap: URL of the base diagram the client clicks on (body diagram, dental chart, etc.). */
+  imageUrl?: string;
+
+  /** imagemap: configurable marker key. Admin defines "N = Numbness, B = Burning, ..." */
+  markers?: ImageMapMarker[];
+}
+
+export interface ImageMapMarker {
+  /** Single character stamped onto the image where the client clicks (first letter of the label by convention). */
+  letter: string;
+  /** Human-readable name shown in the selector (e.g. "Numbness"). */
+  label: string;
+}
+
+/** Shape stored in responsesJson for an imagemap field. */
+export interface ImageMapPoint {
+  /** SVG user-space X coordinate (0 – imageWidth). */
+  x: number;
+  /** SVG user-space Y coordinate (0 – imageHeight). */
+  y: number;
+  /** The marker letter stamped at this point. */
+  letter: string;
 }
 
 export interface IntakeFormResponse {

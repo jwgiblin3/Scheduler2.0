@@ -1,40 +1,43 @@
-using SendGrid;
-using SendGrid.Helpers.Mail;
-
 namespace ProScheduleAPI.Services;
 
+/// <summary>
+/// High-level "what to send" layer. Holds the HTML templates for every
+/// notification the app emits and delegates actual delivery to an
+/// IEmailSender (SMTP, SendGrid, or null-logger), chosen in Program.cs
+/// by the "Email:Provider" config key.
+///
+/// From-address resolution order for each send:
+///   1. Explicit fromEmail / fromName passed by the caller (per-practice override).
+///   2. Email:FromEmail / Email:FromName (app-level default).
+///   3. Legacy SendGrid:FromEmail / SendGrid:FromName (kept for backward compat).
+///   4. Hard-coded "noreply@pryschedule.com" / "ProSchedule" fallback so we
+///      never send from an empty MailFrom.
+/// </summary>
 public class EmailService
 {
+    private readonly IEmailSender _sender;
     private readonly IConfiguration _config;
-    private readonly ILogger<EmailService> _logger;
 
-    public EmailService(IConfiguration config, ILogger<EmailService> logger)
+    public EmailService(IEmailSender sender, IConfiguration config)
     {
+        _sender = sender;
         _config = config;
-        _logger = logger;
     }
 
-    public async Task SendAsync(string toEmail, string toName, string subject, string htmlBody,
+    public Task SendAsync(string toEmail, string toName, string subject, string htmlBody,
         string? fromEmail = null, string? fromName = null)
     {
-        var apiKey = _config["SendGrid:ApiKey"];
-        if (string.IsNullOrEmpty(apiKey))
-        {
-            _logger.LogWarning("SendGrid API key not configured. Email not sent to {Email}", toEmail);
-            return;
-        }
+        var resolvedFromEmail = fromEmail
+            ?? _config["Email:FromEmail"]
+            ?? _config["SendGrid:FromEmail"]
+            ?? "noreply@pryschedule.com";
+        var resolvedFromName = fromName
+            ?? _config["Email:FromName"]
+            ?? _config["SendGrid:FromName"]
+            ?? "ProSchedule";
 
-        var client = new SendGridClient(apiKey);
-        var from = new EmailAddress(
-            fromEmail ?? _config["SendGrid:FromEmail"] ?? "noreply@pryschedule.com",
-            fromName ?? _config["SendGrid:FromName"] ?? "ProSchedule"
-        );
-        var to = new EmailAddress(toEmail, toName);
-        var msg = MailHelper.CreateSingleEmail(from, to, subject, null, htmlBody);
-
-        var response = await client.SendEmailAsync(msg);
-        if (!response.IsSuccessStatusCode)
-            _logger.LogError("SendGrid error {Status} sending to {Email}", response.StatusCode, toEmail);
+        return _sender.SendAsync(toEmail, toName, subject, htmlBody,
+            resolvedFromEmail, resolvedFromName);
     }
 
     // --- Notification templates ---

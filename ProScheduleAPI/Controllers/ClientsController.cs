@@ -73,14 +73,17 @@ public class ClientsController : ControllerBase
             .FirstOrDefaultAsync(c => c.Id == id && c.PracticeId == PracticeId);
         if (client is null) return NotFound();
 
-        // Appointments for the client. Also eager-load the form responses
-        // attached to each appointment so we can zip them into the Responses
-        // list below with a form name resolved from the library.
+        // Appointments for the client. Eager-load the form responses and the
+        // forms attached to each appointment type — we need the latter as a
+        // fallback schema for legacy responses submitted before the
+        // PracticeFormId column existed.
         var appts = await _db.Appointments
             .AsNoTracking()
             .Where(a => a.ClientId == id && a.PracticeId == PracticeId)
             .Include(a => a.Provider)
             .Include(a => a.AppointmentType)
+                .ThenInclude(at => at.AppointmentTypeForms)
+                    .ThenInclude(atf => atf.PracticeForm)
             .Include(a => a.IntakeFormResponses).ThenInclude(r => r.PracticeForm)
             .OrderByDescending(a => a.StartTime)
             .ToListAsync();
@@ -94,19 +97,36 @@ public class ClientsController : ControllerBase
         )).ToList();
 
         var responseDtos = appts
-            .SelectMany(a => a.IntakeFormResponses.Select(r => new ClientFormResponseDto(
-                r.Id,
-                a.Id,
-                a.StartTime,
-                r.PracticeFormId,
-                r.PracticeForm?.Name ?? "Intake Form",
-                r.SubmittedAt,
-                r.ResponsesJson,
-                // Fields definition is needed to render labels — when the
-                // response is tied to a known form we include that form's
-                // schema, else we send "[]" and the UI falls back to raw JSON.
-                r.PracticeForm?.FieldsJson ?? "[]"
-            )))
+            .SelectMany(a => a.IntakeFormResponses.Select(r =>
+            {
+                // Resolve the form this response was submitted against.
+                // Modern responses have a direct PracticeFormId; legacy ones
+                // do not, in which case we fall back to the first form
+                // attached to the appointment's type (which is where the old
+                // one-to-one IntakeForm used to live).
+                PracticeForm? form = r.PracticeForm;
+                if (form is null)
+                {
+                    form = a.AppointmentType.AppointmentTypeForms
+                        .OrderBy(x => x.SortOrder)
+                        .Select(x => x.PracticeForm)
+                        .FirstOrDefault();
+                }
+                // SubmittedAt is written as UTC (DateTime.UtcNow) but EF loads
+                // it back with Kind=Unspecified — mark it Utc so the JSON
+                // serializer emits a Z-suffixed ISO string and the browser
+                // renders it in the viewer's local timezone.
+                return new ClientFormResponseDto(
+                    r.Id,
+                    a.Id,
+                    a.StartTime,
+                    r.PracticeFormId,
+                    form?.Name ?? "Intake Form",
+                    DateTime.SpecifyKind(r.SubmittedAt, DateTimeKind.Utc),
+                    r.ResponsesJson,
+                    form?.FieldsJson ?? "[]"
+                );
+            }))
             .OrderByDescending(r => r.SubmittedAt)
             .ToList();
 

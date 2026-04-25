@@ -70,7 +70,34 @@
                     <div class="response-row">
                       <dt class="response-label">{{ r.label }}</dt>
                       <dd class="response-value">
-                        @if (r.isSignature) {
+                        @if (r.imagemap) {
+                          @if (r.imagemap.imageUrl && r.imagemap.points.length > 0) {
+                            <div class="imagemap-readonly">
+                              <svg class="imagemap-readonly-svg"
+                                   viewBox="0 0 500 600"
+                                   preserveAspectRatio="xMidYMid meet">
+                                <image [attr.href]="r.imagemap.imageUrl" x="0" y="0" width="500" height="600" />
+                                @for (p of r.imagemap.points; track $index) {
+                                  <g>
+                                    <circle [attr.cx]="p.x" [attr.cy]="p.y" r="14" fill="#c53030" stroke="#fff" stroke-width="2" />
+                                    <text [attr.x]="p.x" [attr.y]="p.y"
+                                          text-anchor="middle" dominant-baseline="central"
+                                          fill="#fff" style="font: 700 13px sans-serif;">{{ p.letter }}</text>
+                                  </g>
+                                }
+                              </svg>
+                              @if (r.imagemap.markers.length > 0) {
+                                <div class="imagemap-legend">
+                                  @for (m of r.imagemap.markers; track m.letter) {
+                                    <span class="imagemap-legend-item"><strong>{{ m.letter }}</strong> {{ m.label }}</span>
+                                  }
+                                </div>
+                              }
+                            </div>
+                          } @else {
+                            <span class="response-empty">—</span>
+                          }
+                        } @else if (r.isSignature) {
                           <img class="response-signature" [src]="r.value" alt="Signature" />
                         } @else if (isArray(r.value)) {
                           @if ($any(r.value).length === 0) {

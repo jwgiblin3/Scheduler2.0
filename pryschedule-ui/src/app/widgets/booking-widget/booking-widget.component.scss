@@ -79,3 +79,131 @@ input[type=text], input[type=email], input[type=tel] { width: 100%; padding: .6r
 .auth-prompt .btn-primary:hover { background: #5a67d8; border-color: #5a67d8; }
 .auth-prompt .btn-secondary { background: #fff; color: #667eea; border: 1.5px solid #667eea; }
 .auth-prompt .btn-secondary:hover { background: #f0f4ff; }
+
+/* ---- Earlier-slot waitlist CTA + modal ----
+   Rendered below the booking card, centered, with a muted bell button so it
+   feels like an optional helper rather than part of the main flow. */
+.alert-footer {
+  text-align: center;
+  margin: 1rem 0 0;
+}
+.btn-alert {
+  background: transparent;
+  border: 1.5px solid #c3dafe;
+  color: #4c51bf;
+  padding: .55rem 1.1rem;
+  border-radius: 999px;
+  font-size: .88rem;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.btn-alert:hover {
+  background: #ebf4ff;
+  border-color: #a3bffa;
+  color: #434190;
+}
+
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(26, 31, 54, .55);
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+  z-index: 1000;
+}
+.modal-card {
+  background: #fff; border-radius: 12px;
+  width: 100%; max-width: 560px;
+  max-height: calc(100vh - 2rem);
+  overflow: auto;
+  box-shadow: 0 10px 40px rgba(0,0,0,.25);
+}
+.modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 1rem 1.25rem; border-bottom: 1px solid #edf2f7;
+}
+.modal-header h3 { margin: 0; font-size: 1.05rem; color: #1a1f36; }
+.modal-close {
+  background: transparent; border: none; font-size: 1rem;
+  color: #718096; cursor: pointer; padding: .2rem .45rem; border-radius: 4px;
+}
+.modal-close:hover { background: #f7f8fc; color: #1a1f36; }
+.modal-body { padding: 1.25rem 1.25rem 1.5rem; }
+.modal-desc { margin: 0 0 1rem; color: #4a5568; font-size: .9rem; line-height: 1.5; }
+
+.any-day-row { margin: .5rem 0 1rem; padding: .75rem 1rem; background: #f7f8fc; border-radius: 8px; }
+.any-day-row .checkbox-label { font-size: .88rem; color: #1a1f36; }
+
+/* Day + time-range preferences grid.
+   Five columns: day checkbox + Start / End / Specific Start / Specific End
+   time inputs. Disabled inputs dim out until the day itself is enabled. */
+.day-grid {
+  border: 1px solid #edf2f7; border-radius: 8px; overflow: hidden;
+  margin-bottom: 1rem;
+}
+.day-grid-head {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr 1fr 1fr;
+  gap: .35rem;
+  padding: .5rem .75rem;
+  background: #fafbff;
+  border-bottom: 1px solid #edf2f7;
+  font-size: .76rem; font-weight: 600; color: #4a5568; text-align: center;
+}
+.day-grid-head span:first-child { text-align: left; }
+.day-grid-head small { color: #a0aec0; font-weight: 400; font-size: .68rem; }
+.day-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr 1fr 1fr;
+  gap: .35rem;
+  align-items: center;
+  padding: .45rem .75rem;
+  border-bottom: 1px solid #edf2f7;
+}
+.day-row:last-child { border-bottom: none; }
+.day-row-enabled { background: #fff; }
+.day-label {
+  display: flex; align-items: center; gap: .5rem;
+  font-size: .88rem; color: #1a1f36; cursor: pointer;
+}
+.day-label input { width: auto; }
+.time-input {
+  width: 100%; box-sizing: border-box;
+  padding: .35rem .4rem;
+  border: 1px solid #e2e8f0; border-radius: 5px;
+  font-size: .82rem; color: #1a1f36;
+  background: #fff;
+  font-family: inherit;
+}
+.time-input:disabled {
+  background: #f7f8fc; color: #a0aec0; cursor: not-allowed;
+}
+
+.modal-actions {
+  display: flex; justify-content: flex-end; align-items: center; gap: .75rem;
+  margin-top: 1rem;
+}
+.modal-actions .btn-confirm { padding: .6rem 1.25rem; }
+.modal-actions .btn-link { background: none; border: none; color: #667eea; cursor: pointer; font-size: .88rem; }
+
+.success-body { text-align: center; padding: 1rem 1.25rem 1.5rem; }
+.success-body p { color: #4a5568; font-size: .92rem; line-height: 1.5; margin: .75rem 0 1.25rem; }
+.success-icon {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: #c6f6d5; color: #22543d;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; font-weight: 700;
+}
+
+/* On narrow viewports the 5-column grid gets cramped; stack the time inputs
+   under the day label so each field is still tappable. */
+@media (max-width: 600px) {
+  .day-grid-head { display: none; }
+  .day-row {
+    grid-template-columns: 1fr 1fr;
+    gap: .4rem .35rem;
+  }
+  .day-row .day-label { grid-column: 1 / -1; }
+  .time-input::before {
+    /* no-op hook kept for future mobile labeling */
+  }
+}

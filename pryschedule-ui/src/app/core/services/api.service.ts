@@ -130,6 +130,20 @@ export class ApiService {
     return this.http.get<PracticeForm[]>(`${this.base}/forms/public/appointment-type/${appointmentTypeId}`);
   }
 
+  /** Anonymous — submit an "alert me if earlier slots open" waitlist entry. */
+  createAvailabilityAlert(slug: string, body: {
+    appointmentTypeId: number;
+    providerId?: number | null;
+    clientName: string;
+    email: string;
+    phone?: string | null;
+    preferencesJson: string;
+  }) {
+    return this.http.post<{ id: number; createdAt: string }>(
+      `${this.base}/availabilityalerts/public/${slug}`, body
+    );
+  }
+
   /** Legacy single-form fetch — returns the first form attached to the type. */
   getPublicIntakeForm(appointmentTypeId: number) {
     return this.http.get<PracticeForm>(`${this.base}/intakeforms/public/${appointmentTypeId}`);

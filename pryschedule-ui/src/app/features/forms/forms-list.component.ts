@@ -2,15 +2,25 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
-import { PracticeForm, IntakeFormField } from '../../core/models/models';
+import { PracticeForm, IntakeFormField, ImageMapMarker } from '../../core/models/models';
 
 const FIELD_TYPES: Array<{ value: IntakeFormField['type']; label: string; hasOptions: boolean }> = [
-  { value: 'text',      label: 'Short text',               hasOptions: false },
-  { value: 'textarea',  label: 'Long text',                hasOptions: false },
-  { value: 'radio',     label: 'Single choice (radio)',    hasOptions: true  },
+  { value: 'text',      label: 'Short text',                 hasOptions: false },
+  { value: 'textarea',  label: 'Long text',                  hasOptions: false },
+  { value: 'radio',     label: 'Single choice (radio)',      hasOptions: true  },
   { value: 'checkbox',  label: 'Multiple choice (checkbox)', hasOptions: true  },
-  { value: 'date',      label: 'Date',                     hasOptions: false },
-  { value: 'signature', label: 'Signature',                hasOptions: false }
+  { value: 'date',      label: 'Date',                       hasOptions: false },
+  { value: 'signature', label: 'Signature',                  hasOptions: false },
+  { value: 'imagemap',  label: 'Image map (body diagram)',   hasOptions: false }
+];
+
+/** Seed markers for brand-new imagemap fields — mirrors a common pain-chart key. */
+const DEFAULT_IMAGEMAP_MARKERS = [
+  { letter: 'N', label: 'Numbness' },
+  { letter: 'B', label: 'Burning' },
+  { letter: 'S', label: 'Stabbing' },
+  { letter: 'T', label: 'Tingling' },
+  { letter: 'A', label: 'Dull Ache' }
 ];
 
 @Component({
@@ -67,13 +77,18 @@ export class FormsListComponent implements OnInit {
 
   addField(type: IntakeFormField['type'] = 'text') {
     const needsOptions = FIELD_TYPES.find(t => t.value === type)?.hasOptions;
-    this.editFields.update(list => [...list, {
+    const base: IntakeFormField = {
       id: randomFieldId(),
       label: '',
       type,
       required: false,
       options: needsOptions ? ['Option 1'] : undefined
-    }]);
+    };
+    if (type === 'imagemap') {
+      base.imageUrl = '';
+      base.markers = [...DEFAULT_IMAGEMAP_MARKERS];
+    }
+    this.editFields.update(list => [...list, base]);
     this.formSaved.set(false);
   }
 
@@ -106,7 +121,69 @@ export class FormsListComponent implements OnInit {
       } else if (!needsOptions) {
         merged.options = undefined;
       }
+      // Image-map defaults: seed an empty URL and the standard marker set on
+      // first switch to imagemap, strip those fields on switch away so stale
+      // data doesn't leak into other field types.
+      if (merged.type === 'imagemap') {
+        if (merged.imageUrl === undefined) merged.imageUrl = '';
+        if (!merged.markers || merged.markers.length === 0) {
+          merged.markers = [...DEFAULT_IMAGEMAP_MARKERS];
+        }
+      } else {
+        merged.imageUrl = undefined;
+        merged.markers = undefined;
+      }
       return merged;
+    }));
+    this.formSaved.set(false);
+  }
+
+  // ---- Marker-list helpers (image-map fields only) ----
+
+  addMarker(fieldId: string) {
+    this.editFields.update(list => list.map(f => {
+      if (f.id !== fieldId) return f;
+      const markers = [...(f.markers ?? [])];
+      markers.push({ letter: '', label: '' });
+      return { ...f, markers };
+    }));
+    this.formSaved.set(false);
+  }
+
+  removeMarker(fieldId: string, index: number) {
+    this.editFields.update(list => list.map(f => {
+      if (f.id !== fieldId) return f;
+      const markers = (f.markers ?? []).filter((_, i) => i !== index);
+      return { ...f, markers };
+    }));
+    this.formSaved.set(false);
+  }
+
+  /**
+   * Update a marker's letter or label. Letter is normalized to uppercase,
+   * clamped to one character; changing the label auto-fills the letter when
+   * the admin hasn't overridden it yet, so "Numbness" → N without an extra step.
+   */
+  updateMarker(fieldId: string, index: number, patch: Partial<ImageMapMarker>) {
+    this.editFields.update(list => list.map(f => {
+      if (f.id !== fieldId) return f;
+      const markers = (f.markers ?? []).slice();
+      const existing = markers[index];
+      if (!existing) return f;
+      const next = { ...existing, ...patch };
+      if (typeof patch.letter === 'string') {
+        next.letter = patch.letter.slice(0, 1).toUpperCase();
+      }
+      if (typeof patch.label === 'string' && !patch.letter) {
+        // Only auto-sync when the letter still matches the old label's first
+        // char — i.e. the admin hasn't manually overridden it.
+        const oldAutoLetter = (existing.label ?? '').slice(0, 1).toUpperCase();
+        if (!existing.letter || existing.letter === oldAutoLetter) {
+          next.letter = (patch.label ?? '').slice(0, 1).toUpperCase();
+        }
+      }
+      markers[index] = next;
+      return { ...f, markers };
     }));
     this.formSaved.set(false);
   }
@@ -127,11 +204,25 @@ export class FormsListComponent implements OnInit {
     }
     const fields = this.editFields()
       .filter(f => f.label.trim().length > 0)
-      .map(f => ({
-        ...f,
-        label: f.label.trim(),
-        options: f.options ? f.options.map(o => o.trim()).filter(o => o.length > 0) : undefined
-      }));
+      .map(f => {
+        const cleaned: IntakeFormField = {
+          ...f,
+          label: f.label.trim(),
+          options: f.options ? f.options.map(o => o.trim()).filter(o => o.length > 0) : undefined
+        };
+        if (f.type === 'imagemap') {
+          cleaned.imageUrl = (f.imageUrl ?? '').trim();
+          // Drop partially-filled marker rows so the client side never sees
+          // a marker with "" as its letter.
+          cleaned.markers = (f.markers ?? [])
+            .map(m => ({
+              letter: (m.letter ?? '').slice(0, 1).toUpperCase(),
+              label: (m.label ?? '').trim()
+            }))
+            .filter(m => m.letter && m.label);
+        }
+        return cleaned;
+      });
     const fieldsJson = JSON.stringify(fields);
 
     this.saving.set(true);
@@ -192,13 +283,26 @@ export class FormsListComponent implements OnInit {
     try {
       const parsed = JSON.parse(json);
       if (!Array.isArray(parsed)) return [];
-      return parsed.map((f: any) => ({
-        id: typeof f.id === 'string' && f.id ? f.id : randomFieldId(),
-        label: String(f.label ?? ''),
-        type: (FIELD_TYPES.find(t => t.value === f.type)?.value ?? 'text') as IntakeFormField['type'],
-        required: Boolean(f.required),
-        options: Array.isArray(f.options) ? f.options.map(String) : undefined
-      }));
+      return parsed.map((f: any) => {
+        const type = (FIELD_TYPES.find(t => t.value === f.type)?.value ?? 'text') as IntakeFormField['type'];
+        const base: IntakeFormField = {
+          id: typeof f.id === 'string' && f.id ? f.id : randomFieldId(),
+          label: String(f.label ?? ''),
+          type,
+          required: Boolean(f.required),
+          options: Array.isArray(f.options) ? f.options.map(String) : undefined
+        };
+        if (type === 'imagemap') {
+          base.imageUrl = typeof f.imageUrl === 'string' ? f.imageUrl : '';
+          base.markers = Array.isArray(f.markers)
+            ? f.markers.map((m: any) => ({
+                letter: String(m?.letter ?? '').slice(0, 1).toUpperCase(),
+                label: String(m?.label ?? '')
+              }))
+            : [...DEFAULT_IMAGEMAP_MARKERS];
+        }
+        return base;
+      });
     } catch {
       return [];
     }

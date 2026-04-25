@@ -43,15 +43,10 @@ export class BookingWidgetComponent implements OnInit {
   selectedType = signal<AppointmentType | null>(null);
   selectedProvider = signal<PublicProvider | null | undefined>(undefined);
 
-  // Week picker — start on tomorrow so the visible week shows future days.
-  // The backend filters out slots that are already in the past.
-  weekStart = signal<Date>((() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    // Align to Sunday of the current week.
-    d.setDate(d.getDate() - d.getDay());
-    return d;
-  })());
+  // Week picker — rolling 7-day window that always starts on today.
+  // Past days are never shown; prevWeek() clamps to today so users can't
+  // page back into the past.
+  weekStart = signal<Date>(todayAtMidnight());
 
   slots = signal<AvailableSlot[]>([]);
   loadingSlots = signal(false);
@@ -98,6 +93,172 @@ export class BookingWidgetComponent implements OnInit {
   booking = signal(false);
   bookError = signal('');
 
+  // ---- Availability alert modal ("notify me if earlier slot opens") ----
+  //
+  // Preferences shape (PreferencesJson on the backend):
+  //   {
+  //     anyDay: bool,
+  //     days: {
+  //       sunday: {
+  //         enabled:           bool,
+  //         startTime:         "HH:MM" | "",   // general window start
+  //         endTime:           "HH:MM" | "",   // general window end
+  //         specificStartTime: "HH:MM" | "",   // narrower preferred slot start
+  //         specificEndTime:   "HH:MM" | ""    // narrower preferred slot end
+  //       }, ...
+  //     }
+  //   }
+  //
+  // The general [startTime, endTime] range is the outer window the client will
+  // accept; the specific pair lets them call out a sweet-spot inside it (e.g.
+  // "I'll take 9-5 Monday, but I REALLY want 12:00-13:00 if it opens up").
+  alertModalOpen = signal(false);
+  alertSubmitting = signal(false);
+  alertError = signal('');
+  alertSubmitted = signal(false);
+  alertName = '';
+  alertEmail = '';
+  alertPhone = '';
+  alertAnyDay = true;
+  // Day keys match what the server expects, lowercase English day names.
+  readonly alertDayKeys = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const;
+
+  /** Default general window — "business hours" so the user only needs to tweak exceptions. */
+  private readonly DEFAULT_START = '09:00';
+  private readonly DEFAULT_END = '17:00';
+
+  alertDays: Record<string, {
+    enabled: boolean;
+    startTime: string;
+    endTime: string;
+    specificStartTime: string;
+    specificEndTime: string;
+  }> = {
+    sunday:    this.freshDay(),
+    monday:    this.freshDay(),
+    tuesday:   this.freshDay(),
+    wednesday: this.freshDay(),
+    thursday:  this.freshDay(),
+    friday:    this.freshDay(),
+    saturday:  this.freshDay()
+  };
+
+  private freshDay() {
+    return {
+      enabled: false,
+      startTime: this.DEFAULT_START,
+      endTime: this.DEFAULT_END,
+      specificStartTime: '',
+      specificEndTime: ''
+    };
+  }
+
+  /** Human labels for the day-of-week column headers in the modal. */
+  readonly alertDayLabels: Record<string, string> = {
+    sunday: 'Sunday', monday: 'Monday', tuesday: 'Tuesday',
+    wednesday: 'Wednesday', thursday: 'Thursday', friday: 'Friday', saturday: 'Saturday'
+  };
+
+  openAlertModal() {
+    // Prefill with the signed-in user's identity if we have it; the form
+    // still works for unauthenticated visitors who type their own name/email.
+    const user = this.auth.currentUser();
+    this.alertName = user ? `${user.firstName} ${user.lastName}`.trim() : '';
+    this.alertEmail = user?.email ?? '';
+    this.alertPhone = user?.phone ?? '';
+    this.alertError.set('');
+    this.alertSubmitted.set(false);
+    this.alertModalOpen.set(true);
+  }
+
+  closeAlertModal() {
+    this.alertModalOpen.set(false);
+  }
+
+  /** Flipping "any day" off doesn't erase per-day selections — preserves intent if the user toggles back. */
+  toggleAnyDay(value: boolean) {
+    this.alertAnyDay = value;
+  }
+
+  submitAlert() {
+    if (!this.selectedType()) return;
+    const name = this.alertName.trim();
+    const email = this.alertEmail.trim();
+    if (!name) { this.alertError.set('Please enter your name.'); return; }
+    if (!email || !email.includes('@')) { this.alertError.set('Please enter a valid email.'); return; }
+
+    // Validate: must have anyDay OR at least one enabled day with a valid
+    // start/end window. "Specific" times are optional, so they're not
+    // required for a submission to be valid.
+    if (!this.alertAnyDay) {
+      const anyDayPicked = this.alertDayKeys.some(k => this.alertDays[k].enabled);
+      if (!anyDayPicked) {
+        this.alertError.set('Enable at least one day, or choose "Any day".');
+        return;
+      }
+      // Per-day sanity check — end time must be after start time.
+      for (const k of this.alertDayKeys) {
+        const d = this.alertDays[k];
+        if (!d.enabled) continue;
+        if (!d.startTime || !d.endTime) {
+          this.alertError.set(`${this.alertDayLabels[k]}: please set both a start and end time.`);
+          return;
+        }
+        if (d.startTime >= d.endTime) {
+          this.alertError.set(`${this.alertDayLabels[k]}: end time must be after start time.`);
+          return;
+        }
+        // If the user filled one half of the "specific" pair, require the other.
+        const hasSpecStart = !!d.specificStartTime;
+        const hasSpecEnd = !!d.specificEndTime;
+        if (hasSpecStart !== hasSpecEnd) {
+          this.alertError.set(`${this.alertDayLabels[k]}: specific time needs both a start and an end, or neither.`);
+          return;
+        }
+        if (hasSpecStart && hasSpecEnd && d.specificStartTime >= d.specificEndTime) {
+          this.alertError.set(`${this.alertDayLabels[k]}: specific end time must be after specific start time.`);
+          return;
+        }
+      }
+    }
+
+    const preferences = {
+      anyDay: this.alertAnyDay,
+      days: this.alertDayKeys.reduce<Record<string, unknown>>((acc, k) => {
+        const d = this.alertDays[k];
+        acc[k] = {
+          enabled: d.enabled,
+          startTime: d.startTime,
+          endTime: d.endTime,
+          specificStartTime: d.specificStartTime,
+          specificEndTime: d.specificEndTime
+        };
+        return acc;
+      }, {})
+    };
+
+    const provider = this.selectedProvider();
+    this.alertSubmitting.set(true);
+    this.alertError.set('');
+    this.api.createAvailabilityAlert(this.bookingSlug, {
+      appointmentTypeId: this.selectedType()!.id,
+      providerId: provider?.id ?? null,
+      clientName: name,
+      email,
+      phone: this.alertPhone.trim() || null,
+      preferencesJson: JSON.stringify(preferences)
+    }).subscribe({
+      next: () => {
+        this.alertSubmitting.set(false);
+        this.alertSubmitted.set(true);
+      },
+      error: err => {
+        this.alertSubmitting.set(false);
+        this.alertError.set(err?.error || 'Could not save your alert. Please try again.');
+      }
+    });
+  }
+
   allProviders() { return this.practice()?.providers ?? []; }
 
   initials(name: string): string {
@@ -122,12 +283,9 @@ export class BookingWidgetComponent implements OnInit {
     this.selectedProvider.set(p);
     this.selectedSlot.set(null);
     this.slots.set([]);
-    // Start on the week containing tomorrow so we're fetching future days.
-    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
-    const weekStart = new Date(tomorrow);
-    weekStart.setDate(tomorrow.getDate() - tomorrow.getDay());
-    this.weekStart.set(weekStart);
+    // Reset the week to today whenever a new provider is picked — avoids
+    // carrying a stale "next week" view forward when the user changes their mind.
+    this.weekStart.set(todayAtMidnight());
     this.loadSlotsForCurrentView();
   }
 
@@ -161,10 +319,24 @@ export class BookingWidgetComponent implements OnInit {
     this.clearSlot();
   }
 
+  /** True when the visible week already starts at today — prevents paging past today. */
+  readonly atEarliestWeek = computed(() => {
+    const start = this.weekStart();
+    const today = todayAtMidnight();
+    return start.getTime() <= today.getTime();
+  });
+
   prevWeek() {
+    if (this.atEarliestWeek()) return;
     const d = new Date(this.weekStart());
     d.setDate(d.getDate() - 7);
-    this.weekStart.set(d);
+    // Clamp to today so we never scroll past the present.
+    const today = todayAtMidnight();
+    if (d.getTime() < today.getTime()) {
+      this.weekStart.set(today);
+    } else {
+      this.weekStart.set(d);
+    }
     this.loadSlotsForCurrentView();
   }
 
@@ -312,4 +484,11 @@ export class BookingWidgetComponent implements OnInit {
       error: () => this.error.set('Practice not found. Please check your booking link.')
     });
   }
+}
+
+/** Midnight at the start of today, in local time. */
+function todayAtMidnight(): Date {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
 }

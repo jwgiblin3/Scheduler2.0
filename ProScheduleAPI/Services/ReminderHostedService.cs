@@ -52,7 +52,10 @@ public class ReminderHostedService : BackgroundService
         foreach (var practice in practices)
         {
             var settings = practice.NotificationSettings;
-            if (settings is null || !settings.EmailEnabled) continue;
+            // Skip the whole practice only when BOTH channels are disabled.
+            // The previous check bailed whenever email was off, which silently
+            // suppressed SMS reminders for any practice that had only SMS on.
+            if (settings is null || (!settings.EmailEnabled && !settings.SmsEnabled)) continue;
 
             var reminderWindows = new[] { settings.Reminder1Hours, settings.Reminder2Hours };
 

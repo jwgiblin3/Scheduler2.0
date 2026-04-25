@@ -47,6 +47,34 @@ builder.Services.AddAuthorization();
 // Services
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<AvailabilityService>();
+
+// Email provider selection — driven by the "Email:Provider" config key so
+// deployments can swap SMTP / SendGrid / disabled without a code change.
+// Defaults to SendGrid when no provider is set but a legacy SendGrid:ApiKey
+// exists, and to the null-logger sender otherwise (so local devs without any
+// credentials can still run the app and see what WOULD have been sent).
+var emailProvider = (builder.Configuration["Email:Provider"] ?? "").Trim().ToLowerInvariant();
+if (string.IsNullOrEmpty(emailProvider))
+{
+    if (!string.IsNullOrEmpty(builder.Configuration["SendGrid:ApiKey"]))
+        emailProvider = "sendgrid";
+    else if (!string.IsNullOrEmpty(builder.Configuration["Email:Smtp:Host"]))
+        emailProvider = "smtp";
+    else
+        emailProvider = "none";
+}
+switch (emailProvider)
+{
+    case "smtp":
+        builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
+        break;
+    case "sendgrid":
+        builder.Services.AddScoped<IEmailSender, SendGridEmailSender>();
+        break;
+    default:
+        builder.Services.AddScoped<IEmailSender, NullEmailSender>();
+        break;
+}
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<SmsService>();
 builder.Services.AddHostedService<ReminderHostedService>();

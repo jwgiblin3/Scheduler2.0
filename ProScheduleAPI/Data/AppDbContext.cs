@@ -22,6 +22,7 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<int>, int>
     public DbSet<NotificationSettings> NotificationSettings => Set<NotificationSettings>();
     public DbSet<PracticeHoliday> PracticeHolidays => Set<PracticeHoliday>();
     public DbSet<ProviderException> ProviderExceptions => Set<ProviderException>();
+    public DbSet<AvailabilityAlert> AvailabilityAlerts => Set<AvailabilityAlert>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -162,5 +163,18 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<int>, int>
 
         builder.Entity<IntakeFormResponse>()
             .HasIndex(r => new { r.AppointmentId, r.PracticeFormId });
+
+        // --- Availability alerts (a.k.a. waitlist entries) ---
+        // Cascade from Practice so test-practice cleanup doesn't leave orphans.
+        // Indexed by (PracticeId, IsActive) because the notification job
+        // will repeatedly ask "which active alerts exist for this practice?".
+        builder.Entity<AvailabilityAlert>()
+            .HasOne(a => a.Practice)
+            .WithMany()
+            .HasForeignKey(a => a.PracticeId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<AvailabilityAlert>()
+            .HasIndex(a => new { a.PracticeId, a.IsActive });
     }
 }
