@@ -1,10 +1,17 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity;
 
 namespace ProScheduleAPI.Models;
 
 public class AppUser : IdentityUser<int>
 {
+    // Field-length caps per ADR-001 §6. Identity's own columns (Email,
+    // UserName, NormalizedEmail, etc.) inherit IdentityUser defaults
+    // (256). We only add limits on the fields we own.
+    [Required, MaxLength(50)]
     public string FirstName { get; set; } = string.Empty;
+
+    [Required, MaxLength(80)]
     public string LastName { get; set; } = string.Empty;
 
     /// <summary>

@@ -38,12 +38,13 @@ export class ProviderFormComponent implements OnInit {
 
   dayOptions = [0,1,2,3,4,5,6].map(v => ({ value: v, label: DAYS[v] }));
 
+  // maxLength values mirror server caps from ADR-001 §6 / Phase 0.
   form = this.fb.group({
-    displayName: ['', Validators.required],
-    email: ['', Validators.email], // optional; validated only when filled
-    phone: [''],
-    description: [''],
-    isActive: [true],
+    displayName: ['', [Validators.required, Validators.maxLength(80)]],
+    email:       ['', [Validators.email, Validators.maxLength(254)]],   // optional; validated when filled
+    phone:       ['', [Validators.maxLength(20)]],
+    description: ['', [Validators.maxLength(2000)]],
+    isActive:    [true],
     availabilities: this.fb.array([])
   });
 

@@ -2,13 +2,31 @@
     <div class="confirm-page">
       <div class="confirm-card">
         <div class="checkmark">✓</div>
-        <h1>Appointment Confirmed!</h1>
-        <p class="subtitle">We've sent a confirmation email with your appointment details.</p>
+        <h1>{{ wasRescheduled() ? 'Appointment Updated!' : 'Appointment Confirmed!' }}</h1>
+        <p class="subtitle">
+          {{ wasRescheduled()
+              ? 'Your appointment has been moved to the new time. We\'ve sent a confirmation email.'
+              : 'We\'ve sent a confirmation email with your appointment details.' }}
+        </p>
 
         <div class="details">
           <div class="detail-row">
             <span class="detail-label">Date & Time</span>
             <span class="detail-value">{{ startTime() | date:'EEEE, MMMM d, y · h:mm a' }}</span>
+          </div>
+        </div>
+
+        <!-- Add to Calendar — opens Google in a new tab, or downloads an
+             .ics file that Apple Calendar / Outlook / Fantastical handle. -->
+        <div class="add-to-calendar">
+          <p class="add-to-calendar-label">Add to your calendar</p>
+          <div class="add-to-calendar-buttons">
+            <a [href]="googleCalUrl()" target="_blank" rel="noopener" class="btn-cal btn-cal-google">
+              <span class="btn-cal-icon">📅</span> Google Calendar
+            </a>
+            <button type="button" class="btn-cal btn-cal-ics" (click)="downloadIcs()">
+              <span class="btn-cal-icon">📆</span> Apple / Outlook (.ics)
+            </button>
           </div>
         </div>
 
@@ -24,6 +42,22 @@
             </div>
           </div>
         }
+
+        <!-- "View my bookings" — opens the patient's appointments list.
+             In a widget iframe we use target="_top" so the link breaks out of
+             the embed and shows the full appointments view; standalone uses
+             the Angular router so navigation stays within the SPA. -->
+        <div class="my-bookings-link">
+          @if (inWidget()) {
+            <a [href]="myAppointmentsUrl()" target="_top" class="btn-my-bookings">
+              View my bookings →
+            </a>
+          } @else {
+            <a [routerLink]="['/my/appointments']" class="btn-my-bookings">
+              View my bookings →
+            </a>
+          }
+        </div>
 
         <div class="manage-links">
           <p>Need to make changes?</p>

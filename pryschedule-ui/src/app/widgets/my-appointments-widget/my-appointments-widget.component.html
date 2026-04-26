@@ -77,6 +77,13 @@
                 </div>
               </div>
               <div class="appt-actions">
+                @if (a.cancellationToken && a.practiceSlug) {
+                  <a class="btn-modify"
+                     [routerLink]="['/book', a.practiceSlug]"
+                     [queryParams]="{ reschedule: a.cancellationToken, apptId: a.id, originalStart: a.startTime, originalType: a.appointmentTypeName, originalProvider: a.providerName }">
+                    Modify
+                  </a>
+                }
                 <button class="btn-cancel" type="button" (click)="cancel(a)">Cancel</button>
               </div>
             </div>

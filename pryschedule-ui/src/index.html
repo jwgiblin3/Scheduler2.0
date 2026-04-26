@@ -2,11 +2,24 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>PryscheduleUi</title>
+  <title>ProSchedule</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="alternate icon" type="image/x-icon" href="favicon.ico">
+  <!--
+    Favicons. The `?v=2` query string is cache-busting: Angular's asset
+    pipeline doesn't hash files copied from public/, so without a version
+    bump browsers happily serve the previously-cached (often empty) favicon
+    forever. Bump v=N whenever the icon files change.
+
+    Two icons declared so the browser can pick its best fit:
+      - SVG (modern browsers, scales perfectly)
+      - ICO with sizes="any" (Safari, IE/Edge legacy, OS-level shortcuts)
+    Apple touch icon points at the SVG so iOS home-screen shortcuts get a
+    clean vector instead of a rasterized 16x16 from the .ico.
+  -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2">
+  <link rel="icon" type="image/x-icon" href="favicon.ico?v=2" sizes="any">
+  <link rel="apple-touch-icon" href="favicon.svg?v=2">
 </head>
 <body>
   <app-root></app-root>

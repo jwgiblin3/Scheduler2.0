@@ -17,8 +17,10 @@ export class LoginComponent {
   private route = inject(ActivatedRoute);
   private fb = inject(FormBuilder);
 
+  // maxLength on email matches server cap (RFC 5321 — 254). Password has
+  // no max here; server enforces what it enforces.
   form = this.fb.group({
-    email: ['', [Validators.required, Validators.email]],
+    email:    ['', [Validators.required, Validators.email, Validators.maxLength(254)]],
     password: ['', Validators.required]
   });
 

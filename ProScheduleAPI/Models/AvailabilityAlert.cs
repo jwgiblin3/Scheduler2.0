@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace ProScheduleAPI.Models;
 
 /// <summary>
@@ -18,8 +20,15 @@ public class AvailabilityAlert
     /// <summary>Optional — null means "any provider who offers this type".</summary>
     public int? ProviderId { get; set; }
 
+    // Length caps per ADR-001 §6. ClientName is one combined field (first +
+    // last possibly with spaces) so 130 = 50 + 80.
+    [Required, MaxLength(130)]
     public string ClientName { get; set; } = string.Empty;
+
+    [Required, EmailAddress, MaxLength(254)]
     public string Email { get; set; } = string.Empty;
+
+    [Phone, MaxLength(20)]
     public string? Phone { get; set; }
 
     /// <summary>

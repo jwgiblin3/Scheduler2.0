@@ -88,10 +88,24 @@ export class BookingWidgetComponent implements OnInit {
 
   // Optional phone override and SMS opt-in captured at booking time. Name /
   // email come from the signed-in user's session (no guest bookings).
+  // SMS reminders default ON — patients overwhelmingly want them; opt-out
+  // is friendlier than opt-in.
   clientPhone = '';
-  smsOptIn = false;
+  smsOptIn = true;
   booking = signal(false);
   bookError = signal('');
+
+  // ---- Reschedule mode --------------------------------------------------
+  //
+  // When the booking page is opened from "Modify" on /my/appointments, the
+  // URL carries ?reschedule=<token> plus context about the existing booking.
+  // In this mode the API call switches from POST /book to POST /reschedule
+  // (which keeps the same provider/type and just moves the start time), and
+  // the UI shows a banner so the user knows they're not booking a brand-new
+  // appointment.
+  rescheduleToken = signal<string | null>(null);
+  rescheduleOriginal = signal<{ start: string; type: string; provider: string } | null>(null);
+  isReschedule = computed(() => !!this.rescheduleToken());
 
   // ---- Availability alert modal ("notify me if earlier slot opens") ----
   //
@@ -277,6 +291,7 @@ export class BookingWidgetComponent implements OnInit {
     this.selectedProvider.set(undefined);
     this.selectedSlot.set(null);
     this.slots.set([]);
+    this.persistDraft();
   }
 
   selectProvider(p: PublicProvider | null) {
@@ -287,16 +302,19 @@ export class BookingWidgetComponent implements OnInit {
     // carrying a stale "next week" view forward when the user changes their mind.
     this.weekStart.set(todayAtMidnight());
     this.loadSlotsForCurrentView();
+    this.persistDraft();
   }
 
   /** Click handler for chip / Next Available card. */
   selectSlot(s: AvailableSlot) {
     this.selectedSlot.set(s);
+    this.persistDraft();
   }
 
   clearSlot() {
     this.selectedSlot.set(null);
     this.loadSlotsForCurrentView();
+    this.persistDraft();
   }
 
   /** "Change" button for step 1 — back to the type picker, resets downstream choices. */
@@ -305,6 +323,7 @@ export class BookingWidgetComponent implements OnInit {
     this.selectedProvider.set(undefined);
     this.selectedSlot.set(null);
     this.slots.set([]);
+    this.persistDraft();
   }
 
   /** "Change" button for step 2 — back to the provider picker, resets downstream choices. */
@@ -312,11 +331,93 @@ export class BookingWidgetComponent implements OnInit {
     this.selectedProvider.set(undefined);
     this.selectedSlot.set(null);
     this.slots.set([]);
+    this.persistDraft();
   }
 
   /** "Change" button for step 3 — back to the time picker. */
   editSlot() {
     this.clearSlot();
+  }
+
+  // ---- Booking draft persistence ---------------------------------------
+  //
+  // Booking selections live in component-local signals which means they're
+  // wiped whenever Angular tears the component down — including when the
+  // user clicks "Sign in as someone else" (which navigates to /login and
+  // back). To keep the picks across that round trip we mirror them into
+  // sessionStorage, keyed by the practice slug, and restore them in
+  // ngOnInit. sessionStorage (not localStorage) is correct here: it dies
+  // when the tab closes, which matches how long a half-finished booking
+  // should reasonably hang around.
+  private draftKey(): string { return `booking-draft:${this.bookingSlug}`; }
+
+  private persistDraft() {
+    if (!this.bookingSlug) return;
+    // We deliberately persist only practice-level picks (type/provider/slot),
+    // NOT clientPhone or smsOptIn. Those are per-user and shouldn't carry
+    // across a "sign in as someone else" round trip — the new user gets
+    // their own phone pre-filled and the SMS default re-applied.
+    try {
+      const draft = {
+        typeId: this.selectedType()?.id ?? null,
+        providerId: this.selectedProvider() === undefined
+          ? undefined                                       // not picked yet
+          : (this.selectedProvider()?.id ?? null),          // null = Any Available
+        slotStart: this.selectedSlot()?.start ?? null
+      };
+      sessionStorage.setItem(this.draftKey(), JSON.stringify(draft));
+    } catch { /* sessionStorage unavailable (privacy mode); ignore */ }
+  }
+
+  /**
+   * Rehydrate a saved draft after the practice + appointment types have
+   * loaded. Caller must pass the loaded `BookingInfo` so we can resolve the
+   * type and provider IDs back to the actual objects.
+   */
+  private restoreDraft(info: BookingInfo) {
+    let raw: string | null = null;
+    try { raw = sessionStorage.getItem(this.draftKey()); } catch { return; }
+    if (!raw) return;
+    try {
+      const draft = JSON.parse(raw) as {
+        typeId: number | null;
+        providerId: number | null | undefined;
+        slotStart: string | null;
+      };
+      const type = draft.typeId != null
+        ? info.appointmentTypes.find(t => t.id === draft.typeId) ?? null
+        : null;
+      if (type) this.selectedType.set(type);
+
+      if (draft.providerId === null) {
+        this.selectedProvider.set(null);                  // "Any Available"
+      } else if (typeof draft.providerId === 'number') {
+        const p = info.providers.find(pr => pr.id === draft.providerId) ?? null;
+        this.selectedProvider.set(p);
+      } // else undefined → leave at the initial "not picked" state
+
+      // Reload slots for the restored type/provider, then re-select the
+      // slot once the new list arrives.
+      if (type && this.selectedProvider() !== undefined) {
+        this.loadSlotsForCurrentView();
+        if (draft.slotStart) {
+          // The slot list is loaded async; poll the signal briefly until it
+          // arrives, then restore the chosen start. Falls back gracefully if
+          // the slot is no longer available (e.g. someone else booked it).
+          const tryRestore = (attempts: number) => {
+            const match = this.slots().find(s => s.start === draft.slotStart);
+            if (match) { this.selectedSlot.set(match); return; }
+            if (attempts > 0) setTimeout(() => tryRestore(attempts - 1), 250);
+          };
+          setTimeout(() => tryRestore(8), 250);
+        }
+      }
+    } catch { /* corrupt draft, ignore */ }
+  }
+
+  /** Clear the persisted draft once the booking is complete. */
+  private clearDraft() {
+    try { sessionStorage.removeItem(this.draftKey()); } catch { /* ignore */ }
   }
 
   /** True when the visible week already starts at today — prevents paging past today. */
@@ -424,10 +525,53 @@ export class BookingWidgetComponent implements OnInit {
     return `/book/${this.bookingSlug}`;
   }
 
+  /**
+   * "Not you? Sign in as someone else" handler. Persists the current draft
+   * (including the typed phone + SMS choice, which aren't otherwise saved
+   * on every keystroke) before the auth service logs the user out and
+   * redirects to /login. After the new user signs in they come back to
+   * /book/:slug and ngOnInit's restoreDraft() puts the picks back.
+   */
+  signOutKeepingDraft() {
+    this.persistDraft();
+    this.auth.logout({ returnUrl: this.returnUrl() });
+  }
+
   book() {
     // No guest bookings — the user must be signed in before step 4 is even visible.
     if (!this.auth.isLoggedIn()) {
       this.router.navigate(['/login'], { queryParams: { returnUrl: this.returnUrl() } });
+      return;
+    }
+
+    // Reschedule mode: API only needs the cancellation token + new start time.
+    // The server keeps the original provider, appointment type, and client
+    // info; we just shift the time. Provider/type IDs the user picked here
+    // are intentionally ignored — the modify flow can't re-target.
+    const token = this.rescheduleToken();
+    if (token) {
+      this.booking.set(true);
+      this.api.rescheduleAppointment(token, this.selectedSlot()!.start).subscribe({
+        next: () => {
+          this.clearDraft();
+          this.router.navigate([`/book/${this.bookingSlug}/confirm`], {
+            queryParams: {
+              token,
+              start:        this.selectedSlot()!.start,
+              end:          this.selectedSlot()!.end,
+              apptTypeId:   this.selectedType()!.id,
+              typeName:     this.selectedType()!.name,
+              practiceName: this.practice()?.name ?? '',
+              providerName: this.providerName(this.selectedProvider() ?? null),
+              rescheduled: 'true'
+            }
+          });
+        },
+        error: err => {
+          this.bookError.set(err?.error || 'Reschedule failed. Please try a different time.');
+          this.booking.set(false);
+        }
+      });
       return;
     }
 
@@ -454,6 +598,9 @@ export class BookingWidgetComponent implements OnInit {
         // Now that we've booked, the user has client appointments — update
         // the cached session so /home and the nav show the right cards.
         this.auth.patchUser({ hasClientAppointments: true });
+        // Booking succeeded — drop the saved draft so it doesn't auto-restore
+        // the next time this user opens the booking page.
+        this.clearDraft();
         this.router.navigate([`/book/${this.bookingSlug}/confirm`], {
           queryParams: {
             apptId: res.id,
@@ -461,7 +608,12 @@ export class BookingWidgetComponent implements OnInit {
             start: res.startTime,
             end: res.endTime,
             needsIntake: res.requiresIntakeForm,
-            apptTypeId: this.selectedType()!.id
+            apptTypeId: this.selectedType()!.id,
+            // Extra context for the "Add to Calendar" buttons on the confirm
+            // page. Cheap to pass through query params; saves an extra API call.
+            typeName: this.selectedType()!.name,
+            practiceName: this.practice()?.name ?? '',
+            providerName: this.providerName(this.selectedProvider() ?? null)
           }
         });
       },
@@ -479,8 +631,32 @@ export class BookingWidgetComponent implements OnInit {
       this.error.set('Missing practice slug.');
       return;
     }
+
+    // Reschedule mode? The "Modify" button on /my/appointments adds these.
+    const q = this.route.snapshot.queryParamMap;
+    const rt = q.get('reschedule');
+    if (rt) {
+      this.rescheduleToken.set(rt);
+      this.rescheduleOriginal.set({
+        start:    q.get('originalStart')    ?? '',
+        type:     q.get('originalType')     ?? '',
+        provider: q.get('originalProvider') ?? ''
+      });
+    }
+
+    // Pre-fill phone from the signed-in user's profile so they don't have
+    // to retype it every time. They can still edit it before confirming.
+    const user = this.auth.currentUser();
+    if (user?.phone) this.clientPhone = user.phone;
+
     this.api.getPublicPractice(this.bookingSlug).subscribe({
-      next: data => this.practice.set(data),
+      next: data => {
+        this.practice.set(data);
+        // Re-hydrate any in-progress booking from before a logout/login round
+        // trip. Has to wait until appointment types + providers are loaded
+        // because we look the IDs back up against the practice.
+        this.restoreDraft(data);
+      },
       error: () => this.error.set('Practice not found. Please check your booking link.')
     });
   }

@@ -1,6 +1,17 @@
+// =====================================================================
+// ProSchedule UI — global styles
+//
 // Kendo UI default theme is loaded via angular.json "styles" array
-// (node_modules/@progress/kendo-theme-default/dist/all.css). That avoids Sass
-// @use/@import compatibility issues when compiling the precompiled theme.
+// (node_modules/@progress/kendo-theme-default/dist/all.css).
+//
+// This file holds the shared design system: page layout, cards, buttons,
+// forms, alerts, badges, status colors. Component .scss files should
+// only contain rules that are unique to that component — not the shared
+// design tokens below. When you add a rule that's used in 3+ components,
+// move it here.
+// =====================================================================
+
+// ---------- Reset & typography ----------------------------------------
 
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -13,8 +24,93 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-input, textarea, select, button {
-  font-family: inherit;
-}
-
+input, textarea, select, button { font-family: inherit; }
 a { color: inherit; }
+
+// ---------- Page layout -----------------------------------------------
+
+.page              { padding: 2rem; }
+.page-header       { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+.page-header h1    { margin: 0; font-size: 1.5rem; font-weight: 600; }
+.page-actions      { display: flex; gap: .5rem; align-items: center; }
+
+// ---------- Cards / panels --------------------------------------------
+
+.card              { background: #fff; border-radius: 10px; padding: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+.card-header       { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: .75rem; border-bottom: 1px solid #edf2f7; }
+.card-title        { margin: 0; font-size: 1rem; font-weight: 600; color: #2d3748; }
+
+// ---------- Buttons ---------------------------------------------------
+
+.btn               { padding: .5rem 1rem; border-radius: 6px; font-size: .85rem; cursor: pointer; border: none; font-weight: 500; transition: background .15s, border-color .15s, color .15s; display: inline-flex; align-items: center; gap: .35rem; }
+.btn:disabled      { opacity: .6; cursor: not-allowed; }
+
+.btn-primary       { background: #667eea; color: #fff; border: 1.5px solid #667eea; }
+.btn-primary:hover:not(:disabled) { background: #5a67d8; border-color: #5a67d8; }
+
+.btn-secondary     { border: 1.5px solid #e2e8f0; color: #4a5568; background: transparent; }
+.btn-secondary:hover:not(:disabled) { border-color: #667eea; color: #667eea; }
+
+.btn-danger        { background: #fff5f5; color: #c53030; border: 1.5px solid #fed7d7; }
+.btn-danger:hover:not(:disabled) { background: #fed7d7; }
+
+.btn-icon-danger   { color: #c53030; }
+.btn-sm            { padding: .35rem .75rem; font-size: .8rem; }
+.btn-lg            { padding: .75rem 1.5rem; font-size: 1rem; }
+
+// ---------- Forms -----------------------------------------------------
+
+.form-group        { margin-bottom: 1rem; }
+.form-group label  { display: block; font-size: .8rem; font-weight: 600; color: #4a5568; margin-bottom: .35rem; }
+.form-group input,
+.form-group textarea,
+.form-group select { width: 100%; padding: .55rem .75rem; border: 1.5px solid #e2e8f0; border-radius: 6px; font-size: .9rem; color: #1a1f36; background: #fff; }
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,.15); }
+
+.form-row          { display: flex; gap: 1rem; flex-wrap: wrap; }
+.form-row > .form-group { flex: 1 1 0; min-width: 200px; }
+
+.form-actions      { display: flex; gap: .75rem; justify-content: flex-end; margin-top: 1.5rem; }
+
+.checkbox-label    { display: flex; align-items: center; gap: .5rem; cursor: pointer; font-size: .9rem; }
+.checkbox-label input[type="checkbox"] { width: auto; margin: 0; }
+
+// ---------- Alerts ----------------------------------------------------
+
+.alert-error       { background: #fff5f5; color: #c53030; padding: .6rem .75rem; border-radius: 6px; font-size: .85rem; margin-bottom: .75rem; }
+.alert-success     { background: #f0fff4; color: #2f855a; padding: .6rem .75rem; border-radius: 6px; font-size: .85rem; margin-bottom: .75rem; }
+.alert-warning     { background: #fffaf0; color: #b7791f; padding: .6rem .75rem; border-radius: 6px; font-size: .85rem; margin-bottom: .75rem; }
+.alert-info        { background: #ebf8ff; color: #2c5282; padding: .6rem .75rem; border-radius: 6px; font-size: .85rem; margin-bottom: .75rem; }
+
+// ---------- Badges ----------------------------------------------------
+
+.badge             { display: inline-block; padding: .2rem .6rem; border-radius: 4px; font-size: .72rem; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; }
+.badge-green       { background: #c6f6d5; color: #22543d; }
+.badge-gray        { background: #e2e8f0; color: #4a5568; }
+.badge-red         { background: #fed7d7; color: #742a2a; }
+.badge-blue        { background: #bee3f8; color: #2a4365; }
+.badge-yellow      { background: #fefcbf; color: #744210; }
+
+// ---------- Appointment status colors ---------------------------------
+// Used in appointments-list / dashboard / my-appointments.
+// 0=Scheduled  1=Confirmed  2=Completed  3=Cancelled  4=NoShow
+.status-0          { color: #d69e2e; }
+.status-1          { color: #2f855a; }
+.status-2          { color: #3182ce; }
+.status-3          { color: #c53030; }
+.status-4          { color: #718096; }
+
+// ---------- Empty / loading states ------------------------------------
+
+.empty-state       { text-align: center; padding: 3rem 1rem; color: #718096; }
+.empty-state h3    { margin: 0 0 .5rem; color: #2d3748; font-weight: 600; }
+.empty-state p     { margin: 0; font-size: .9rem; }
+
+.loading           { padding: 2rem; text-align: center; color: #718096; }
+
+// ---------- Links -----------------------------------------------------
+
+.link              { color: #667eea; text-decoration: none; cursor: pointer; }
+.link:hover        { text-decoration: underline; }

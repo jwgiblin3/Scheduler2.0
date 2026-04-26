@@ -1,13 +1,8 @@
 
-    .page { padding: 2rem; }
-    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    /* .page, .page-header, .btn, .btn-primary, .btn-secondary now in global styles.scss */
     h1 { margin: 0; font-size: 1.6rem; color: #1a1f36; }
     h2 { margin: 0 0 1rem; font-size: 1.05rem; color: #1a1f36; }
 
-    .btn { padding: .5rem 1rem; border-radius: 6px; font-size: .85rem; cursor: pointer; border: none; }
-    .btn-primary { background: #667eea; color: #fff; }
-    .btn-primary:disabled { opacity: .6; }
-    .btn-secondary { border: 1.5px solid #e2e8f0; color: #4a5568; background: transparent; }
     .btn-export {
       padding: .45rem .9rem; background: #fff;
       border: 1.5px solid #e2e8f0; border-radius: 6px;
@@ -43,7 +38,7 @@
 
     .detail-col { display: flex; flex-direction: column; gap: 1.25rem; }
 
-    .card { background: #fff; border-radius: 10px; padding: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+    /* .card now in global styles.scss */
     .card-header {
       display: flex; justify-content: space-between; align-items: flex-start;
       gap: 1rem; margin-bottom: 1rem;
@@ -54,15 +49,11 @@
     .info-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; color: #a0aec0; margin-bottom: .25rem; }
     .info-value { font-size: .95rem; font-weight: 500; color: #1a1f36; }
 
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    .form-group { margin-bottom: 1rem; }
+    /* .form-group, .form-actions, .alert-error, .alert-success, .checkbox-label now in global styles.scss */
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; } /* grid layout, not the global flex */
     label { display: block; font-size: .85rem; font-weight: 500; color: #4a5568; margin-bottom: 4px; }
     input { width: 100%; padding: .55rem .75rem; border: 1.5px solid #e2e8f0; border-radius: 6px; font-size: .9rem; box-sizing: border-box; }
-    .checkbox-label { display: inline-flex; align-items: center; gap: .4rem; cursor: pointer; font-size: .88rem; }
-    .checkbox-label input { width: auto; }
-    .form-actions { display: flex; gap: .6rem; justify-content: flex-end; margin-top: .5rem; }
-    .alert-error { background: #fff5f5; color: #c53030; padding: .55rem .75rem; border-radius: 6px; font-size: .85rem; margin-bottom: .75rem; }
-    .alert-success { background: #f0fff4; color: #276749; padding: .55rem .75rem; border-radius: 6px; font-size: .85rem; margin-top: .75rem; }
+    .alert-success { margin-top: .75rem; } /* override: appears after form here, not before */
 
     /* Appointments table */
     .appts-table { width: 100%; border-collapse: collapse; font-size: .88rem; }

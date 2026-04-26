@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace ProScheduleAPI.Models;
 
 /// <summary>
@@ -22,6 +24,7 @@ public class ProviderException
     public DateOnly EndDate { get; set; }
 
     /// <summary>Optional private note for the admin ("Paris trip", "Sick").</summary>
+    [MaxLength(200)]
     public string? Reason { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

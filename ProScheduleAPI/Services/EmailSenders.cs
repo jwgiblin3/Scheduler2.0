@@ -132,6 +132,11 @@ public class SendGridEmailSender : IEmailSender
 /// No-op sender used when no provider is configured. Logs what it would have
 /// sent so local developers can still see the flow without setting up SMTP
 /// or signing up for anything.
+///
+/// Logged at Warning (not Information) so it shows up at the default log
+/// level — otherwise "emails aren't sending" goes unnoticed until someone
+/// turns on Information logging. Includes a hint pointing at the config
+/// keys that fix it.
 /// </summary>
 public class NullEmailSender : IEmailSender
 {
@@ -143,8 +148,10 @@ public class NullEmailSender : IEmailSender
         string fromEmail, string fromName,
         CancellationToken ct = default)
     {
-        _logger.LogInformation(
-            "Email provider not configured — would have sent '{Subject}' from {FromEmail} to {ToEmail}.",
+        _logger.LogWarning(
+            "Email NOT SENT — no provider configured. Would have sent '{Subject}' " +
+            "from {FromEmail} to {ToEmail}. Set Email:Provider to 'smtp' or " +
+            "'sendgrid' in appsettings to enable delivery.",
             subject, fromEmail, toEmail);
         return Task.CompletedTask;
     }

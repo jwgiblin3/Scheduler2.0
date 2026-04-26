@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace ProScheduleAPI.Models;
 
 public class NotificationSettings
@@ -14,7 +16,10 @@ public class NotificationSettings
     public bool EmailEnabled { get; set; } = true;
     public bool SmsEnabled { get; set; } = false;
 
-    // From address/name for emails
+    // From address/name for emails. Length caps per ADR-001 §6.
+    [Required, EmailAddress, MaxLength(254)]
     public string FromEmail { get; set; } = string.Empty;
+
+    [Required, MaxLength(80)]
     public string FromName { get; set; } = string.Empty;
 }

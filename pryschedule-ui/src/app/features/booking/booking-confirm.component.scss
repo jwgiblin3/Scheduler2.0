@@ -16,3 +16,30 @@
     .manage-links { border-top: 1px solid #f7f8fc; padding-top: 1.25rem; }
     .manage-links p { font-size: .85rem; color: #718096; margin: 0 0 .5rem; }
     .link-cancel { color: #fc8181; text-decoration: none; font-size: .85rem; }
+
+    /* View my bookings */
+    .my-bookings-link { margin-bottom: 1.5rem; text-align: center; }
+    .btn-my-bookings {
+      display: inline-block;
+      padding: .65rem 1.25rem;
+      background: #667eea; color: #fff;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: .9rem; font-weight: 500;
+      transition: background .15s;
+    }
+    .btn-my-bookings:hover { background: #5a67d8; }
+
+    /* Add to Calendar */
+    .add-to-calendar { margin-bottom: 1.5rem; }
+    .add-to-calendar-label { font-size: .8rem; color: #718096; margin: 0 0 .5rem; text-align: center; }
+    .add-to-calendar-buttons { display: flex; gap: .5rem; justify-content: center; flex-wrap: wrap; }
+    .btn-cal {
+      display: inline-flex; align-items: center; gap: .4rem;
+      padding: .55rem .9rem; border-radius: 6px; font-size: .85rem; font-weight: 500;
+      text-decoration: none; cursor: pointer; border: 1.5px solid #e2e8f0;
+      background: #fff; color: #4a5568;
+      transition: border-color .15s, color .15s, background .15s;
+    }
+    .btn-cal:hover { border-color: #667eea; color: #667eea; }
+    .btn-cal-icon { font-size: 1rem; }

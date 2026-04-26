@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace ProScheduleAPI.Models;
 
 public class Client
@@ -15,9 +17,18 @@ public class Client
     public int? AppUserId { get; set; }
     public AppUser? AppUser { get; set; }
 
+    // Length caps per ADR-001 §6. Email cap matches RFC 5321 (254).
+    // Last name allows 80 to accommodate compound names ("van der Berg").
+    [Required, MaxLength(50)]
     public string FirstName { get; set; } = string.Empty;
+
+    [Required, MaxLength(80)]
     public string LastName { get; set; } = string.Empty;
+
+    [Required, EmailAddress, MaxLength(254)]
     public string Email { get; set; } = string.Empty;
+
+    [Phone, MaxLength(20)]
     public string? Phone { get; set; }
     public bool SmsOptIn { get; set; } = false;
     public bool PushOptIn { get; set; } = false;

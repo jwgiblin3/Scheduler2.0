@@ -16,12 +16,13 @@ export class ClientRegisterComponent {
   private route = inject(ActivatedRoute);
   private fb = inject(FormBuilder);
 
+  // maxLength values mirror server caps from ADR-001 §6 / Phase 0.
   form = this.fb.group({
-    firstName: ['', Validators.required],
-    lastName: ['', Validators.required],
-    email: ['', [Validators.required, Validators.email]],
-    phone: [''],
-    password: ['', [Validators.required, Validators.minLength(8)]]
+    firstName: ['', [Validators.required, Validators.maxLength(50)]],
+    lastName:  ['', [Validators.required, Validators.maxLength(80)]],
+    email:     ['', [Validators.required, Validators.email, Validators.maxLength(254)]],
+    phone:     ['', [Validators.maxLength(20)]],
+    password:  ['', [Validators.required, Validators.minLength(8)]]
   });
 
   loading = false;

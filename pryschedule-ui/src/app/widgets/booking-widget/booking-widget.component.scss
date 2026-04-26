@@ -9,6 +9,16 @@
 
 .booking-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,.07); overflow: hidden; }
 h2 { margin: 0; padding: 1.5rem; border-bottom: 1px solid #f7f8fc; font-size: 1.2rem; color: #1a1f36; }
+
+.reschedule-banner {
+  background: #ebf4ff;
+  color: #2c5282;
+  padding: .85rem 1.5rem;
+  font-size: .85rem;
+  border-bottom: 1px solid #bee3f8;
+  line-height: 1.4;
+}
+.reschedule-banner strong { color: #1a365d; }
 .step { padding: 1.25rem 1.5rem; border-bottom: 1px solid #f7f8fc; }
 .step:last-child { border-bottom: none; }
 .step.completed .step-label { color: #a0aec0; text-decoration: line-through; font-size: .85rem; }

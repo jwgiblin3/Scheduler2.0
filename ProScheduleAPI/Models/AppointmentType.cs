@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace ProScheduleAPI.Models;
 
 public class AppointmentType
@@ -5,7 +7,12 @@ public class AppointmentType
     public int Id { get; set; }
     public int PracticeId { get; set; }
     public Practice Practice { get; set; } = null!;
+
+    // Length caps per ADR-001 §6.
+    [Required, MaxLength(100)]
     public string Name { get; set; } = string.Empty;
+
+    [MaxLength(500)]
     public string? Description { get; set; }
     public int DurationMinutes { get; set; } = 60;
     public int BufferBeforeMinutes { get; set; } = 0;

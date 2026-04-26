@@ -50,18 +50,22 @@ builder.Services.AddScoped<AvailabilityService>();
 
 // Email provider selection — driven by the "Email:Provider" config key so
 // deployments can swap SMTP / SendGrid / disabled without a code change.
-// Defaults to SendGrid when no provider is set but a legacy SendGrid:ApiKey
-// exists, and to the null-logger sender otherwise (so local devs without any
-// credentials can still run the app and see what WOULD have been sent).
+// When no provider is explicitly set we auto-detect from whichever
+// credentials are populated, checking BOTH the new "Email:SendGrid:ApiKey"
+// path and the legacy top-level "SendGrid:ApiKey" so existing configs still
+// work. Falls back to the null-logger sender so devs without any
+// credentials can still run the app and see what WOULD have been sent.
 var emailProvider = (builder.Configuration["Email:Provider"] ?? "").Trim().ToLowerInvariant();
 if (string.IsNullOrEmpty(emailProvider))
 {
-    if (!string.IsNullOrEmpty(builder.Configuration["SendGrid:ApiKey"]))
-        emailProvider = "sendgrid";
-    else if (!string.IsNullOrEmpty(builder.Configuration["Email:Smtp:Host"]))
-        emailProvider = "smtp";
-    else
-        emailProvider = "none";
+    var hasSendGridKey =
+        !string.IsNullOrEmpty(builder.Configuration["Email:SendGrid:ApiKey"]) ||
+        !string.IsNullOrEmpty(builder.Configuration["SendGrid:ApiKey"]);
+    var hasSmtpHost = !string.IsNullOrEmpty(builder.Configuration["Email:Smtp:Host"]);
+
+    if (hasSendGridKey)      emailProvider = "sendgrid";
+    else if (hasSmtpHost)    emailProvider = "smtp";
+    else                     emailProvider = "none";
 }
 switch (emailProvider)
 {
@@ -73,6 +77,14 @@ switch (emailProvider)
         break;
     default:
         builder.Services.AddScoped<IEmailSender, NullEmailSender>();
+        // Surface this prominently at startup. It's the single most common
+        // reason "emails aren't sending" reports come in — the app silently
+        // ran on NullEmailSender because no credentials were configured.
+        Console.WriteLine(
+            "[Email] WARNING: no provider configured (Email:Provider is empty " +
+            "and no SMTP host / SendGrid API key found). Outbound email is " +
+            "DISABLED — set Email:Provider to 'smtp' or 'sendgrid' and " +
+            "populate the matching credentials to enable sending.");
         break;
 }
 builder.Services.AddScoped<EmailService>();

@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace ProScheduleAPI.Models;
 
 /// <summary>
@@ -22,6 +24,7 @@ public class PracticeHoliday
     public DateOnly EndDate { get; set; }
 
     /// <summary>Optional label ("Christmas", "Office retreat"). Never shown to clients.</summary>
+    [MaxLength(120)]
     public string? Name { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

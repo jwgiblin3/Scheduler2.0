@@ -1,6 +1,5 @@
 
-    .page { padding: 2rem; }
-    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+    /* .page, .page-header now in global styles.scss */
     h1 { margin: 0; font-size: 1.6rem; color: #1a1f36; }
     .filters { display: flex; gap: .5rem; flex-wrap: wrap; }
     .header-right { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }

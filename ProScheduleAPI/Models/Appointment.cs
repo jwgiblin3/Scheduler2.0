@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace ProScheduleAPI.Models;
 
 public class Appointment
@@ -13,7 +15,14 @@ public class Appointment
     public DateTime StartTime { get; set; }
     public DateTime EndTime { get; set; }
     public AppointmentStatus Status { get; set; } = AppointmentStatus.Scheduled;
+
+    // Length caps per ADR-001 §6. Notes is the generic free-text cap (2000).
+    // CancellationToken is generated server-side as a GUID-shaped string
+    // (~36 chars), so 64 leaves headroom without overcommitting.
+    [MaxLength(2000)]
     public string? Notes { get; set; }
+
+    [MaxLength(64)]
     public string? CancellationToken { get; set; } // unique token for client-facing cancel/reschedule links
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

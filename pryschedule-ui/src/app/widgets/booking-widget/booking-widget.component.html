@@ -5,7 +5,20 @@
 } @else {
   <div class="widget-container">
     <div class="booking-card">
-      <h2>Book an Appointment</h2>
+      <h2>{{ isReschedule() ? 'Reschedule your appointment' : 'Book an Appointment' }}</h2>
+
+      @if (isReschedule() && rescheduleOriginal(); as orig) {
+        <div class="reschedule-banner">
+          <strong>Modifying existing appointment.</strong>
+          @if (orig.start) {
+            Currently scheduled for
+            <strong>{{ orig.start | date:'EEE, MMM d · h:mm a' }}</strong>
+          }
+          @if (orig.type) { · {{ orig.type }} }
+          @if (orig.provider && orig.provider !== 'Any Available') { with {{ orig.provider }} }.
+          Pick a new time below — your existing booking will move automatically.
+        </div>
+      }
 
       <!-- Step 1: Select appointment type -->
       <div class="step" [class.completed]="selectedType()">
@@ -174,7 +187,7 @@
               Signed in as
               <strong>{{ auth.currentUser()?.firstName }} {{ auth.currentUser()?.lastName }}</strong>
               · {{ auth.currentUser()?.email }}
-              <button class="signed-in-signout" type="button" (click)="auth.logout({ returnUrl: returnUrl() })">Not you? Sign in as someone else</button>
+              <button class="signed-in-signout" type="button" (click)="signOutKeepingDraft()">Not you? Sign in as someone else</button>
             </div>
 
             <div class="form-group">
@@ -192,7 +205,9 @@
             @if (bookError()) { <div class="alert-error">{{ bookError() }}</div> }
 
             <button class="btn-confirm" [disabled]="booking()" (click)="book()">
-              {{ booking() ? 'Booking...' : 'Confirm Appointment' }}
+              {{ booking()
+                  ? (isReschedule() ? 'Rescheduling...' : 'Booking...')
+                  : (isReschedule() ? 'Confirm New Time'  : 'Confirm Appointment') }}
             </button>
             <button class="btn-link" type="button" (click)="clearSlot()">Pick a different time</button>
           }

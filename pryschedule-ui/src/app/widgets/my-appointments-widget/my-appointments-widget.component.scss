@@ -23,6 +23,9 @@ h2 { margin: 0 0 .75rem; font-size: 1rem; color: #4a5568; font-weight: 600; }
 .appt-status.status-cancelled { background: #fff5f5; color: #c53030; }
 .appt-status.status-no-show { background: #fef3c7; color: #92400e; }
 
+.btn-modify { display: inline-block; background: #fff; border: 1.5px solid #e2e8f0; color: #4a5568; border-radius: 6px; padding: .5rem .9rem; font-size: .85rem; font-weight: 500; text-decoration: none; transition: border-color .15s, color .15s; margin-right: .4rem; }
+.btn-modify:hover { border-color: #667eea; color: #667eea; }
+
 .btn-cancel { background: #fff; border: 1.5px solid #e2e8f0; color: #c53030; border-radius: 6px; padding: .5rem .9rem; font-size: .85rem; font-weight: 500; cursor: pointer; transition: border-color .15s, background .15s; }
 .btn-cancel:hover { border-color: #c53030; background: #fff5f5; }
 

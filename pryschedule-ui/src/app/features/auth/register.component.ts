@@ -15,13 +15,17 @@ export class RegisterComponent {
   private router = inject(Router);
   private fb = inject(FormBuilder);
 
+  // maxLength values mirror server-side caps in ADR-001 §6 / Phase 0
+  // entity annotations. Server is the source of truth; these give inline
+  // feedback before the request is even sent.
   form = this.fb.group({
-    firstName: ['', Validators.required],
-    lastName: ['', Validators.required],
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(8)]],
-    practiceName: ['', Validators.required],
-    practiceSlug: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9-]+$/)]]
+    firstName:     ['', [Validators.required, Validators.maxLength(50)]],
+    lastName:      ['', [Validators.required, Validators.maxLength(80)]],
+    email:         ['', [Validators.required, Validators.email, Validators.maxLength(254)]],
+    password:      ['', [Validators.required, Validators.minLength(8)]],
+    practiceName:  ['', [Validators.required, Validators.maxLength(120)]],
+    practiceSlug:  ['', [Validators.required, Validators.maxLength(80),
+                         Validators.pattern(/^[a-zA-Z0-9-]+$/)]]
   });
 
   loading = false;
@@ -81,6 +85,9 @@ export class RegisterComponent {
       } else if (errs['minlength']) {
         const req = errs['minlength'].requiredLength;
         messages.push(`${label} must be at least ${req} characters.`);
+      } else if (errs['maxlength']) {
+        const req = errs['maxlength'].requiredLength;
+        messages.push(`${label} must be ${req} characters or fewer.`);
       } else if (errs['pattern']) {
         if (key === 'practiceSlug') {
           messages.push('Booking URL slug can only contain letters, numbers, and hyphens (no spaces or other punctuation).');

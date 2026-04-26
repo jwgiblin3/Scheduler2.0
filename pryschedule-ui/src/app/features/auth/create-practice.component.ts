@@ -21,12 +21,15 @@ export class CreatePracticeComponent {
   private router = inject(Router);
   private fb = inject(FormBuilder);
 
+  // maxLength values mirror server caps from ADR-001 §6 / Phase 0.
   form = this.fb.group({
-    practiceName: ['', [Validators.required, Validators.minLength(2)]],
+    practiceName: ['', [Validators.required, Validators.minLength(2),
+                        Validators.maxLength(120)]],
     practiceSlug: ['', [
       Validators.required,
-      Validators.pattern(/^[a-zA-Z0-9-]+$/),
-      Validators.minLength(2)
+      Validators.minLength(2),
+      Validators.maxLength(80),
+      Validators.pattern(/^[a-zA-Z0-9-]+$/)
     ]]
   });
 
