@@ -100,13 +100,25 @@ export class AuthService {
   }
 
   /**
-   * Where to send the user right after sign-in. An admin who also has client
-   * appointments still lands on /home (the unified chooser); a pure client
-   * lands on /my/appointments; a plain practice admin goes to /dashboard.
+   * Platform-level operator. Distinct from a practice Admin: a SuperAdmin
+   * has no PracticeId and operates above tenants. Used to gate the /admin
+   * console (global form templates, cross-tenant browse).
+   */
+  isSuperAdmin(): boolean {
+    return this.currentUser()?.role === 'SuperAdmin';
+  }
+
+  /**
+   * Where to send the user right after sign-in.
+   * - SuperAdmin lands on /admin (the platform console).
+   * - Admin who also has client appointments lands on /home (the chooser).
+   * - Plain practice admin goes to /dashboard.
+   * - Pure client goes to /my/appointments.
    */
   postLoginRoute(): string {
     const u = this.currentUser();
     if (!u) return '/login';
+    if (u.role === 'SuperAdmin') return '/admin';
     const hasPractice = !!u.practiceId;
     const hasAppts = !!u.hasClientAppointments;
     if (hasPractice && hasAppts) return '/home';

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ProScheduleAPI.Data;
 
@@ -11,9 +12,11 @@ using ProScheduleAPI.Data;
 namespace ProScheduleAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260426163904_AddFieldLengthLimits")]
+    partial class AddFieldLengthLimits
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -241,10 +244,7 @@ namespace ProScheduleAPI.Migrations
 
                     b.HasIndex("PracticeId");
 
-                    b.ToTable("AspNetUsers", null, t =>
-                        {
-                            t.HasCheckConstraint("CK_AspNetUsers_SuperAdmin_NoPracticeId", "([Role] <> -1) OR ([PracticeId] IS NULL)");
-                        });
+                    b.ToTable("AspNetUsers", (string)null);
                 });
 
             modelBuilder.Entity("ProScheduleAPI.Models.Appointment", b =>
@@ -365,62 +365,6 @@ namespace ProScheduleAPI.Migrations
                     b.ToTable("AppointmentTypeForms");
                 });
 
-            modelBuilder.Entity("ProScheduleAPI.Models.AuditLog", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<int>("Action")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ChangedFieldsJson")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EntityId")
-                        .IsRequired()
-                        .HasMaxLength(80)
-                        .HasColumnType("nvarchar(80)");
-
-                    b.Property<string>("EntityType")
-                        .IsRequired()
-                        .HasMaxLength(80)
-                        .HasColumnType("nvarchar(80)");
-
-                    b.Property<string>("IpAddress")
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
-
-                    b.Property<string>("Note")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int?>("PracticeId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Role")
-                        .HasMaxLength(40)
-                        .HasColumnType("nvarchar(40)");
-
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PracticeId", "Timestamp");
-
-                    b.HasIndex("UserId", "Timestamp");
-
-                    b.HasIndex("EntityType", "EntityId", "Timestamp");
-
-                    b.ToTable("AuditLogs");
-                });
-
             modelBuilder.Entity("ProScheduleAPI.Models.AvailabilityAlert", b =>
                 {
                     b.Property<int>("Id")
@@ -521,234 +465,6 @@ namespace ProScheduleAPI.Migrations
                     b.HasIndex("PracticeId");
 
                     b.ToTable("Clients");
-                });
-
-            modelBuilder.Entity("ProScheduleAPI.Models.FieldGroup", b =>
-                {
-                    b.Property<Guid>("LogicalId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Category")
-                        .HasMaxLength(60)
-                        .HasColumnType("nvarchar(60)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("CurrentVersion")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsGlobal")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("nvarchar(120)");
-
-                    b.Property<int?>("OwnerPracticeId")
-                        .HasColumnType("int");
-
-                    b.Property<Guid?>("ParentLogicalId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("LogicalId");
-
-                    b.HasIndex("ParentLogicalId");
-
-                    b.HasIndex("OwnerPracticeId", "Category", "IsGlobal");
-
-                    b.ToTable("FieldGroups");
-                });
-
-            modelBuilder.Entity("ProScheduleAPI.Models.FieldGroupVersion", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ConditionalLogicJson")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("CreatedByUserId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<Guid>("FieldGroupLogicalId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("FieldsJson")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("nvarchar(120)");
-
-                    b.Property<bool>("PhiFlag")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("Version")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedByUserId");
-
-                    b.HasIndex("FieldGroupLogicalId", "Version")
-                        .IsUnique();
-
-                    b.ToTable("FieldGroupVersions");
-                });
-
-            modelBuilder.Entity("ProScheduleAPI.Models.FormInstance", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AppointmentId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("FormTemplateVersionId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("PinnedGroupVersionsJson")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ResponsesJson")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Snapshot")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("StartedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<string>("SubmissionIp")
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
-
-                    b.Property<DateTime?>("SubmittedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AppointmentId");
-
-                    b.HasIndex("FormTemplateVersionId");
-
-                    b.HasIndex("Status", "SubmittedAt");
-
-                    b.ToTable("FormInstances");
-                });
-
-            modelBuilder.Entity("ProScheduleAPI.Models.FormTemplate", b =>
-                {
-                    b.Property<Guid>("LogicalId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("CurrentVersion")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsGlobal")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("nvarchar(120)");
-
-                    b.Property<int?>("OwnerPracticeId")
-                        .HasColumnType("int");
-
-                    b.Property<Guid?>("ParentLogicalId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("TargetAudience")
-                        .IsRequired()
-                        .HasMaxLength(40)
-                        .HasColumnType("nvarchar(40)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("LogicalId");
-
-                    b.HasIndex("ParentLogicalId");
-
-                    b.HasIndex("OwnerPracticeId", "TargetAudience", "IsGlobal");
-
-                    b.ToTable("FormTemplates");
-                });
-
-            modelBuilder.Entity("ProScheduleAPI.Models.FormTemplateVersion", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("CreatedByUserId")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("FormTemplateLogicalId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ItemsJson")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("nvarchar(120)");
-
-                    b.Property<int>("Version")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedByUserId");
-
-                    b.HasIndex("FormTemplateLogicalId", "Version")
-                        .IsUnique();
-
-                    b.ToTable("FormTemplateVersions");
                 });
 
             modelBuilder.Entity("ProScheduleAPI.Models.IntakeFormResponse", b =>
@@ -1204,16 +920,6 @@ namespace ProScheduleAPI.Migrations
                     b.Navigation("PracticeForm");
                 });
 
-            modelBuilder.Entity("ProScheduleAPI.Models.AuditLog", b =>
-                {
-                    b.HasOne("ProScheduleAPI.Models.AppUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("ProScheduleAPI.Models.AvailabilityAlert", b =>
                 {
                     b.HasOne("ProScheduleAPI.Models.Practice", "Practice")
@@ -1241,81 +947,6 @@ namespace ProScheduleAPI.Migrations
                     b.Navigation("AppUser");
 
                     b.Navigation("Practice");
-                });
-
-            modelBuilder.Entity("ProScheduleAPI.Models.FieldGroup", b =>
-                {
-                    b.HasOne("ProScheduleAPI.Models.Practice", "OwnerPractice")
-                        .WithMany()
-                        .HasForeignKey("OwnerPracticeId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("OwnerPractice");
-                });
-
-            modelBuilder.Entity("ProScheduleAPI.Models.FieldGroupVersion", b =>
-                {
-                    b.HasOne("ProScheduleAPI.Models.AppUser", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("ProScheduleAPI.Models.FieldGroup", "FieldGroup")
-                        .WithMany("Versions")
-                        .HasForeignKey("FieldGroupLogicalId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CreatedByUser");
-
-                    b.Navigation("FieldGroup");
-                });
-
-            modelBuilder.Entity("ProScheduleAPI.Models.FormInstance", b =>
-                {
-                    b.HasOne("ProScheduleAPI.Models.Appointment", "Appointment")
-                        .WithMany()
-                        .HasForeignKey("AppointmentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ProScheduleAPI.Models.FormTemplateVersion", "FormTemplateVersion")
-                        .WithMany()
-                        .HasForeignKey("FormTemplateVersionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Appointment");
-
-                    b.Navigation("FormTemplateVersion");
-                });
-
-            modelBuilder.Entity("ProScheduleAPI.Models.FormTemplate", b =>
-                {
-                    b.HasOne("ProScheduleAPI.Models.Practice", "OwnerPractice")
-                        .WithMany()
-                        .HasForeignKey("OwnerPracticeId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("OwnerPractice");
-                });
-
-            modelBuilder.Entity("ProScheduleAPI.Models.FormTemplateVersion", b =>
-                {
-                    b.HasOne("ProScheduleAPI.Models.AppUser", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("ProScheduleAPI.Models.FormTemplate", "FormTemplate")
-                        .WithMany("Versions")
-                        .HasForeignKey("FormTemplateLogicalId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CreatedByUser");
-
-                    b.Navigation("FormTemplate");
                 });
 
             modelBuilder.Entity("ProScheduleAPI.Models.IntakeFormResponse", b =>
@@ -1438,16 +1069,6 @@ namespace ProScheduleAPI.Migrations
             modelBuilder.Entity("ProScheduleAPI.Models.Client", b =>
                 {
                     b.Navigation("Appointments");
-                });
-
-            modelBuilder.Entity("ProScheduleAPI.Models.FieldGroup", b =>
-                {
-                    b.Navigation("Versions");
-                });
-
-            modelBuilder.Entity("ProScheduleAPI.Models.FormTemplate", b =>
-                {
-                    b.Navigation("Versions");
                 });
 
             modelBuilder.Entity("ProScheduleAPI.Models.Practice", b =>

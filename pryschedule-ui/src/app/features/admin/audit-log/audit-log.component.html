@@ -1,0 +1,133 @@
+<div class="al-page">
+  <div class="al-header">
+    <a routerLink="/admin" class="back-link">← Admin Console</a>
+    <h1>Audit Log</h1>
+    <p class="subtitle">
+      Append-only access trail. One row per access event. Field values are never recorded —
+      only field <em>names</em> for updates. See ADR-001 §10.7 for the policy.
+    </p>
+  </div>
+
+  <div class="al-filters">
+    <div class="filter">
+      <label>Action</label>
+      <select [(ngModel)]="filterAction" name="action" (change)="load(true)">
+        <option [ngValue]="''">All</option>
+        @for (a of actionOptions; track a.value) {
+          <option [ngValue]="a.value">{{ a.label }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="filter">
+      <label>Entity type</label>
+      <input type="text" [(ngModel)]="filterEntityType" name="entityType" (change)="load(true)" placeholder="e.g. AppUser, FormInstance" maxlength="80">
+    </div>
+
+    <div class="filter">
+      <label>User ID</label>
+      <input type="number" [(ngModel)]="filterUserId" name="userId" (change)="load(true)" min="1">
+    </div>
+
+    <div class="filter">
+      <label>Practice ID</label>
+      <input type="number" [(ngModel)]="filterPracticeId" name="practiceId" (change)="load(true)" min="1">
+    </div>
+
+    <div class="filter">
+      <label>From</label>
+      <input type="datetime-local" [(ngModel)]="filterFrom" name="from" (change)="load(true)">
+    </div>
+
+    <div class="filter">
+      <label>To</label>
+      <input type="datetime-local" [(ngModel)]="filterTo" name="to" (change)="load(true)">
+    </div>
+
+    <button type="button" class="btn-text" (click)="clearFilters()">Clear filters</button>
+  </div>
+
+  @if (error()) {
+    <div class="al-error">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="al-loading">Loading…</div>
+  } @else if (page()?.rows?.length === 0) {
+    <div class="al-empty">No audit events match the current filters.</div>
+  } @else if (page()) {
+    <div class="al-summary">
+      Showing {{ ((pageNum - 1) * pageSize) + 1 }}–{{ ((pageNum - 1) * pageSize) + page()!.rows.length }}
+      of {{ page()!.total | number }} events
+    </div>
+
+    <table class="al-table">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Action</th>
+          <th>User</th>
+          <th>Entity</th>
+          <th>Practice</th>
+          <th>IP</th>
+          <th>Details</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of page()!.rows; track r.id) {
+          <tr>
+            <td class="ts">{{ formatTime(r.timestamp) }}</td>
+            <td>
+              <span class="action-chip" [class]="actionClass(r.action)">
+                {{ actionLabel(r.action) }}
+              </span>
+            </td>
+            <td>
+              @if (r.userEmail) {
+                <div class="user-name">{{ r.userName || r.userEmail }}</div>
+                <div class="user-meta">
+                  {{ r.userEmail }}
+                  @if (r.role) { · {{ r.role }} }
+                </div>
+              } @else {
+                <span class="muted">—</span>
+              }
+            </td>
+            <td>
+              <div class="entity-type">{{ r.entityType }}</div>
+              <div class="entity-id">{{ r.entityId }}</div>
+            </td>
+            <td>
+              @if (r.practiceName) {
+                <div>{{ r.practiceName }}</div>
+                <div class="muted small">#{{ r.practiceId }}</div>
+              } @else if (r.practiceId !== null) {
+                <span class="muted">#{{ r.practiceId }}</span>
+              } @else {
+                <span class="muted">—</span>
+              }
+            </td>
+            <td class="ip">{{ r.ipAddress || '—' }}</td>
+            <td class="details">
+              @if (r.changedFields?.length) {
+                <div><strong>Changed:</strong> {{ r.changedFields!.join(', ') }}</div>
+              }
+              @if (r.note) {
+                <div class="note">{{ r.note }}</div>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <div class="al-pagination">
+      <button type="button" class="btn-icon" (click)="goToPage(1)"          [disabled]="pageNum === 1">⏮</button>
+      <button type="button" class="btn-icon" (click)="goToPage(pageNum - 1)" [disabled]="pageNum === 1">←</button>
+      <span class="page-indicator">Page {{ pageNum }} of {{ totalPages() }}</span>
+      <button type="button" class="btn-icon" (click)="goToPage(pageNum + 1)" [disabled]="pageNum === totalPages()">→</button>
+      <button type="button" class="btn-icon" (click)="goToPage(totalPages())" [disabled]="pageNum === totalPages()">⏭</button>
+    </div>
+  }
+</div>

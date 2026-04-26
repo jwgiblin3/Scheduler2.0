@@ -371,9 +371,9 @@ Cross-form search ("find all clients with allergy = penicillin," "all clients wh
 
 1. [x] Review and accept ADR.
 2. [x] Resolve seven open questions (§10).
-3. [ ] **Phase 0 — field-length migration** ← starting now.
-4. [ ] Phase 1 — SuperAdmin role + admin shell.
-5. [ ] Phase 2 — new tables for form groups/templates/instances + audit log + file-blob storage.
+3. [x] **Phase 0 — field-length annotations across entities + Angular validators.** Code complete; user runs `dotnet ef migrations add AddFieldLengthLimits` + `dotnet ef database update` to apply. See `docs/PHASE-0-NOTES.md`.
+4. [x] **Phase 1 — SuperAdmin role + admin shell.** Code complete; user runs `dotnet ef migrations add AddSuperAdminRoleAndConstraint` + `dotnet ef database update`, then `dotnet run -- seed-superadmin --email ... --password ...` to bootstrap the first SuperAdmin. See `docs/PHASE-1-NOTES.md`.
+5. [ ] ← **Phase 2 next** — new tables for form groups/templates/instances + audit log + file-blob storage.
 6. [ ] Phases 3–6 sequenced as above.
 
 ---

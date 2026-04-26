@@ -42,7 +42,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+// Authorization policies. Roles are stamped into JWTs by TokenService as
+// ClaimTypes.Role from the UserRole enum's string name. RequireRole accepts
+// any of the listed names — first match wins.
+//
+//   SuperAdmin    — platform operator only.
+//   PracticeAdmin — accepts Admin within a tenant OR SuperAdmin (since
+//                   SuperAdmins operate above tenants and naturally cover
+//                   everything an Admin can do).
+//   ManageGlobals — restricted to SuperAdmin. Used to gate global form
+//                   template / group management endpoints (Phase 3).
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("SuperAdmin",     p => p.RequireRole("SuperAdmin"));
+    options.AddPolicy("PracticeAdmin",  p => p.RequireRole("SuperAdmin", "Admin"));
+    options.AddPolicy("ManageGlobals",  p => p.RequireRole("SuperAdmin"));
+});
 
 // Services
 builder.Services.AddScoped<TokenService>();
@@ -90,6 +105,13 @@ switch (emailProvider)
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<SmsService>();
 builder.Services.AddHostedService<ReminderHostedService>();
+
+// Audit log (Phase 2). Scoped so it shares the request's DbContext and
+// HttpContext. AddHttpContextAccessor() is required so AuditService can
+// read the current user / IP in places that don't already inject the
+// HttpContext directly. Cheap and safe to register globally.
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IAuditService, AuditService>();
 
 // CORS — origins come from two sources, unioned in PracticeCorsOriginProvider:
 //   1. Static list in appsettings ("Cors:AllowedOrigins") for the ProSchedule
@@ -164,9 +186,38 @@ if (app.Environment.IsDevelopment())
     await db.Database.MigrateAsync();
 }
 
+// CLI commands — short-circuit before app.Run() if invoked. This keeps
+// "operational" entry points colocated with the web host so they share
+// configuration, DbContext registration, Identity setup, etc., without
+// needing a separate console project.
+//
+//   dotnet run -- seed-superadmin --email <e> --password <p>
+//
+// On success the process exits 0; on failure, 1.
+if (args.Length > 0 && args[0] == "seed-superadmin")
+{
+    var ok = await ProScheduleAPI.Services.SuperAdminSeeder.RunAsync(app, args.Skip(1).ToArray());
+    return ok ? 0 : 1;
+}
+
+// Seed the standard global field groups (Contact Info, Address, Insurance,
+// Medical Background, Medical History — Chiropractic, Medical History —
+// Massage Therapy, Consents & Signature). Idempotent — safe to re-run.
+if (args.Length > 0 && args[0] == "seed-form-groups")
+{
+    var ok = await ProScheduleAPI.Services.FormGroupSeeder.RunAsync(app);
+    return ok ? 0 : 1;
+}
+
 app.UseCors("Angular");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// `app.Run()` only returns when the host shuts down; this final return is
+// here so the top-level statements all match the Task<int> return shape
+// imposed by the seed-superadmin early-return above. The compiler can't
+// see that Run() is "blocking forever" at type-check time.
+return 0;

@@ -17,12 +17,18 @@ public class AuthController : ControllerBase
     private readonly UserManager<AppUser> _userManager;
     private readonly AppDbContext _db;
     private readonly TokenService _tokenService;
+    private readonly IAuditService _audit;
 
-    public AuthController(UserManager<AppUser> userManager, AppDbContext db, TokenService tokenService)
+    public AuthController(
+        UserManager<AppUser> userManager,
+        AppDbContext db,
+        TokenService tokenService,
+        IAuditService audit)
     {
         _userManager = userManager;
         _db = db;
         _tokenService = tokenService;
+        _audit = audit;
     }
 
     // Practice-owner registration — creates a new Practice + admin account.
@@ -162,7 +168,28 @@ public class AuthController : ControllerBase
             .FirstOrDefaultAsync(u => u.Email == req.Email);
 
         if (user is null || !await _userManager.CheckPasswordAsync(user, req.Password))
+        {
+            // Audit the failure. We use EntityType "AppUser" with the
+            // attempted email as EntityId so investigators can correlate
+            // failed attempts even when the account doesn't exist.
+            await _audit.LogAsync(
+                AuditAction.FailedLogin,
+                entityType: "AppUser",
+                entityId: req.Email ?? "(no email)",
+                practiceId: user?.PracticeId,
+                explicitUserId: user?.Id,
+                explicitRole: user?.Role.ToString());
+
             return Unauthorized("Invalid credentials.");
+        }
+
+        await _audit.LogAsync(
+            AuditAction.Login,
+            entityType: "AppUser",
+            entityId: user.Id.ToString(),
+            practiceId: user.PracticeId,
+            explicitUserId: user.Id,
+            explicitRole: user.Role.ToString());
 
         return Ok(await BuildAuthResponseAsync(user, user.Practice));
     }

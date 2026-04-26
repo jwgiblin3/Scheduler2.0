@@ -1,0 +1,89 @@
+<div class="fg-page">
+  <div class="fg-header">
+    <a routerLink="/admin" class="back-link">← Admin Console</a>
+    <h1>Field Groups</h1>
+    <p class="subtitle">Reusable Lego blocks that templates compose. Editing a group creates a new version; older versions remain in the database so historical submissions render unchanged.</p>
+  </div>
+
+  <div class="fg-toolbar">
+    <div class="fg-filter">
+      <label>Category</label>
+      <select [(ngModel)]="filterCategory" (ngModelChange)="load()">
+        <option [ngValue]="''">All</option>
+        @for (c of categories(); track c) {
+          <option [ngValue]="c">{{ c }}</option>
+        }
+      </select>
+    </div>
+
+    <label class="fg-toggle">
+      <input type="checkbox" [(ngModel)]="showDeleted" (ngModelChange)="load()">
+      Show deleted
+    </label>
+
+    <div class="fg-spacer"></div>
+
+    <a routerLink="/admin/field-groups/new" class="btn btn-primary">+ New Group</a>
+  </div>
+
+  @if (error()) {
+    <div class="fg-error">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="fg-loading">Loading…</div>
+  } @else if (rows().length === 0) {
+    <div class="fg-empty">
+      No field groups yet. Run <code>dotnet run -- seed-form-groups</code> from the API folder
+      to seed the eight standard groups (Contact Info, Address, Insurance, Medical Background,
+      Medical History — Chiropractic, Medical History — Massage Therapy, Consents &amp; Signature),
+      or click <strong>+ New Group</strong> to create one from scratch.
+    </div>
+  } @else {
+    <table class="fg-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Category</th>
+          <th class="num">Version</th>
+          <th>Updated</th>
+          <th>Status</th>
+          <th class="actions"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of rows(); track r.logicalId) {
+          <tr [class.deleted]="r.deleted"
+              [routerLink]="['/admin/field-groups', r.logicalId, 'edit']"
+              class="row-link">
+            <td>
+              <div class="row-name">{{ r.name }}</div>
+              <div class="row-id">{{ r.logicalId.substring(0, 8) }}…</div>
+            </td>
+            <td>
+              @if (r.category) {
+                <span class="cat-chip">{{ r.category }}</span>
+              } @else {
+                <span class="muted">—</span>
+              }
+            </td>
+            <td class="num">v{{ r.currentVersion }}</td>
+            <td>{{ formatDate(r.updatedAt) }}</td>
+            <td>
+              @if (r.deleted) {
+                <span class="status status-deleted">Deleted</span>
+              } @else {
+                <span class="status status-active">Active</span>
+              }
+            </td>
+            <td class="actions">
+              @if (!r.deleted) {
+                <button type="button" class="btn-icon" (click)="remove(r, $event)" title="Soft-delete">×</button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

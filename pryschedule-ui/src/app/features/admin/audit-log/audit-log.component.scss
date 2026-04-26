@@ -1,0 +1,126 @@
+.al-page { max-width: 1400px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+.al-header { margin-bottom: 1.25rem; }
+.back-link { display: inline-block; font-size: .85rem; color: #667eea; text-decoration: none; margin-bottom: 1rem; }
+.back-link:hover { text-decoration: underline; }
+h1 { margin: 0 0 .35rem; font-size: 1.5rem; color: #1a1f36; }
+.subtitle { margin: 0; color: #718096; font-size: .9rem; max-width: 720px; line-height: 1.5; }
+.subtitle em { color: #2d3748; font-style: italic; }
+
+.al-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: .9rem;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+.filter { display: flex; flex-direction: column; gap: .3rem; }
+.filter label { font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; color: #4a5568; font-weight: 600; }
+.filter input, .filter select {
+  padding: .4rem .6rem;
+  border: 1px solid #cbd5e0;
+  border-radius: 4px;
+  font-size: .85rem;
+  background: #fff;
+}
+.filter input[type="number"] { width: 100px; }
+.filter input[type="datetime-local"] { width: 195px; }
+.btn-text {
+  background: none;
+  border: none;
+  color: #667eea;
+  font-size: .85rem;
+  cursor: pointer;
+  padding: .35rem .65rem;
+  border-radius: 4px;
+}
+.btn-text:hover { background: #edf2f7; }
+
+.al-error { padding: .85rem 1rem; background: #fff5f5; border: 1px solid #feb2b2; color: #9b2c2c; border-radius: 6px; font-size: .9rem; margin-bottom: 1rem; }
+.al-loading, .al-empty { padding: 3rem 1.5rem; text-align: center; color: #718096; background: #fff; border: 1px dashed #cbd5e0; border-radius: 8px; }
+
+.al-summary { color: #4a5568; font-size: .85rem; margin-bottom: .75rem; }
+
+.al-table {
+  width: 100%;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  font-size: .85rem;
+}
+.al-table th {
+  text-align: left;
+  padding: .7rem 1rem;
+  font-size: .7rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: #4a5568;
+  background: #f7fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+.al-table td {
+  padding: .65rem 1rem;
+  border-bottom: 1px solid #edf2f7;
+  vertical-align: top;
+}
+.al-table tr:last-child td { border-bottom: none; }
+.al-table tr:hover { background: #f7fafc; }
+
+.ts { white-space: nowrap; color: #4a5568; font-variant-numeric: tabular-nums; }
+.ip { font-family: monospace; font-size: .8rem; color: #4a5568; }
+.muted { color: #a0aec0; }
+.muted.small { font-size: .75rem; }
+
+.user-name { font-weight: 500; color: #2d3748; }
+.user-meta { font-size: .75rem; color: #718096; margin-top: 1px; }
+
+.entity-type { font-weight: 500; color: #2d3748; }
+.entity-id { font-family: monospace; font-size: .75rem; color: #718096; margin-top: 1px; }
+
+.action-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: .7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.action-chip.a-login   { background: #c6f6d5; color: #276749; }
+.action-chip.a-fail    { background: #fed7d7; color: #9b2c2c; }
+.action-chip.a-create  { background: #bee3f8; color: #2c5282; }
+.action-chip.a-update  { background: #faf089; color: #744210; }
+.action-chip.a-delete  { background: #feb2b2; color: #9b2c2c; }
+.action-chip.a-submit  { background: #e9d8fd; color: #553c9a; }
+.action-chip.a-read    { background: #edf2f7; color: #4a5568; }
+
+.details { font-size: .8rem; color: #4a5568; }
+.details strong { color: #2d3748; font-weight: 600; }
+.note { font-style: italic; color: #718096; margin-top: 2px; }
+
+.al-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .35rem;
+  margin-top: 1.25rem;
+}
+.al-pagination .btn-icon {
+  background: #fff;
+  border: 1px solid #cbd5e0;
+  color: #4a5568;
+  cursor: pointer;
+  font-size: .9rem;
+  padding: 4px 11px;
+  border-radius: 4px;
+}
+.al-pagination .btn-icon:hover:not(:disabled) { background: #edf2f7; }
+.al-pagination .btn-icon:disabled { opacity: .35; cursor: not-allowed; }
+.page-indicator { font-size: .85rem; color: #4a5568; padding: 0 .75rem; font-variant-numeric: tabular-nums; }

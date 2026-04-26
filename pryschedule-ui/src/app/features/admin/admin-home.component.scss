@@ -1,0 +1,110 @@
+// Visually distinct from the practice dashboard so a SuperAdmin always
+// knows which "side" they're on. Slightly darker chrome and a subtle
+// red-orange accent on the SuperAdmin badge to communicate elevated scope.
+
+.admin-page { min-height: 100vh; background: #f5f6fa; }
+
+.admin-header {
+  background: #1a1f36;
+  border-bottom: 1px solid #2d3548;
+  padding: 1rem 0;
+  color: #fff;
+}
+.admin-header-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.logo { font-size: 1.2rem; font-weight: 700; color: #fff; }
+.spacer { flex: 1; }
+.user-chip { display: flex; align-items: center; gap: .75rem; font-size: .9rem; color: #cbd5e0; }
+.user-chip-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: #fef3e2;
+  color: #c0571c;
+  border-radius: 999px;
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.user-chip-name { font-weight: 500; }
+.user-chip-signout {
+  background: none;
+  border: 1px solid #4a5568;
+  color: #cbd5e0;
+  cursor: pointer;
+  font-size: .85rem;
+  padding: .3rem .8rem;
+  border-radius: 4px;
+}
+.user-chip-signout:hover { background: #2d3548; color: #fff; }
+
+.admin-container { max-width: 1080px; margin: 0 auto; padding: 3rem 1.5rem 2rem; }
+h1 { margin: 0 0 .4rem; font-size: 1.7rem; color: #1a1f36; }
+.admin-subtitle { margin: 0 0 2rem; color: #718096; font-size: .95rem; max-width: 720px; line-height: 1.5; }
+
+.admin-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.25rem;
+}
+
+.admin-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color .15s, transform .1s, box-shadow .15s;
+}
+.admin-card:not(.placeholder):hover {
+  border-color: #667eea;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(102,126,234,.18);
+}
+// Placeholders are visibly muted so SuperAdmins don't try to click them.
+.admin-card.placeholder {
+  opacity: .65;
+  cursor: not-allowed;
+  background: #fafbfc;
+  border-style: dashed;
+}
+.admin-card-icon { font-size: 2rem; flex-shrink: 0; line-height: 1; padding-top: 4px; }
+.admin-card-body { flex: 1; min-width: 0; }
+.admin-card-title { font-size: 1.1rem; font-weight: 600; color: #1a1f36; }
+.admin-card-status {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 8px;
+  background: #edf2f7;
+  color: #4a5568;
+  border-radius: 4px;
+  font-size: .7rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.admin-card-desc {
+  margin-top: .65rem;
+  font-size: .85rem;
+  color: #718096;
+  line-height: 1.45;
+}
+
+.admin-footer {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+  font-size: .9rem;
+}
+.admin-footer a { color: #667eea; text-decoration: none; }
+.admin-footer a:hover { text-decoration: underline; }

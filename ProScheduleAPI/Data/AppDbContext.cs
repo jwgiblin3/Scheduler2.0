@@ -24,6 +24,15 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<int>, int>
     public DbSet<ProviderException> ProviderExceptions => Set<ProviderException>();
     public DbSet<AvailabilityAlert> AvailabilityAlerts => Set<AvailabilityAlert>();
 
+    // --- Phase 2: form-group / template / instance system + audit log ---
+    // (See ADR-001 §4 for the data model and §10.7 for the audit policy.)
+    public DbSet<FieldGroup> FieldGroups => Set<FieldGroup>();
+    public DbSet<FieldGroupVersion> FieldGroupVersions => Set<FieldGroupVersion>();
+    public DbSet<FormTemplate> FormTemplates => Set<FormTemplate>();
+    public DbSet<FormTemplateVersion> FormTemplateVersions => Set<FormTemplateVersion>();
+    public DbSet<FormInstance> FormInstances => Set<FormInstance>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -58,6 +67,15 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<int>, int>
             .HasForeignKey(u => u.PracticeId)
             .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // SuperAdmin invariant: a SuperAdmin (Role = -1) must have a NULL
+        // PracticeId. Mirrored in AppUser.Validate() so the API returns a
+        // friendly 400 before the DB ever rejects the row, but enforced here
+        // too so direct SQL inserts can't bypass it.
+        builder.Entity<AppUser>()
+            .ToTable(t => t.HasCheckConstraint(
+                "CK_AspNetUsers_SuperAdmin_NoPracticeId",
+                "([Role] <> -1) OR ([PracticeId] IS NULL)"));
 
         // Link Client rows back to the AspNetUsers account that booked them (optional).
         // Used by GET /appointments/me to resolve "which appointments belong to this user".
@@ -176,5 +194,138 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<int>, int>
 
         builder.Entity<AvailabilityAlert>()
             .HasIndex(a => new { a.PracticeId, a.IsActive });
+
+        // --- Phase 2: Field groups, form templates, form instances ---
+        // See ADR-001 §4 for the data-model rationale.
+
+        // FieldGroup: LogicalId is the stable identity referenced by both
+        // version rows and template references. We make it the alternate
+        // key (so FK relationships can target it) but keep an int Id-style
+        // arrangement is unnecessary — LogicalId IS the PK here, since
+        // FieldGroup is the "logical" row, not a versioned snapshot.
+        builder.Entity<FieldGroup>()
+            .HasKey(g => g.LogicalId);
+
+        builder.Entity<FieldGroup>()
+            .HasOne(g => g.OwnerPractice)
+            .WithMany()
+            .HasForeignKey(g => g.OwnerPracticeId)
+            .IsRequired(false)
+            // Restrict so deleting a practice that has overrides doesn't
+            // silently nuke the override rows — admins resolve manually.
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Common admin-UI query: list groups visible to a practice (its own
+        // overrides + globals) filtered by category and not soft-deleted.
+        builder.Entity<FieldGroup>()
+            .HasIndex(g => new { g.OwnerPracticeId, g.Category, g.IsGlobal });
+
+        builder.Entity<FieldGroup>()
+            .HasIndex(g => g.ParentLogicalId);   // "is there a fork of this global?"
+
+        // FieldGroupVersion: int Id PK + FK to FieldGroup.LogicalId.
+        // (LogicalId, Version) is unique — that's the addressable handle
+        // a template reference points at.
+        builder.Entity<FieldGroupVersion>()
+            .HasOne(v => v.FieldGroup)
+            .WithMany(g => g.Versions)
+            .HasForeignKey(v => v.FieldGroupLogicalId)
+            .HasPrincipalKey(g => g.LogicalId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<FieldGroupVersion>()
+            .HasIndex(v => new { v.FieldGroupLogicalId, v.Version })
+            .IsUnique();
+
+        builder.Entity<FieldGroupVersion>()
+            .HasOne(v => v.CreatedByUser)
+            .WithMany()
+            .HasForeignKey(v => v.CreatedByUserId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // FormTemplate — same shape as FieldGroup.
+        builder.Entity<FormTemplate>()
+            .HasKey(t => t.LogicalId);
+
+        builder.Entity<FormTemplate>()
+            .HasOne(t => t.OwnerPractice)
+            .WithMany()
+            .HasForeignKey(t => t.OwnerPracticeId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<FormTemplate>()
+            .HasIndex(t => new { t.OwnerPracticeId, t.TargetAudience, t.IsGlobal });
+
+        builder.Entity<FormTemplate>()
+            .HasIndex(t => t.ParentLogicalId);
+
+        // FormTemplateVersion — same shape as FieldGroupVersion.
+        builder.Entity<FormTemplateVersion>()
+            .HasOne(v => v.FormTemplate)
+            .WithMany(t => t.Versions)
+            .HasForeignKey(v => v.FormTemplateLogicalId)
+            .HasPrincipalKey(t => t.LogicalId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<FormTemplateVersion>()
+            .HasIndex(v => new { v.FormTemplateLogicalId, v.Version })
+            .IsUnique();
+
+        builder.Entity<FormTemplateVersion>()
+            .HasOne(v => v.CreatedByUser)
+            .WithMany()
+            .HasForeignKey(v => v.CreatedByUserId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // FormInstance — pinned to a template version, references an
+        // appointment. Restrict on Appointment delete: clinical/audit
+        // record, deleting silently with the appointment would lose
+        // history. Cascade on FormTemplateVersion.Restrict too — a version
+        // shouldn't be deletable if any instance refers to it.
+        builder.Entity<FormInstance>()
+            .HasOne(i => i.Appointment)
+            .WithMany()
+            .HasForeignKey(i => i.AppointmentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<FormInstance>()
+            .HasOne(i => i.FormTemplateVersion)
+            .WithMany()
+            .HasForeignKey(i => i.FormTemplateVersionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<FormInstance>()
+            .HasIndex(i => i.AppointmentId);
+
+        builder.Entity<FormInstance>()
+            .HasIndex(i => new { i.Status, i.SubmittedAt });
+
+        // --- Audit log ---
+        // bigint PK because this table grows unbounded and 2B rows is
+        // reachable over years; nothing else uses bigint so we explicitly
+        // type it. Indexes target the three primary query shapes:
+        //   1. "what did this user do?"      (UserId + Timestamp)
+        //   2. "what happened in this tenant?" (PracticeId + Timestamp)
+        //   3. "who touched this entity?"     (EntityType + EntityId + Timestamp)
+        // ADR-001 §10.7 and PARKING-LOT.md #15 cover the append-only and
+        // streaming-to-external-store stories.
+        builder.Entity<AuditLog>()
+            .HasOne(a => a.User)
+            .WithMany()
+            .HasForeignKey(a => a.UserId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<AuditLog>()
+            .HasIndex(a => new { a.UserId, a.Timestamp });
+
+        builder.Entity<AuditLog>()
+            .HasIndex(a => new { a.PracticeId, a.Timestamp });
+
+        builder.Entity<AuditLog>()
+            .HasIndex(a => new { a.EntityType, a.EntityId, a.Timestamp });
     }
 }

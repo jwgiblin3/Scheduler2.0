@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, adminGuard, clientGuard } from './core/guards/auth.guard';
+import { authGuard, adminGuard, superAdminGuard, clientGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/home', pathMatch: 'full' },
@@ -35,6 +35,37 @@ export const routes: Routes = [
     path: 'my/appointments',
     canActivate: [clientGuard],
     loadComponent: () => import('./features/client/my-appointments.component').then(m => m.MyAppointmentsComponent)
+  },
+
+  // --- SuperAdmin Console (platform-level operator only) ---
+  // Server-side authz on the actual API endpoints uses the "ManageGlobals"
+  // / "SuperAdmin" policies; this guard is just a UX filter so practice
+  // admins don't get empty 403 pages.
+  {
+    path: 'admin',
+    canActivate: [superAdminGuard],
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./features/admin/admin-home.component').then(m => m.AdminHomeComponent)
+      },
+      {
+        path: 'field-groups',
+        loadComponent: () => import('./features/admin/field-groups/field-groups-list.component').then(m => m.FieldGroupsListComponent)
+      },
+      {
+        path: 'field-groups/new',
+        loadComponent: () => import('./features/admin/field-groups/field-group-edit.component').then(m => m.FieldGroupEditComponent)
+      },
+      {
+        path: 'field-groups/:id/edit',
+        loadComponent: () => import('./features/admin/field-groups/field-group-edit.component').then(m => m.FieldGroupEditComponent)
+      },
+      {
+        path: 'audit',
+        loadComponent: () => import('./features/admin/audit-log/audit-log.component').then(m => m.AuditLogComponent)
+      }
+    ]
   },
 
   // --- Admin / Staff shell ---
