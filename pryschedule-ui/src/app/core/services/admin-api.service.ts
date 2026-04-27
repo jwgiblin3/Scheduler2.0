@@ -4,7 +4,11 @@ import { environment } from '../../../environments/environment';
 import {
   FieldGroupListItem, FieldGroupDetail, FieldGroupVersionSummary,
   CreateFieldGroupRequest, UpdateFieldGroupRequest,
-  AuditLogPage, AuditLogQuery
+  AuditLogPage, AuditLogQuery,
+  FormTemplateListItem, FormTemplateDetail,
+  CreateFormTemplateRequest, UpdateFormTemplateRequest,
+  PracticeAdminSummary,
+  AdminUser, CreateAdminUserRequest
 } from '../models/admin-models';
 
 /**
@@ -63,5 +67,51 @@ export class AdminApiService {
     if (q?.page !== undefined)       params = params.set('page', String(q.page));
     if (q?.pageSize !== undefined)   params = params.set('pageSize', String(q.pageSize));
     return this.http.get<AuditLogPage>(`${this.base}/audit`, { params });
+  }
+
+  // ---- Form templates ----
+
+  listFormTemplates(opts?: { audience?: string; includeDeleted?: boolean }) {
+    let params = new HttpParams();
+    if (opts?.audience) params = params.set('audience', opts.audience);
+    if (opts?.includeDeleted) params = params.set('includeDeleted', 'true');
+    return this.http.get<FormTemplateListItem[]>(`${this.base}/form-templates`, { params });
+  }
+
+  getFormTemplate(logicalId: string) {
+    return this.http.get<FormTemplateDetail>(`${this.base}/form-templates/${logicalId}`);
+  }
+
+  createFormTemplate(body: CreateFormTemplateRequest) {
+    return this.http.post<FormTemplateDetail>(`${this.base}/form-templates`, body);
+  }
+
+  updateFormTemplate(logicalId: string, body: UpdateFormTemplateRequest) {
+    return this.http.put<FormTemplateDetail>(
+      `${this.base}/form-templates/${logicalId}`, body);
+  }
+
+  deleteFormTemplate(logicalId: string) {
+    return this.http.delete(`${this.base}/form-templates/${logicalId}`);
+  }
+
+  // ---- Practices browser ----
+
+  listPractices() {
+    return this.http.get<PracticeAdminSummary[]>(`${this.base}/practices`);
+  }
+
+  // ---- Admin (SuperAdmin) users ----
+
+  listAdminUsers() {
+    return this.http.get<AdminUser[]>(`${this.base}/users`);
+  }
+
+  createAdminUser(body: CreateAdminUserRequest) {
+    return this.http.post<AdminUser>(`${this.base}/users`, body);
+  }
+
+  revokeAdminUser(id: number) {
+    return this.http.delete(`${this.base}/users/${id}`);
   }
 }

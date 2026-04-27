@@ -150,6 +150,35 @@
               }
             </div>
 
+            <!--
+              Notes — flattened view of practice-side notes from every
+              appointment. Lets staff scan a client's "story" without
+              opening each appointment one by one. Edits still happen on
+              the appointment detail page (one note per appointment is the
+              data model); this is read-only.
+            -->
+            <div class="card">
+              <h2>Notes ({{ clientNotes().length }})</h2>
+              @if (clientNotes().length === 0) {
+                <div class="empty">
+                  No notes yet. Notes added on individual appointments will appear here as a chronological history.
+                </div>
+              } @else {
+                <ul class="notes-stack">
+                  @for (n of clientNotes(); track n.appointmentId) {
+                    <li class="note-card">
+                      <div class="note-head">
+                        <div class="note-when">{{ n.startTime | date:'EEE, MMM d, y · h:mm a' }}</div>
+                        <a class="note-link" [routerLink]="['/appointments', n.appointmentId]">Open appointment →</a>
+                      </div>
+                      <div class="note-meta">{{ n.appointmentTypeName }} · {{ n.providerName }}</div>
+                      <p class="note-body">{{ n.notes }}</p>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+
             <!-- Form responses -->
             <div class="card">
               <h2>Submitted Forms ({{ renderedResponses().length }})</h2>

@@ -239,4 +239,16 @@ export class ApiService {
   rescheduleAppointment(cancellationToken: string, newStartTime: string) {
     return this.http.post(`${this.base}/appointments/reschedule`, { cancellationToken, newStartTime });
   }
+
+  // --- Field groups (browse) ---
+  // Practice admins read global field groups via this endpoint to populate
+  // the "+ Add field group" picker on the forms editor. Server endpoint is
+  // /api/field-groups (separate from /api/admin/field-groups, which is
+  // SuperAdmin-only CRUD).
+  getAvailableFieldGroups(category?: string) {
+    let params = new HttpParams();
+    if (category) params = params.set('category', category);
+    return this.http.get<import('../models/admin-models').FieldGroupDetail[]>(
+      `${this.base}/field-groups`, { params });
+  }
 }

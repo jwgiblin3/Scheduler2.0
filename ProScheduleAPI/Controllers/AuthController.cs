@@ -206,6 +206,22 @@ public class AuthController : ControllerBase
         // AspNetUsers id. We don't load the rows — we just need a bool.
         var hasClientAppts = await _db.Clients.AnyAsync(c => c.AppUserId == user.Id);
 
+        // Phone resolution. Prefer the AppUser's own PhoneNumber (set at
+        // client-register time, or by the booking flow's auto-persist).
+        // For existing accounts that booked BEFORE the auto-persist landed,
+        // fall back to the phone on their most recent Client row so the
+        // booking widget can still pre-fill it. Returned phone is never
+        // written back here — that's the booking flow's job.
+        var phone = user.PhoneNumber;
+        if (string.IsNullOrWhiteSpace(phone))
+        {
+            phone = await _db.Clients
+                .Where(c => c.AppUserId == user.Id && !string.IsNullOrEmpty(c.Phone))
+                .OrderByDescending(c => c.CreatedAt)
+                .Select(c => c.Phone)
+                .FirstOrDefaultAsync();
+        }
+
         return new AuthResponse(
             Token: _tokenService.CreateToken(user),
             Email: user.Email!,
@@ -216,7 +232,7 @@ public class AuthController : ControllerBase
             PracticeName: practice?.Name,
             PracticeSlug: practice?.Slug,
             HasClientAppointments: hasClientAppts,
-            Phone: user.PhoneNumber
+            Phone: phone
         );
     }
 

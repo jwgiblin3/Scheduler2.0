@@ -1,0 +1,83 @@
+// Mirrors the field-groups list styling — same conventions.
+.ft-page { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+.ft-header { margin-bottom: 1.5rem; }
+.back-link {
+  display: inline-block; font-size: .85rem; color: #667eea;
+  text-decoration: none; margin-bottom: 1rem;
+}
+.back-link:hover { text-decoration: underline; }
+h1 { margin: 0 0 .35rem; font-size: 1.5rem; color: #1a1f36; }
+.subtitle { margin: 0; color: #718096; font-size: .9rem; max-width: 720px; line-height: 1.5; }
+
+.ft-toolbar {
+  display: flex; align-items: center; gap: 1.25rem;
+  margin-bottom: 1rem; padding: .85rem 1rem;
+  background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;
+}
+.ft-filter { display: flex; align-items: center; gap: .5rem; }
+.ft-filter label { font-size: .85rem; color: #4a5568; font-weight: 500; }
+.ft-filter select {
+  padding: .35rem .6rem; border: 1px solid #cbd5e0; border-radius: 4px;
+  background: #fff; font-size: .9rem;
+}
+.ft-toggle { display: flex; align-items: center; gap: .4rem; font-size: .85rem; color: #4a5568; cursor: pointer; }
+.ft-spacer { flex: 1; }
+
+.btn {
+  display: inline-flex; align-items: center; padding: .5rem 1rem;
+  border-radius: 6px; border: 1px solid transparent;
+  font-size: .9rem; font-weight: 500; text-decoration: none; cursor: pointer;
+  transition: background-color .12s, border-color .12s;
+}
+.btn-primary { background: #667eea; color: #fff; border-color: #667eea; }
+.btn-primary:hover { background: #5a67d8; border-color: #5a67d8; }
+
+.ft-error { padding: .85rem 1rem; background: #fff5f5; border: 1px solid #feb2b2; color: #9b2c2c; border-radius: 6px; margin-bottom: 1rem; font-size: .9rem; }
+.ft-loading, .ft-empty { padding: 3rem 1.5rem; text-align: center; color: #718096; background: #fff; border: 1px dashed #cbd5e0; border-radius: 8px; }
+.ft-empty a { color: #667eea; }
+
+.ft-table {
+  width: 100%; background: #fff;
+  border: 1px solid #e2e8f0; border-radius: 8px;
+  border-collapse: separate; border-spacing: 0; overflow: hidden;
+}
+.ft-table th {
+  text-align: left; padding: .75rem 1rem;
+  font-size: .75rem; text-transform: uppercase; letter-spacing: .04em;
+  color: #4a5568; background: #f7fafc; border-bottom: 1px solid #e2e8f0;
+}
+.ft-table th.num, .ft-table td.num { text-align: right; }
+.ft-table th.actions { width: 50px; }
+.ft-table td {
+  padding: .85rem 1rem; border-bottom: 1px solid #edf2f7;
+  font-size: .9rem; vertical-align: middle;
+}
+.ft-table tr:last-child td { border-bottom: none; }
+.ft-table tr.row-link { cursor: pointer; }
+.ft-table tr.row-link:hover { background: #f7fafc; }
+.ft-table tr.deleted { opacity: .55; }
+
+.row-name { font-weight: 500; color: #1a1f36; }
+.row-id { font-family: monospace; font-size: .72rem; color: #a0aec0; margin-top: 2px; }
+
+.aud-chip {
+  display: inline-block; padding: 2px 8px;
+  background: #e9d8fd; color: #553c9a;
+  border-radius: 999px; font-size: .72rem; font-weight: 500;
+}
+
+.status {
+  display: inline-block; padding: 2px 8px; border-radius: 999px;
+  font-size: .7rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.status-active { background: #c6f6d5; color: #276749; }
+.status-deleted { background: #fed7d7; color: #9b2c2c; }
+
+.btn-icon {
+  background: none; border: 1px solid transparent;
+  color: #a0aec0; cursor: pointer; font-size: 1.2rem;
+  padding: 2px 8px; border-radius: 4px;
+}
+.btn-icon:hover { color: #c53030; border-color: #fed7d7; }

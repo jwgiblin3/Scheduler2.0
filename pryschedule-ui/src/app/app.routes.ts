@@ -64,6 +64,30 @@ export const routes: Routes = [
       {
         path: 'audit',
         loadComponent: () => import('./features/admin/audit-log/audit-log.component').then(m => m.AuditLogComponent)
+      },
+      // Form templates — list + create + edit. Same versioning model as
+      // field groups: editing creates a new version row, older versions stay.
+      {
+        path: 'form-templates',
+        loadComponent: () => import('./features/admin/form-templates/form-templates-list.component').then(m => m.FormTemplatesListComponent)
+      },
+      {
+        path: 'form-templates/new',
+        loadComponent: () => import('./features/admin/form-templates/form-template-edit.component').then(m => m.FormTemplateEditComponent)
+      },
+      {
+        path: 'form-templates/:id/edit',
+        loadComponent: () => import('./features/admin/form-templates/form-template-edit.component').then(m => m.FormTemplateEditComponent)
+      },
+      // Cross-tenant practices browser (read-only).
+      {
+        path: 'practices',
+        loadComponent: () => import('./features/admin/practices/practices-list.component').then(m => m.PracticesListComponent)
+      },
+      // SuperAdmin user management.
+      {
+        path: 'users',
+        loadComponent: () => import('./features/admin/admin-users/admin-users-list.component').then(m => m.AdminUsersListComponent)
       }
     ]
   },

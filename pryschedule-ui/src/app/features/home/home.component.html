@@ -16,6 +16,25 @@
         <p class="home-subtitle">Where would you like to go?</p>
 
         <div class="home-cards">
+          <!--
+            Admin Console card (only for platform-level SuperAdmins).
+            Listed first when present so SuperAdmins land on the operator
+            workflow even from a manual /home navigation.
+          -->
+          @if (auth.isSuperAdmin()) {
+            <a class="home-card home-card-admin" routerLink="/admin">
+              <div class="home-card-icon">🛡️</div>
+              <div class="home-card-body">
+                <div class="home-card-title">Admin Console</div>
+                <div class="home-card-subtitle">Platform-level operations</div>
+                <div class="home-card-desc">
+                  Manage global field groups, browse the audit log, and operate across all tenants.
+                </div>
+              </div>
+              <div class="home-card-arrow">→</div>
+            </a>
+          }
+
           <!-- Practice card (only for practice owners / admins) -->
           @if (auth.hasPractice()) {
             <a class="home-card home-card-practice" routerLink="/dashboard">
@@ -31,8 +50,13 @@
             </a>
           }
 
-          <!-- Create-practice card (only when the user doesn't already own one) -->
-          @if (!auth.hasPractice()) {
+          <!--
+            Create-practice card. Shown only for accounts that don't have a
+            practice AND aren't SuperAdmin. SuperAdmins operate above
+            tenants — prompting them to "open a practice" would conflict
+            with the SuperAdmin invariant (PracticeId must stay null).
+          -->
+          @if (!auth.hasPractice() && !auth.isSuperAdmin()) {
             <a class="home-card home-card-create-practice" routerLink="/my/create-practice">
               <div class="home-card-icon">🏥</div>
               <div class="home-card-body">

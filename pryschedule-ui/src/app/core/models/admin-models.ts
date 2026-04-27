@@ -165,3 +165,94 @@ export interface AuditLogQuery {
   page?: number;
   pageSize?: number;
 }
+
+// ---- Form templates ----
+
+export interface FormTemplateListItem {
+  logicalId: string;
+  name: string;
+  targetAudience: string;
+  isGlobal: boolean;
+  ownerPracticeId: number | null;
+  parentLogicalId: string | null;
+  currentVersion: number;
+  itemCount: number;
+  updatedAt: string;
+  deleted: boolean;
+}
+
+/**
+ * One entry in a template's items array. Discriminated by `kind`:
+ *  - "group": references an existing FieldGroup (logicalId + version pin)
+ *  - "field": embeds a standalone Field inline
+ *
+ * For "group" items, the server populates `groupName` and `groupFieldCount`
+ * on read so the UI can render a card without a round trip per item.
+ */
+export interface FormTemplateItem {
+  kind: 'group' | 'field';
+  groupLogicalId?: string | null;
+  groupVersion?: number | null;
+  groupName?: string | null;
+  groupFieldCount?: number | null;
+  field?: Field | null;
+}
+
+export interface FormTemplateDetail {
+  logicalId: string;
+  name: string;
+  targetAudience: string;
+  isGlobal: boolean;
+  ownerPracticeId: number | null;
+  parentLogicalId: string | null;
+  currentVersion: number;
+  items: FormTemplateItem[];
+  updatedAt: string;
+  deleted: boolean;
+}
+
+export interface CreateFormTemplateRequest {
+  name: string;
+  targetAudience: string;
+  items: FormTemplateItem[];
+}
+
+export type UpdateFormTemplateRequest = CreateFormTemplateRequest;
+
+// ---- Practices admin ----
+
+export interface PracticeAdminSummary {
+  id: number;
+  name: string;
+  slug: string;
+  adminEmail: string;
+  phone: string | null;
+  website: string | null;
+  addressSummary: string | null;
+  createdAt: string;
+  userCount: number;
+  providerCount: number;
+  clientCount: number;
+  appointmentCount: number;
+  legacyFormCount: number;
+  overrideGroupCount: number;
+  overrideTemplateCount: number;
+}
+
+// ---- Admin users ----
+
+export interface AdminUser {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  createdAt: string;
+  isSelf: boolean;
+}
+
+export interface CreateAdminUserRequest {
+  email: string;
+  firstName: string;
+  lastName: string;
+  password: string;
+}

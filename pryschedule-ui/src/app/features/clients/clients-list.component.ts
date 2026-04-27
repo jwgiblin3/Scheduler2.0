@@ -67,6 +67,27 @@ export class ClientsListComponent implements OnInit {
     return d.formResponses.map(r => this.renderResponse(r));
   });
 
+  /**
+   * Flattened "all notes for this client" view. Pulls the appointment-level
+   * `notes` field from every appointment that has one. Empty/whitespace
+   * notes are filtered out so the section only shows actual content.
+   * Already most-recent first since the controller orders appointments
+   * OrderByDescending(a => a.StartTime) — we inherit that order.
+   */
+  readonly clientNotes = computed(() => {
+    const d = this.detail();
+    if (!d) return [];
+    return d.appointments
+      .filter(a => (a.notes ?? '').trim().length > 0)
+      .map(a => ({
+        appointmentId: a.id,
+        startTime: a.startTime,
+        providerName: a.providerName,
+        appointmentTypeName: a.appointmentTypeName,
+        notes: a.notes!.trim()
+      }));
+  });
+
   statusLabel(s: AppointmentStatus) {
     return ['Scheduled', 'Completed', 'Cancelled', 'No Show'][s];
   }

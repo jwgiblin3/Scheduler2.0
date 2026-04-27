@@ -17,8 +17,45 @@
     .info-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; color: #a0aec0; margin-bottom: .25rem; }
     .info-value { font-size: .95rem; font-weight: 500; }
     .info-sub { font-size: .8rem; color: #718096; }
-    .notes-block { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #f7f8fc; }
-    .notes-block p { margin: .5rem 0 0; color: #4a5568; font-size: .9rem; }
+    .notes-block { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #edf2f7; }
+    .notes-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: .4rem; }
+    .notes-counter { font-size: .72rem; color: #a0aec0; font-variant-numeric: tabular-nums; }
+    .notes-counter.over { color: #c53030; font-weight: 600; }
+    .notes-textarea {
+      width: 100%; box-sizing: border-box;
+      padding: .55rem .7rem;
+      border: 1px solid #cbd5e0; border-radius: 6px;
+      font-family: inherit; font-size: .9rem;
+      resize: vertical; min-height: 90px;
+    }
+    .notes-textarea:focus {
+      outline: none; border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+    }
+    .notes-error {
+      margin-top: .5rem; padding: .5rem .65rem;
+      background: #fff5f5; border: 1px solid #feb2b2;
+      color: #9b2c2c; border-radius: 4px; font-size: .8rem;
+    }
+    .notes-actions { display: flex; align-items: center; gap: .5rem; margin-top: .5rem; }
+    .notes-actions-spacer { flex: 1; }
+    .notes-saved-flash {
+      font-size: .8rem; color: #276749; font-weight: 600;
+    }
+    .btn-primary {
+      background: #667eea; color: #fff;
+      padding: .45rem 1rem; font-size: .85rem; border: none;
+      border-radius: 6px; cursor: pointer;
+    }
+    .btn-primary:hover:not(:disabled) { background: #5a67d8; }
+    .btn-primary:disabled { opacity: .55; cursor: not-allowed; }
+    .btn-text {
+      background: none; color: #4a5568; border: 1px solid transparent;
+      padding: .4rem .85rem; font-size: .85rem; cursor: pointer;
+      border-radius: 6px;
+    }
+    .btn-text:hover:not(:disabled) { background: #edf2f7; }
+    .btn-text:disabled { opacity: .55; cursor: not-allowed; }
     .actions { display: flex; gap: .5rem; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #f7f8fc; }
     .btn { padding: .5rem 1rem; border: none; border-radius: 6px; cursor: pointer; font-size: .85rem; }
     .btn-success { background: #48bb78; color: #fff; }

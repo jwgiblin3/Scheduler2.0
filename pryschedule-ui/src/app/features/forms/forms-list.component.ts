@@ -3,6 +3,9 @@ import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
 import { PracticeForm, IntakeFormField, ImageMapMarker } from '../../core/models/models';
+import {
+  FieldGroupDetail, Field as RichField, FieldType as RichFieldType
+} from '../../core/models/admin-models';
 
 const FIELD_TYPES: Array<{ value: IntakeFormField['type']; label: string; hasOptions: boolean }> = [
   { value: 'text',      label: 'Short text',                 hasOptions: false },
@@ -47,8 +50,34 @@ export class FormsListComponent implements OnInit {
   formSaved = signal(false);
   error = signal('');
 
+  // --- Field group picker state ---
+  // The picker fetches global field groups from /api/field-groups when first
+  // opened. The list is cached for the lifetime of the component (it's not
+  // unreasonable to assume globals don't change mid-edit).
+  pickerOpen = signal(false);
+  pickerLoading = signal(false);
+  availableGroups = signal<FieldGroupDetail[]>([]);
+  pickerCategory = signal<string>('');
+
   /** True when the editor panel should render. */
   showEditor = computed(() => this.isNew() || this.selected() !== null);
+
+  /**
+   * Distinct categories present in the loaded groups, for the picker filter.
+   * Sorted alphabetically; empty string is treated as "(uncategorized)".
+   */
+  pickerCategories = computed(() => {
+    const set = new Set<string>();
+    for (const g of this.availableGroups()) if (g.category) set.add(g.category);
+    return Array.from(set).sort();
+  });
+
+  /** Filtered groups for the picker, applying the category dropdown. */
+  filteredGroups = computed(() => {
+    const cat = this.pickerCategory();
+    if (!cat) return this.availableGroups();
+    return this.availableGroups().filter(g => g.category === cat);
+  });
 
   openNew() {
     this.isNew.set(true);
@@ -274,6 +303,106 @@ export class FormsListComponent implements OnInit {
       next: list => { this.forms.set(list); this.loadingList.set(false); },
       error: () => { this.loadingList.set(false); }
     });
+  }
+
+  // --- Field group picker actions ---
+
+  openPicker() {
+    this.pickerOpen.set(true);
+    if (this.availableGroups().length === 0) {
+      this.pickerLoading.set(true);
+      this.api.getAvailableFieldGroups().subscribe({
+        next: groups => {
+          this.availableGroups.set(groups);
+          this.pickerLoading.set(false);
+        },
+        error: () => {
+          this.error.set('Could not load field groups. Try again.');
+          this.pickerLoading.set(false);
+          this.pickerOpen.set(false);
+        }
+      });
+    }
+  }
+
+  closePicker() {
+    this.pickerOpen.set(false);
+  }
+
+  /**
+   * Drop the chosen group's fields into the form editor inline. We translate
+   * the rich Field shape into the legacy IntakeFormField shape — lossy but
+   * covers the cases the legacy renderer supports. Admins can edit each
+   * field afterwards if the translation didn't capture what they wanted.
+   *
+   * Translation rules:
+   *   Rich Text/Email/Phone/Number  → 'text'
+   *   Rich Textarea                 → 'textarea'
+   *   Rich Date                     → 'date'
+   *   Rich Select/Radio             → 'radio'
+   *   Rich Multiselect/CheckboxGroup→ 'checkbox'
+   *   Rich Signature                → 'signature'
+   *   Rich BodyDiagram              → 'imagemap' (with default markers)
+   *   anything else                 → 'text' (admins can adjust)
+   *
+   * The labels and option values are preserved. Width, PHI, conditional
+   * logic, placeholders, and validation bounds are dropped — they aren't
+   * representable in the legacy shape. This is the deliberate trade-off in
+   * keeping the legacy /forms screen alive while practices adopt groups.
+   */
+  pickGroup(g: FieldGroupDetail) {
+    const newFields = g.fields.map(f => this.translateRichField(f));
+    if (newFields.length === 0) {
+      this.error.set(`Group "${g.name}" has no fields to add.`);
+      return;
+    }
+    this.editFields.update(list => [...list, ...newFields]);
+    this.formSaved.set(false);
+    this.closePicker();
+  }
+
+  private translateRichField(f: RichField): IntakeFormField {
+    const id = f.id ?? randomFieldId();
+    const label = f.label;
+    const required = !!f.required;
+    const optionLabels = (f.options ?? []).map(o => o.label).filter(s => !!s);
+
+    const base: IntakeFormField = { id, label, type: 'text', required };
+
+    switch (f.type) {
+      case RichFieldType.Textarea:
+        base.type = 'textarea';
+        break;
+      case RichFieldType.Date:
+      case RichFieldType.DateTime:
+        base.type = 'date';
+        break;
+      case RichFieldType.Select:
+      case RichFieldType.Radio:
+        base.type = 'radio';
+        base.options = optionLabels.length > 0 ? optionLabels : ['Option 1'];
+        break;
+      case RichFieldType.Multiselect:
+      case RichFieldType.CheckboxGroup:
+        base.type = 'checkbox';
+        base.options = optionLabels.length > 0 ? optionLabels : ['Option 1'];
+        break;
+      case RichFieldType.Signature:
+        base.type = 'signature';
+        break;
+      case RichFieldType.BodyDiagram:
+        base.type = 'imagemap';
+        base.imageUrl = '';
+        base.markers = [...DEFAULT_IMAGEMAP_MARKERS];
+        break;
+      default:
+        // Text, Email, Phone, Number, Time, Checkbox (single), File,
+        // AddressBlock, PaymentMethod — fall back to short text. Admin can
+        // tweak after the drop.
+        base.type = 'text';
+        break;
+    }
+    return base;
   }
 
   ngOnInit() { this.load(); }

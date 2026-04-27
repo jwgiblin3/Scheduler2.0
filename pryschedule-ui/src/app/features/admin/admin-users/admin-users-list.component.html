@@ -1,0 +1,97 @@
+<div class="au-page">
+  <div class="au-header">
+    <a routerLink="/admin" class="back-link">← Admin Console</a>
+    <h1>Admin Users</h1>
+    <p class="subtitle">
+      Platform-level operators. The very first SuperAdmin is bootstrapped via the
+      <code>seed-superadmin</code> CLI; further additions and revocations go through
+      this screen so they're recorded in the audit log.
+    </p>
+  </div>
+
+  <div class="au-toolbar">
+    <div class="au-spacer"></div>
+    @if (!formOpen()) {
+      <button type="button" class="btn btn-primary" (click)="openForm()">+ Add SuperAdmin</button>
+    }
+  </div>
+
+  @if (formOpen()) {
+    <form class="au-form" (submit)="$event.preventDefault(); submitNew()">
+      <h2>New SuperAdmin</h2>
+      <div class="row">
+        <label class="col-grow">
+          <span class="field-label">Email <span class="req">*</span></span>
+          <input type="email" [(ngModel)]="newEmail" name="email" maxlength="254" required>
+        </label>
+      </div>
+      <div class="row">
+        <label class="col">
+          <span class="field-label">First name <span class="req">*</span></span>
+          <input type="text" [(ngModel)]="newFirstName" name="firstName" maxlength="50" required>
+        </label>
+        <label class="col">
+          <span class="field-label">Last name <span class="req">*</span></span>
+          <input type="text" [(ngModel)]="newLastName" name="lastName" maxlength="80" required>
+        </label>
+      </div>
+      <div class="row">
+        <label class="col-grow">
+          <span class="field-label">Initial password <span class="req">*</span></span>
+          <input type="password" [(ngModel)]="newPassword" name="password" minlength="8" required>
+          <span class="hint">Minimum 8 characters, must contain at least one digit. Share securely with the new SuperAdmin; they should change it on first sign-in.</span>
+        </label>
+      </div>
+
+      @if (formError()) { <div class="au-error">{{ formError() }}</div> }
+
+      <div class="au-actions">
+        <button type="button" class="btn btn-text" (click)="closeForm()" [disabled]="saving()">Cancel</button>
+        <button type="submit" class="btn btn-primary" [disabled]="saving()">
+          @if (saving()) { Creating… } @else { Create SuperAdmin }
+        </button>
+      </div>
+    </form>
+  }
+
+  @if (error()) { <div class="au-error">{{ error() }}</div> }
+
+  @if (loading()) {
+    <div class="au-loading">Loading…</div>
+  } @else if (rows().length === 0) {
+    <div class="au-empty">No SuperAdmins. (How are you reading this page?)</div>
+  } @else {
+    <table class="au-table">
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Name</th>
+          <th>Created</th>
+          <th class="actions"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (u of rows(); track u.id) {
+          <tr>
+            <td>
+              <span class="email">{{ u.email }}</span>
+              @if (u.isSelf) {
+                <span class="self-badge">you</span>
+              }
+            </td>
+            <td>{{ u.firstName }} {{ u.lastName }}</td>
+            <td>{{ formatDate(u.createdAt) }}</td>
+            <td class="actions">
+              <button type="button" class="btn btn-danger-soft" (click)="revoke(u)" [disabled]="u.isSelf">
+                Revoke
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <p class="au-hint">
+      You cannot revoke yourself or the last SuperAdmin — both guards are also enforced server-side.
+    </p>
+  }
+</div>

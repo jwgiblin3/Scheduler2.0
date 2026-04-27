@@ -142,3 +142,28 @@
   border-radius: 999px; font-size: .7rem;
   font-family: ui-monospace, Menlo, Consolas, monospace;
 }
+
+/* --- Client notes (chronological view across appointments) --- */
+.notes-stack {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: .65rem;
+}
+.note-card {
+  /* Soft amber background + left bar so notes visually pop from the
+     structured tables and forms above. These are the "human" content. */
+  border: 1px solid #e2e8f0; border-left: 3px solid #f59e0b;
+  border-radius: 8px;
+  padding: .75rem .9rem; background: #fffdf6;
+}
+.note-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: .65rem; margin-bottom: .15rem;
+}
+.note-when { font-size: .85rem; color: #2d3748; font-weight: 600; }
+.note-link { font-size: .8rem; color: #667eea; text-decoration: none; }
+.note-link:hover { text-decoration: underline; }
+.note-meta { font-size: .75rem; color: #718096; margin-bottom: .45rem; }
+.note-body {
+  margin: 0; color: #2d3748; font-size: .9rem; line-height: 1.5;
+  white-space: pre-wrap;   /* preserve newlines from the textarea */
+}

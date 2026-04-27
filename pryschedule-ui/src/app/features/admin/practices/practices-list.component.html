@@ -1,0 +1,72 @@
+<div class="prac-page">
+  <div class="prac-header">
+    <a routerLink="/admin" class="back-link">← Admin Console</a>
+    <h1>Practices</h1>
+    <p class="subtitle">
+      Read-only cross-tenant browser. The "overrides" columns count tenant
+      forks of global field groups and templates — useful for spotting
+      practices that have customized heavily.
+    </p>
+  </div>
+
+  @if (error()) { <div class="prac-error">{{ error() }}</div> }
+
+  @if (loading()) {
+    <div class="prac-loading">Loading…</div>
+  } @else if (rows().length === 0) {
+    <div class="prac-empty">No practices on the platform yet.</div>
+  } @else {
+    <div class="prac-summary">{{ rows().length }} practice{{ rows().length === 1 ? '' : 's' }}</div>
+    <table class="prac-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Slug</th>
+          <th>Admin email</th>
+          <th>Address</th>
+          <th class="num">Users</th>
+          <th class="num">Providers</th>
+          <th class="num">Clients</th>
+          <th class="num">Appts</th>
+          <th class="num">Forms</th>
+          <th class="num">Overrides</th>
+          <th>Created</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of rows(); track r.id) {
+          <tr>
+            <td>
+              <div class="row-name">{{ r.name }}</div>
+              @if (r.website) {
+                <a class="row-website" [href]="r.website" target="_blank" rel="noopener">{{ r.website }}</a>
+              }
+            </td>
+            <td><code class="slug">{{ r.slug }}</code></td>
+            <td>{{ r.adminEmail }}</td>
+            <td>
+              @if (r.addressSummary) {
+                <span>{{ r.addressSummary }}</span>
+              } @else {
+                <span class="muted">—</span>
+              }
+            </td>
+            <td class="num">{{ r.userCount | number }}</td>
+            <td class="num">{{ r.providerCount | number }}</td>
+            <td class="num">{{ r.clientCount | number }}</td>
+            <td class="num">{{ r.appointmentCount | number }}</td>
+            <td class="num">{{ r.legacyFormCount | number }}</td>
+            <td class="num">
+              @if (r.overrideGroupCount + r.overrideTemplateCount === 0) {
+                <span class="muted">0</span>
+              } @else {
+                <span class="ovr">{{ r.overrideGroupCount }}g · {{ r.overrideTemplateCount }}t</span>
+              }
+            </td>
+            <td>{{ formatDate(r.createdAt) }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

@@ -20,17 +20,17 @@
 
     <div class="admin-cards">
 
-      <!-- Global form templates (Phase 3) -->
-      <div class="admin-card placeholder">
+      <!-- Global form templates -->
+      <a class="admin-card" routerLink="/admin/form-templates">
         <div class="admin-card-icon">📋</div>
         <div class="admin-card-body">
           <div class="admin-card-title">Form Templates</div>
-          <div class="admin-card-status">Coming in Phase 3</div>
+          <div class="admin-card-status status-ready">Available</div>
           <div class="admin-card-desc">
             Manage the global form templates that practices start from. Versioned, with copy-on-write tenant overrides.
           </div>
         </div>
-      </div>
+      </a>
 
       <!-- Global field groups -->
       <a class="admin-card" routerLink="/admin/field-groups">
@@ -44,29 +44,29 @@
         </div>
       </a>
 
-      <!-- Cross-tenant practice browser (Phase 3) -->
-      <div class="admin-card placeholder">
+      <!-- Cross-tenant practice browser -->
+      <a class="admin-card" routerLink="/admin/practices">
         <div class="admin-card-icon">🏥</div>
         <div class="admin-card-body">
           <div class="admin-card-title">Practices</div>
-          <div class="admin-card-status">Coming in Phase 3</div>
+          <div class="admin-card-status status-ready">Available</div>
           <div class="admin-card-desc">
-            Browse every tenant. Drill into a practice to see its overrides of global templates.
+            Browse every tenant. See activity counts and how many global templates each practice has overridden.
           </div>
         </div>
-      </div>
+      </a>
 
-      <!-- SuperAdmin user management (Phase 3) -->
-      <div class="admin-card placeholder">
+      <!-- SuperAdmin user management -->
+      <a class="admin-card" routerLink="/admin/users">
         <div class="admin-card-icon">👥</div>
         <div class="admin-card-body">
           <div class="admin-card-title">Admin Users</div>
-          <div class="admin-card-status">Coming in Phase 3</div>
+          <div class="admin-card-status status-ready">Available</div>
           <div class="admin-card-desc">
             Add or remove other SuperAdmins. The first one is bootstrapped via the seed-superadmin CLI.
           </div>
         </div>
-      </div>
+      </a>
 
       <!-- PHI audit log viewer -->
       <a class="admin-card" routerLink="/admin/audit">
@@ -83,7 +83,12 @@
     </div>
 
     <div class="admin-footer">
-      <a routerLink="/dashboard">← Back to dashboard</a>
+      <!--
+        Send back to /home (the role chooser), not /dashboard. SuperAdmins
+        don't have a practiceId, so /dashboard would error. /home decides
+        which views to surface based on role and practice membership.
+      -->
+      <a routerLink="/home">← Switch view</a>
     </div>
   </div>
 </div>

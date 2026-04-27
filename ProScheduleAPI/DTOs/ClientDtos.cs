@@ -29,7 +29,11 @@ public record ClientAppointmentDto(
     string ProviderName,
     string AppointmentTypeName,
     int Status,
-    bool HasIntakeResponse
+    bool HasIntakeResponse,
+    // Practice-side notes attached to the appointment. Carried on the
+    // client detail so the Notes section can show one chronological
+    // stream across every appointment without a second API call.
+    string? Notes
 );
 
 /// <summary>One submitted form response shown on a client's detail page.</summary>

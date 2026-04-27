@@ -1,0 +1,82 @@
+<div class="ft-page">
+  <div class="ft-header">
+    <a routerLink="/admin" class="back-link">← Admin Console</a>
+    <h1>Form Templates</h1>
+    <p class="subtitle">Ordered collections of field groups and standalone fields. Each save creates a new version; older versions remain so historical FormInstances render unchanged.</p>
+  </div>
+
+  <div class="ft-toolbar">
+    <div class="ft-filter">
+      <label>Audience</label>
+      <select [(ngModel)]="filterAudience" (ngModelChange)="load()">
+        @for (opt of audienceOptions; track opt.value) {
+          <option [ngValue]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+    </div>
+
+    <label class="ft-toggle">
+      <input type="checkbox" [(ngModel)]="showDeleted" (ngModelChange)="load()">
+      Show deleted
+    </label>
+
+    <div class="ft-spacer"></div>
+
+    <a routerLink="/admin/form-templates/new" class="btn btn-primary">+ New Template</a>
+  </div>
+
+  @if (error()) {
+    <div class="ft-error">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="ft-loading">Loading…</div>
+  } @else if (rows().length === 0) {
+    <div class="ft-empty">
+      No form templates yet. Click <strong>+ New Template</strong> to create one. Templates compose
+      <a routerLink="/admin/field-groups">field groups</a> plus optional standalone fields.
+    </div>
+  } @else {
+    <table class="ft-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Audience</th>
+          <th class="num">Items</th>
+          <th class="num">Version</th>
+          <th>Updated</th>
+          <th>Status</th>
+          <th class="actions"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of rows(); track r.logicalId) {
+          <tr [class.deleted]="r.deleted"
+              [routerLink]="['/admin/form-templates', r.logicalId, 'edit']"
+              class="row-link">
+            <td>
+              <div class="row-name">{{ r.name }}</div>
+              <div class="row-id">{{ r.logicalId.substring(0, 8) }}…</div>
+            </td>
+            <td><span class="aud-chip">{{ audienceLabel(r.targetAudience) }}</span></td>
+            <td class="num">{{ r.itemCount }}</td>
+            <td class="num">v{{ r.currentVersion }}</td>
+            <td>{{ formatDate(r.updatedAt) }}</td>
+            <td>
+              @if (r.deleted) {
+                <span class="status status-deleted">Deleted</span>
+              } @else {
+                <span class="status status-active">Active</span>
+              }
+            </td>
+            <td class="actions">
+              @if (!r.deleted) {
+                <button type="button" class="btn-icon" (click)="remove(r, $event)" title="Soft-delete">×</button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

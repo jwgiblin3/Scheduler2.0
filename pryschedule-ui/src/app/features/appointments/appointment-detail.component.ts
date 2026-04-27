@@ -39,6 +39,26 @@ export class AppointmentDetailComponent implements OnInit {
   loading = signal(true);
   appt = signal<AppointmentDetail | null>(null);
 
+  // ---- Notes (practice-side, attached to the appointment) ----
+  // Editable text area bound to the appointment's `notes` column. Length
+  // capped at 2000 to match the server-side [MaxLength(2000)] from Phase 0.
+  // Save reuses the existing PUT /api/appointments/{id} endpoint, which
+  // takes both Status and Notes — we always pass the current Status so we
+  // never accidentally roll the appointment back to Scheduled.
+  notesEdit = signal('');
+  savingNotes = signal(false);
+  notesSavedAt = signal<Date | null>(null);
+  notesError = signal('');
+
+  /** True when the textarea diverges from the persisted value. */
+  notesDirty = computed(() => (this.notesEdit() ?? '') !== (this.appt()?.notes ?? ''));
+
+  /** Length cap mirrors server. */
+  readonly notesMaxLength = 2000;
+
+  /** "0 / 2000" style counter for the UI. */
+  notesCounter = computed(() => `${(this.notesEdit() ?? '').length} / ${this.notesMaxLength}`);
+
   /**
    * The field definitions for whichever form(s) are attached to this
    * appointment's type. We join these against responsesJson keys to render
@@ -85,9 +105,49 @@ export class AppointmentDetailComponent implements OnInit {
 
   updateStatus(status: AppointmentStatus) {
     const id = this.appt()!.id;
-    this.api.updateAppointmentStatus(id, status).subscribe(() => {
-      this.appt.update(a => a ? { ...a, status } : null);
+    // Carry the latest notes value through with the status change so we
+    // don't lose unsaved edits if the user clicks "Mark Completed" before
+    // hitting "Save notes".
+    const notes = this.notesEdit() ?? this.appt()?.notes ?? null;
+    this.api.updateAppointmentStatus(id, status, notes ?? undefined).subscribe(() => {
+      this.appt.update(a => a ? { ...a, status, notes } : null);
     });
+  }
+
+  /**
+   * Save just the notes — no status change. Sends the current Status as
+   * a passthrough so the server's `appointment.Status = req.Status;` line
+   * doesn't roll the row back to a stale value.
+   */
+  saveNotes() {
+    const a = this.appt();
+    if (!a) return;
+    this.savingNotes.set(true);
+    this.notesError.set('');
+    const notes = (this.notesEdit() ?? '').trim();
+    this.api.updateAppointmentStatus(a.id, a.status, notes).subscribe({
+      next: () => {
+        this.savingNotes.set(false);
+        this.notesSavedAt.set(new Date());
+        this.appt.update(curr => curr ? { ...curr, notes } : null);
+        // Auto-clear the "Saved" flash after a few seconds. Keeps the UI
+        // calm — the dirty/clean state of the textarea continues to
+        // communicate save status implicitly.
+        setTimeout(() => {
+          if (!this.notesDirty()) this.notesSavedAt.set(null);
+        }, 3000);
+      },
+      error: err => {
+        this.savingNotes.set(false);
+        this.notesError.set(typeof err?.error === 'string' ? err.error : 'Could not save notes.');
+      }
+    });
+  }
+
+  /** Discard unsaved edits and revert to whatever the server last returned. */
+  resetNotes() {
+    this.notesEdit.set(this.appt()?.notes ?? '');
+    this.notesError.set('');
   }
 
   ngOnInit() {
@@ -95,6 +155,10 @@ export class AppointmentDetailComponent implements OnInit {
     this.api.getAppointment(id).subscribe({
       next: data => {
         this.appt.set(data);
+        // Seed the notes editor from the server value so the dirty check
+        // starts clean. If the appointment has no notes yet, the textarea
+        // shows up empty and the Save button stays disabled until typed.
+        this.notesEdit.set(data.notes ?? '');
         this.loading.set(false);
         // Grab the forms attached to this appointment type so we can resolve
         // field IDs to labels. Silent-fail on error — the template falls back

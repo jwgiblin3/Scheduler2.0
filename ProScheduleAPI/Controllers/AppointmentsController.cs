@@ -111,7 +111,9 @@ public class AppointmentsController : ControllerBase
             a.Id,
             a.Client.Practice.Name,
             a.Client.Practice.Slug,
+            a.ProviderId,
             a.Provider.GetDisplayName(),
+            a.AppointmentTypeId,
             a.AppointmentType.Name,
             a.StartTime,
             a.EndTime,
@@ -220,6 +222,21 @@ public class AppointmentsController : ControllerBase
         else
         {
             Console.WriteLine($"[Book] reusing Client id={client.Id} AppUserId={client.AppUserId}");
+        }
+
+        // Persist the phone onto the AppUser record too, so future sign-ins
+        // surface it via AuthResponse.Phone and the booking widget can
+        // pre-fill it on the next visit. Only fill if the AppUser doesn't
+        // already have a phone — never overwrite, since the user may have
+        // explicitly set a different number on their profile.
+        if (!string.IsNullOrWhiteSpace(req.ClientPhone))
+        {
+            var appUser = await _db.Users.FindAsync(bookingUserId);
+            if (appUser is not null && string.IsNullOrWhiteSpace(appUser.PhoneNumber))
+            {
+                appUser.PhoneNumber = req.ClientPhone.Trim();
+                await _db.SaveChangesAsync();
+            }
         }
 
         var appointment = new Appointment

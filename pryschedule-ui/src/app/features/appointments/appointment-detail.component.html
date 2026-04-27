@@ -32,12 +32,47 @@
               </div>
             </div>
 
-            @if (appt()!.notes) {
-              <div class="notes-block">
+            <!--
+              Practice-side notes about this appointment. Always visible
+              (so staff can ADD notes too, not just read existing ones).
+              Backed by Appointment.Notes (nvarchar(2000)). Saving reuses
+              the existing PUT /api/appointments/{id} endpoint.
+            -->
+            <div class="notes-block">
+              <div class="notes-header">
                 <div class="info-label">Notes</div>
-                <p>{{ appt()!.notes }}</p>
+                <span class="notes-counter" [class.over]="(notesEdit()?.length ?? 0) > notesMaxLength">
+                  {{ notesCounter() }}
+                </span>
               </div>
-            }
+              <textarea
+                class="notes-textarea"
+                rows="4"
+                [maxlength]="notesMaxLength"
+                placeholder="Internal notes about this appointment. Visible to practice staff only."
+                [ngModel]="notesEdit()"
+                (ngModelChange)="notesEdit.set($event)"
+              ></textarea>
+
+              @if (notesError()) {
+                <div class="notes-error">{{ notesError() }}</div>
+              }
+
+              <div class="notes-actions">
+                @if (notesSavedAt() && !notesDirty()) {
+                  <span class="notes-saved-flash">✓ Saved</span>
+                }
+                <div class="notes-actions-spacer"></div>
+                @if (notesDirty()) {
+                  <button type="button" class="btn btn-text" (click)="resetNotes()" [disabled]="savingNotes()">
+                    Discard
+                  </button>
+                }
+                <button type="button" class="btn btn-primary" (click)="saveNotes()" [disabled]="!notesDirty() || savingNotes()">
+                  @if (savingNotes()) { Saving… } @else { Save notes }
+                </button>
+              </div>
+            </div>
 
             @if (appt()!.status === 0) {
               <div class="actions">

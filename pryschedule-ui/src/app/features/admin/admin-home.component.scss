@@ -93,6 +93,12 @@ h1 { margin: 0 0 .4rem; font-size: 1.7rem; color: #1a1f36; }
   letter-spacing: .04em;
   text-transform: uppercase;
 }
+// "Available" badge — use a green tint to distinguish working tiles from
+// the dashed "Coming soon" placeholders.
+.admin-card-status.status-ready {
+  background: #c6f6d5;
+  color: #276749;
+}
 .admin-card-desc {
   margin-top: .65rem;
   font-size: .85rem;

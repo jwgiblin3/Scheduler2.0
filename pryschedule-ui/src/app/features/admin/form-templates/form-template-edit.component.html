@@ -1,0 +1,187 @@
+<div class="fte-page">
+  <div class="fte-header">
+    <a routerLink="/admin/form-templates" class="back-link">← Form Templates</a>
+    <h1>{{ isEdit() ? 'Edit form template' : 'New form template' }}</h1>
+    <p class="subtitle">
+      @if (isEdit()) {
+        Saving creates a new version. Older versions remain so historical FormInstances render unchanged.
+      } @else {
+        This will be a global template available to every practice. Tenant overrides ship in a later phase.
+      }
+    </p>
+  </div>
+
+  @if (loading()) {
+    <div class="fte-loading">Loading…</div>
+  } @else {
+  <form (submit)="$event.preventDefault(); onSave()" class="fte-form">
+    <section class="fte-section">
+      <h2>Template details</h2>
+      <div class="row">
+        <label class="col-grow">
+          <span class="field-label">Name <span class="req">*</span></span>
+          <input type="text" [(ngModel)]="name" name="name" maxlength="120" required>
+        </label>
+        <label class="col-third">
+          <span class="field-label">Audience</span>
+          <select [(ngModel)]="targetAudience" name="audience">
+            @for (a of audienceOptions; track a.value) {
+              <option [ngValue]="a.value">{{ a.label }}</option>
+            }
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <section class="fte-section">
+      <div class="section-header">
+        <h2>Items</h2>
+        <div class="section-buttons">
+          <button type="button" class="btn btn-secondary" (click)="openPicker()">+ Add field group</button>
+          <button type="button" class="btn btn-secondary" (click)="addInlineField()">+ Add inline field</button>
+        </div>
+      </div>
+
+      @if (items().length === 0) {
+        <div class="fte-empty">
+          A template needs at least one item. Add a field group (most common — Contact Info, Address, etc.)
+          or an inline field for one-offs that don't belong in any reusable group.
+        </div>
+      }
+
+      @for (item of items(); track $index; let i = $index) {
+        <div class="item-row" [class.item-group]="item.kind === 'group'" [class.item-field]="item.kind === 'field'">
+          <div class="item-row-header">
+            <span class="item-num">{{ i + 1 }}.</span>
+            @if (item.kind === 'group') {
+              <span class="item-kind">Field group</span>
+              <span class="item-name">{{ item.groupName || item.groupLogicalId }}</span>
+              @if (item.groupVersion) {
+                <span class="item-version">pinned to v{{ item.groupVersion }}</span>
+              }
+              @if (item.groupFieldCount !== null && item.groupFieldCount !== undefined) {
+                <span class="item-count">{{ item.groupFieldCount }} field{{ item.groupFieldCount === 1 ? '' : 's' }}</span>
+              }
+            } @else {
+              <span class="item-kind">Inline field</span>
+              <input type="text" class="item-label-input" placeholder="Field label"
+                     [(ngModel)]="item.field!.label" [name]="'lbl-' + i" maxlength="200">
+            }
+            <div class="item-row-actions">
+              <button type="button" class="btn-icon" (click)="moveItem(i, -1)" [disabled]="i === 0" title="Move up">↑</button>
+              <button type="button" class="btn-icon" (click)="moveItem(i, 1)" [disabled]="i === items().length - 1" title="Move down">↓</button>
+              <button type="button" class="btn-icon danger" (click)="removeItem(i)" title="Remove">×</button>
+            </div>
+          </div>
+
+          <!-- Inline field editor body -->
+          @if (item.kind === 'field' && item.field) {
+            <div class="inline-field-body">
+              <label class="col">
+                <span class="field-label">Type</span>
+                <select [(ngModel)]="item.field!.type" [name]="'type-' + i" (ngModelChange)="onInlineTypeChange(i)">
+                  @for (opt of fieldTypeOptions; track opt.value) {
+                    <option [ngValue]="opt.value">{{ opt.label }}</option>
+                  }
+                </select>
+              </label>
+              <label class="col">
+                <span class="field-label">Width</span>
+                <select [(ngModel)]="item.field!.width" [name]="'w-' + i">
+                  @for (opt of widthOptions; track opt.value) {
+                    <option [ngValue]="opt.value">{{ opt.label }}</option>
+                  }
+                </select>
+              </label>
+              <label class="col-grow">
+                <span class="field-label">Help text (optional)</span>
+                <input type="text" [(ngModel)]="item.field!.helpText" [name]="'help-' + i" maxlength="500" placeholder="Shown below the input">
+              </label>
+            </div>
+            <div class="inline-field-flags">
+              <label class="checkbox-inline">
+                <input type="checkbox" [(ngModel)]="item.field!.required" [name]="'req-' + i">
+                <span>Required</span>
+              </label>
+              <label class="checkbox-inline">
+                <input type="checkbox" [(ngModel)]="item.field!.phiFlag" [name]="'phi-' + i">
+                <span>PHI</span>
+              </label>
+            </div>
+
+            @if (usesOptions(item.field!.type)) {
+              <div class="options-editor">
+                <div class="options-header">
+                  <span>Options</span>
+                  <button type="button" class="btn-text" (click)="addInlineOption(i)">+ Add option</button>
+                </div>
+                @for (opt of item.field!.options ?? []; track $index; let oi = $index) {
+                  <div class="option-row">
+                    <input type="text" [(ngModel)]="opt.value" [name]="'opt-v-' + i + '-' + oi" placeholder="value (stored)" maxlength="100">
+                    <input type="text" [(ngModel)]="opt.label" [name]="'opt-l-' + i + '-' + oi" placeholder="label (shown)" maxlength="200">
+                    <button type="button" class="btn-icon danger" (click)="removeInlineOption(i, oi)" title="Remove option">×</button>
+                  </div>
+                }
+                @if ((item.field!.options?.length ?? 0) < 2) {
+                  <div class="option-hint">At least 2 options are required.</div>
+                }
+              </div>
+            }
+          }
+        </div>
+      }
+    </section>
+
+    @if (error()) {
+      <div class="fte-error">{{ error() }}</div>
+    }
+
+    <div class="fte-actions">
+      <a routerLink="/admin/form-templates" class="btn btn-text">Cancel</a>
+      <button type="submit" class="btn btn-primary" [disabled]="saving()">
+        @if (saving()) { Saving… }
+        @else if (isEdit()) { Save new version }
+        @else { Create template }
+      </button>
+    </div>
+  </form>
+  }
+
+  <!-- Group picker modal -->
+  @if (pickerOpen()) {
+    <div class="picker-backdrop" (click)="closePicker()">
+      <div class="picker-modal" (click)="$event.stopPropagation()">
+        <div class="picker-header">
+          <h2>Add a field group</h2>
+          <button type="button" class="picker-close" (click)="closePicker()" aria-label="Close">×</button>
+        </div>
+        <p class="picker-desc">
+          Picking a group adds a reference pinned to its current version. Future edits to the
+          group don't change this template until you edit and re-pick.
+        </p>
+
+        @if (pickerLoading()) {
+          <div class="picker-loading">Loading…</div>
+        } @else if (availableGroups().length === 0) {
+          <div class="picker-empty">
+            No field groups available. Create some at <a routerLink="/admin/field-groups">Admin → Field Groups</a>.
+          </div>
+        } @else {
+          <div class="picker-list">
+            @for (g of availableGroups(); track g.logicalId) {
+              <button type="button" class="picker-item" (click)="pickGroup(g)">
+                <div class="picker-item-head">
+                  <span class="picker-item-name">{{ g.name }}</span>
+                  @if (g.category) {
+                    <span class="picker-item-cat">{{ g.category }}</span>
+                  }
+                  <span class="picker-item-version">v{{ g.currentVersion }}</span>
+                </div>
+              </button>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

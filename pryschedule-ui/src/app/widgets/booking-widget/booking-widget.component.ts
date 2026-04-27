@@ -104,7 +104,13 @@ export class BookingWidgetComponent implements OnInit {
   // the UI shows a banner so the user knows they're not booking a brand-new
   // appointment.
   rescheduleToken = signal<string | null>(null);
-  rescheduleOriginal = signal<{ start: string; type: string; provider: string } | null>(null);
+  rescheduleOriginal = signal<{
+    start: string;
+    type: string;
+    provider: string;
+    typeId: number | null;
+    providerId: number | null;
+  } | null>(null);
   isReschedule = computed(() => !!this.rescheduleToken());
 
   // ---- Availability alert modal ("notify me if earlier slot opens") ----
@@ -633,14 +639,21 @@ export class BookingWidgetComponent implements OnInit {
     }
 
     // Reschedule mode? The "Modify" button on /my/appointments adds these.
+    // We read both names (used in the "you're modifying X" banner copy) and
+    // the IDs (used to pre-select the type/provider/slot once the practice
+    // data loads, so the user only has to change what they want changed).
     const q = this.route.snapshot.queryParamMap;
     const rt = q.get('reschedule');
     if (rt) {
       this.rescheduleToken.set(rt);
+      const typeIdRaw = q.get('originalTypeId');
+      const providerIdRaw = q.get('originalProviderId');
       this.rescheduleOriginal.set({
-        start:    q.get('originalStart')    ?? '',
-        type:     q.get('originalType')     ?? '',
-        provider: q.get('originalProvider') ?? ''
+        start:      q.get('originalStart')    ?? '',
+        type:       q.get('originalType')     ?? '',
+        provider:   q.get('originalProvider') ?? '',
+        typeId:     typeIdRaw     ? Number(typeIdRaw)     : null,
+        providerId: providerIdRaw ? Number(providerIdRaw) : null
       });
     }
 
@@ -652,13 +665,81 @@ export class BookingWidgetComponent implements OnInit {
     this.api.getPublicPractice(this.bookingSlug).subscribe({
       next: data => {
         this.practice.set(data);
-        // Re-hydrate any in-progress booking from before a logout/login round
-        // trip. Has to wait until appointment types + providers are loaded
-        // because we look the IDs back up against the practice.
-        this.restoreDraft(data);
+        // In reschedule mode, pre-select the original appointment's
+        // type/provider/slot so the user only has to change what they want
+        // to change. The saved sessionStorage draft is intentionally
+        // ignored here — reschedule context wins over a stale half-finished
+        // booking.
+        if (this.isReschedule()) {
+          this.prefillFromReschedule(data);
+        } else {
+          // Re-hydrate any in-progress booking from before a logout/login
+          // round trip. Has to wait until appointment types + providers are
+          // loaded because we look the IDs back up against the practice.
+          this.restoreDraft(data);
+        }
       },
       error: () => this.error.set('Practice not found. Please check your booking link.')
     });
+  }
+
+  /**
+   * Pre-select the original appointment's type, provider, and slot in
+   * reschedule mode. Picks resolve against the just-loaded BookingInfo so
+   * we get the same TypeScript objects the rest of the widget operates on.
+   *
+   * Slot pre-selection is "best effort" — the original time is loaded into
+   * the slots grid, and if it's still available it's auto-selected. If
+   * someone else booked it in between, the user sees the time picker open
+   * and can pick a fresh slot. The reschedule banner makes the original
+   * time visible regardless.
+   */
+  private prefillFromReschedule(info: BookingInfo) {
+    const orig = this.rescheduleOriginal();
+    if (!orig) return;
+
+    // Type — resolve from the IDs the Modify link passed.
+    if (orig.typeId !== null) {
+      const t = info.appointmentTypes.find(t => t.id === orig.typeId);
+      if (t) this.selectedType.set(t);
+    }
+
+    // Provider — null in the URL would mean "Any Available", which the
+    // booking-widget represents internally as null (vs undefined for
+    // "haven't picked yet"). The Modify link always sends a concrete
+    // providerId today, so map any number to a real provider; if the
+    // provider has been removed since the booking, leave the picker empty
+    // so the user can choose a different one.
+    if (orig.providerId !== null) {
+      const p = info.providers.find(pr => pr.id === orig.providerId) ?? null;
+      this.selectedProvider.set(p);
+    }
+
+    // Slot — load availability for the original date and look for an
+    // exact match on the start time. Same polling pattern as restoreDraft
+    // because slots load asynchronously.
+    if (this.selectedType() && this.selectedProvider() !== undefined) {
+      // Anchor the visible week on the original appointment's date so the
+      // user lands on the right week immediately rather than today.
+      if (orig.start) {
+        const origDate = new Date(orig.start);
+        if (!isNaN(origDate.getTime())) {
+          origDate.setHours(0, 0, 0, 0);
+          this.weekStart.set(origDate);
+        }
+      }
+
+      this.loadSlotsForCurrentView();
+
+      if (orig.start) {
+        const tryRestore = (attempts: number) => {
+          const match = this.slots().find(s => s.start === orig.start);
+          if (match) { this.selectedSlot.set(match); return; }
+          if (attempts > 0) setTimeout(() => tryRestore(attempts - 1), 250);
+        };
+        setTimeout(() => tryRestore(8), 250);
+      }
+    }
   }
 }
 

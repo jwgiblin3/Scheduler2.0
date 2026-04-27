@@ -93,7 +93,8 @@ public class ClientsController : ControllerBase
             a.Provider.GetDisplayName(),
             a.AppointmentType.Name,
             (int)a.Status,
-            a.IntakeFormResponses.Any()
+            a.IntakeFormResponses.Any(),
+            a.Notes
         )).ToList();
 
         var responseDtos = appts

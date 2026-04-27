@@ -61,12 +61,19 @@ public record AvailableSlotDto(DateTime Start, DateTime End);
 
 public record IntakeFormResponseDto(int Id, string ResponsesJson, DateTime SubmittedAt);
 
-/// <summary>Appointment summary as shown to a signed-in client on their "My Appointments" page.</summary>
+/// <summary>
+/// Appointment summary as shown to a signed-in client on their
+/// "My Appointments" page. Includes both display names (for the list)
+/// AND ids (for the Modify booking flow's pre-selection of the original
+/// type/provider).
+/// </summary>
 public record MyAppointmentDto(
     int Id,
     string PracticeName,
     string PracticeSlug,
+    int ProviderId,
     string ProviderName,
+    int AppointmentTypeId,
     string AppointmentTypeName,
     DateTime StartTime,
     DateTime EndTime,

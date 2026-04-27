@@ -78,9 +78,24 @@
               </div>
               <div class="appt-actions">
                 @if (a.cancellationToken && a.practiceSlug) {
+                  <!--
+                    Modify link: passes BOTH names (for the banner copy on
+                    the booking page) AND ids (so the widget can pre-select
+                    the same provider, appointment type, and slot the user
+                    originally chose — they only have to change what they
+                    actually want to change).
+                  -->
                   <a class="btn-modify"
                      [routerLink]="['/book', a.practiceSlug]"
-                     [queryParams]="{ reschedule: a.cancellationToken, apptId: a.id, originalStart: a.startTime, originalType: a.appointmentTypeName, originalProvider: a.providerName }">
+                     [queryParams]="{
+                       reschedule:        a.cancellationToken,
+                       apptId:            a.id,
+                       originalStart:     a.startTime,
+                       originalType:      a.appointmentTypeName,
+                       originalTypeId:    a.appointmentTypeId,
+                       originalProvider:  a.providerName,
+                       originalProviderId: a.providerId
+                     }">
                     Modify
                   </a>
                 }

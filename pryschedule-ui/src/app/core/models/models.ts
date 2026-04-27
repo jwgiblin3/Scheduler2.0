@@ -47,7 +47,12 @@ export interface MyAppointment {
   id: number;
   practiceName: string;
   practiceSlug: string;
+  // IDs are surfaced alongside the display names so the Modify flow on
+  // the booking widget can pre-select the original provider / appointment
+  // type without an extra round trip.
+  providerId: number;
   providerName: string;
+  appointmentTypeId: number;
   appointmentTypeName: string;
   startTime: string;
   endTime: string;
@@ -132,6 +137,10 @@ export interface ClientDetail {
     appointmentTypeName: string;
     status: AppointmentStatus;
     hasIntakeResponse: boolean;
+    // Practice-side notes from the appointment (nullable). Surfaced
+    // here so the client detail's Notes section can render a unified
+    // chronological view across every appointment.
+    notes?: string | null;
   }>;
   formResponses: ClientFormResponse[];
 }
