@@ -54,11 +54,12 @@
                       </div>
                       <div class="field-row-body">
                         <div class="form-group field-label">
-                          <label>Question *</label>
+                          <!-- Heading rows show "Heading text" rather than "Question *" — they're not questions. -->
+                          <label>{{ field.type === 'heading' ? 'Heading text *' : 'Question *' }}</label>
                           <input
                             [ngModel]="field.label"
                             (ngModelChange)="updateField(field.id, { label: $event })"
-                            placeholder="e.g. What brings you in today?"
+                            [placeholder]="field.type === 'heading' ? 'e.g. Contact Information' : 'e.g. What brings you in today?'"
                           />
                         </div>
                         <div class="form-group field-type">
@@ -72,17 +73,23 @@
                             }
                           </select>
                         </div>
-                        <div class="form-group field-required">
-                          <label>&nbsp;</label>
-                          <label class="checkbox-label">
-                            <input
-                              type="checkbox"
-                              [ngModel]="field.required"
-                              (ngModelChange)="updateField(field.id, { required: $event })"
-                            />
-                            Required
-                          </label>
-                        </div>
+                        <!--
+                          "Required" makes no sense for a heading — it's a
+                          divider, not data collection. Hide the toggle.
+                        -->
+                        @if (field.type !== 'heading') {
+                          <div class="form-group field-required">
+                            <label>&nbsp;</label>
+                            <label class="checkbox-label">
+                              <input
+                                type="checkbox"
+                                [ngModel]="field.required"
+                                (ngModelChange)="updateField(field.id, { required: $event })"
+                              />
+                              Required
+                            </label>
+                          </div>
+                        }
                       </div>
                       @if (field.type === 'radio' || field.type === 'checkbox') {
                         <div class="field-options">

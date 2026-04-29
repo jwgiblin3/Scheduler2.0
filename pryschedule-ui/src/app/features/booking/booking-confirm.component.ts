@@ -1,6 +1,8 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
+import { ApiService } from '../../core/services/api.service';
+import { PracticeForm } from '../../core/models/models';
 
 @Component({
   selector: 'app-booking-confirm',
@@ -11,6 +13,7 @@ import { DatePipe } from '@angular/common';
 })
 export class BookingConfirmComponent implements OnInit {
   private route = inject(ActivatedRoute);
+  private api = inject(ApiService);
 
   apptId = signal(0);
   token = signal('');
@@ -22,6 +25,26 @@ export class BookingConfirmComponent implements OnInit {
   practiceName = signal('');
   providerName = signal('');
   slug = '';
+
+  /**
+   * The practice's own forms attached to this appointment type. Loaded after
+   * booking so we can show real form names ("New Customer Intake", "Waiver", …)
+   * instead of a generic "intake form" label. Each name comes straight from
+   * what the practice typed in the Forms library — we don't relabel it.
+   */
+  attachedForms = signal<PracticeForm[]>([]);
+
+  /** Comma-separated form names with Oxford-comma style joining. */
+  attachedFormNames = computed(() => {
+    const names = this.attachedForms().map(f => f.name).filter(n => !!n);
+    if (names.length === 0) return '';
+    if (names.length === 1) return names[0];
+    if (names.length === 2) return `${names[0]} and ${names[1]}`;
+    return names.slice(0, -1).join(', ') + ', and ' + names[names.length - 1];
+  });
+
+  /** True when the practice attached more than one form. Drives plural copy. */
+  hasMultipleForms = computed(() => this.attachedForms().length > 1);
 
   /**
    * True when this page is rendered inside an iframe (i.e. the embeddable
@@ -151,6 +174,17 @@ export class BookingConfirmComponent implements OnInit {
     // is itself a strong signal that we're framed.
     try { this.inWidget.set(window.self !== window.top); }
     catch { this.inWidget.set(true); }
+
+    // Pull the actual attached forms so the intake notice reads with the
+    // practice's real form names rather than a generic "intake form".
+    // Only worth loading when intake is needed AND we have a real type id —
+    // otherwise the endpoint would return an empty list anyway.
+    if (this.needsIntake() && this.apptTypeId() > 0) {
+      this.api.getPublicFormsForType(this.apptTypeId()).subscribe({
+        next: forms => this.attachedForms.set(forms ?? []),
+        error: () => { /* leave empty — UI falls back to generic copy */ }
+      });
+    }
   }
 }
 

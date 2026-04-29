@@ -52,8 +52,11 @@ export class FieldGroupEditComponent implements OnInit {
   loading = signal(false);
   error = signal('');
 
-  // Pickers and labels for the field-row UI
+  // Pickers and labels for the field-row UI. Section is listed first
+  // (above the data-collecting types) since it's structural — admins
+  // typically lay out sections before filling them.
   fieldTypeOptions = [
+    { value: FieldType.Section,       label: 'Section heading' },
     { value: FieldType.Text,          label: 'Text' },
     { value: FieldType.Textarea,      label: 'Textarea' },
     { value: FieldType.Email,         label: 'Email' },
@@ -128,6 +131,16 @@ export class FieldGroupEditComponent implements OnInit {
         || t === FieldType.CheckboxGroup;
   }
 
+  /**
+   * Section is a structural type — it has a label (the section title)
+   * and optional help text, but doesn't collect data and doesn't accept
+   * required/width/options/validation. The editor row shows just the
+   * label + help text inputs when this returns true.
+   */
+  isSection(t: FieldType): boolean {
+    return t === FieldType.Section;
+  }
+
   // --- Field-row mutations ---
 
   addField() {
@@ -153,7 +166,9 @@ export class FieldGroupEditComponent implements OnInit {
 
   /**
    * When the user changes a field's type, prune Options if the new type
-   * doesn't use them — saves us validating an empty option array on save.
+   * doesn't use them. For Section, force the irrelevant flags (Required,
+   * PHI) off and width to Full — those settings have no meaning on a
+   * non-collecting structural row.
    */
   onTypeChange(idx: number) {
     const fs = [...this.fields()];
@@ -162,6 +177,16 @@ export class FieldGroupEditComponent implements OnInit {
       f.options = null;
     } else if (!f.options || f.options.length === 0) {
       f.options = [{ value: '', label: '' }, { value: '', label: '' }];
+    }
+    if (this.isSection(f.type)) {
+      f.required = false;
+      f.phiFlag = false;
+      f.width = FieldWidth.Full;
+      f.options = null;
+      f.placeholder = null;
+      f.maxLength = null;
+      f.minLength = null;
+      f.pattern = null;
     }
     this.fields.set(fs);
   }
@@ -189,8 +214,10 @@ export class FieldGroupEditComponent implements OnInit {
       this.error.set('Every field needs a label.');
       return;
     }
-    // Options-using fields need at least 2 options with values.
+    // Options-using fields need at least 2 options with values. Sections
+    // are skipped — they have no options or validation by design.
     for (const f of this.fields()) {
+      if (this.isSection(f.type)) continue;
       if (this.usesOptions(f.type)) {
         const opts = (f.options ?? []).filter(o => o.value.trim() && o.label.trim());
         if (opts.length < 2) {

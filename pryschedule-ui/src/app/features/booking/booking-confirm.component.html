@@ -34,11 +34,27 @@
           <div class="intake-notice">
             <div class="intake-icon">📋</div>
             <div>
-              <div class="intake-title">Please complete your intake form</div>
-              <div class="intake-sub">Your provider requires an intake form before your appointment.</div>
-              <a [routerLink]="intakeLink()" [queryParams]="intakeParams()" class="btn-intake">
-                Complete Intake Form
-              </a>
+              @if (attachedFormNames()) {
+                <div class="intake-title">
+                  Please complete: {{ attachedFormNames() }}
+                </div>
+                <div class="intake-sub">
+                  Your provider requires
+                  {{ hasMultipleForms() ? 'these forms' : 'this form' }}
+                  before your appointment.
+                </div>
+                <a [routerLink]="intakeLink()" [queryParams]="intakeParams()" class="btn-intake">
+                  @if (hasMultipleForms()) { Complete Forms } @else { Complete {{ attachedFormNames() }} }
+                </a>
+              } @else {
+                <!-- Fallback when the form list hasn't loaded yet (or load
+                     failed). Generic copy keeps the page usable. -->
+                <div class="intake-title">Please complete your intake form</div>
+                <div class="intake-sub">Your provider requires an intake form before your appointment.</div>
+                <a [routerLink]="intakeLink()" [queryParams]="intakeParams()" class="btn-intake">
+                  Complete Intake Form
+                </a>
+              }
             </div>
           </div>
         }

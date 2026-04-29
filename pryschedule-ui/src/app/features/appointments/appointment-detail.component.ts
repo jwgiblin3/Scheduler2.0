@@ -5,11 +5,12 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
 import {
   AppointmentDetail, AppointmentStatus,
-  IntakeFormField, PracticeForm, ImageMapMarker, ImageMapPoint
+  IntakeFormField, IntakeFormResponse,
+  PracticeForm, ImageMapMarker, ImageMapPoint
 } from '../../core/models/models';
 
 /** One row in the rendered intake responses — resolved from a fieldId to its label + value. */
-interface RenderedResponse {
+interface RenderedResponseRow {
   fieldId: string;
   label: string;
   type: IntakeFormField['type'];
@@ -23,6 +24,15 @@ interface RenderedResponse {
     markers: ImageMapMarker[];
     points: ImageMapPoint[];
   };
+}
+
+/** Top-level render unit — one card per submitted form. */
+interface RenderedFormCard {
+  responseId: number;
+  formName: string;
+  submittedAt: string;
+  rows: RenderedResponseRow[];
+  rawJson: string | null;
 }
 
 @Component({
@@ -60,34 +70,29 @@ export class AppointmentDetailComponent implements OnInit {
   notesCounter = computed(() => `${(this.notesEdit() ?? '').length} / ${this.notesMaxLength}`);
 
   /**
-   * The field definitions for whichever form(s) are attached to this
-   * appointment's type. We join these against responsesJson keys to render
-   * human-readable labels instead of the raw "sgw95kb9": "John" shape.
+   * Field definitions per PracticeForm id. Multi-form appointments need to
+   * resolve each response's field IDs against ITS form's definition, not a
+   * shared flat pool — different forms can reuse the same auto-generated
+   * 8-char IDs and would collide. Map keyed by PracticeForm.id.
+   *
+   * Falls back to a flat list under key 0 for legacy responses that
+   * pre-date PracticeFormId being set.
    */
-  formFields = signal<IntakeFormField[]>([]);
+  formFieldsByFormId = signal<Map<number, IntakeFormField[]>>(new Map());
 
-  readonly renderedResponses = computed<RenderedResponse[]>(() => {
+  /** Flat list of every field across every attached form. Used as a
+   *  last-resort fallback when a response has no PracticeFormId. */
+  fallbackFields = signal<IntakeFormField[]>([]);
+
+  /**
+   * One rendered card per submitted response. Each card carries the form
+   * name (header), submission timestamp (badge), and the resolved field
+   * rows. Order matches the API: most-recent first.
+   */
+  readonly renderedForms = computed<RenderedFormCard[]>(() => {
     const a = this.appt();
-    if (!a?.intakeResponse?.responsesJson) return [];
-
-    let data: Record<string, any> = {};
-    try { data = JSON.parse(a.intakeResponse.responsesJson); }
-    catch { return []; }
-
-    const fields = this.formFields();
-    const byId = new Map(fields.map(f => [f.id, f]));
-    // Preserve the form's declared order; append any stray keys that don't
-    // match a known field at the end so nothing is silently dropped.
-    const rows: RenderedResponse[] = [];
-    for (const f of fields) {
-      if (!(f.id in data)) continue;
-      rows.push(this.buildRow(f.id, data[f.id], f));
-    }
-    for (const key of Object.keys(data)) {
-      if (byId.has(key)) continue;
-      rows.push(this.buildRow(key, data[key], null));
-    }
-    return rows;
+    if (!a?.intakeResponses?.length) return [];
+    return a.intakeResponses.map(r => this.buildFormCard(r));
   });
 
   statusLabel(s: AppointmentStatus) {
@@ -172,23 +177,96 @@ export class AppointmentDetailComponent implements OnInit {
   private loadFormFields(apptTypeId: number) {
     this.api.getPublicFormsForType(apptTypeId).subscribe({
       next: (forms: PracticeForm[]) => {
-        // Flatten fields from every attached form. Field IDs are random 8-char
-        // strings and realistically won't collide across forms, so a flat list
-        // is fine — we just need to know "which label matches this key?".
-        const all: IntakeFormField[] = [];
+        // Build a per-form-id map so each response can resolve field IDs
+        // against its OWN form's definition. Different forms can reuse the
+        // same random 8-char IDs and would collide if we flattened.
+        const map = new Map<number, IntakeFormField[]>();
+        const flat: IntakeFormField[] = [];
         for (const f of forms) {
           try {
             const parsed = JSON.parse(f.fieldsJson);
-            if (Array.isArray(parsed)) all.push(...parsed);
+            if (Array.isArray(parsed)) {
+              map.set(f.id, parsed);
+              flat.push(...parsed);
+            }
           } catch { /* ignore malformed fieldsJson */ }
         }
-        this.formFields.set(all);
+        this.formFieldsByFormId.set(map);
+        this.fallbackFields.set(flat);
       },
-      error: () => { /* leave fields empty; template shows raw JSON */ }
+      error: () => { /* leave maps empty; cards show raw JSON */ }
     });
   }
 
-  private buildRow(fieldId: string, raw: any, field: IntakeFormField | null): RenderedResponse {
+  /**
+   * Build one card from a submitted response. Resolves field labels via
+   * the per-form map; falls back to the flat list when the response is
+   * legacy (no PracticeFormId). Unmatched keys still appear at the end so
+   * nothing is silently dropped.
+   *
+   * Heading fields are included in the row list even though they have no
+   * response value — the renderer special-cases them to draw a section
+   * divider. We only emit them when at least one data field follows so
+   * a trailing heading with no fields doesn't dangle.
+   */
+  private buildFormCard(r: IntakeFormResponse): RenderedFormCard {
+    const formName = (r.formName ?? '').trim() || 'Intake Form';
+
+    let data: Record<string, any> = {};
+    try { data = JSON.parse(r.responsesJson); }
+    catch {
+      return {
+        responseId: r.id,
+        formName,
+        submittedAt: r.submittedAt,
+        rows: [],
+        rawJson: r.responsesJson
+      };
+    }
+
+    let fields: IntakeFormField[] = [];
+    if (r.practiceFormId != null) {
+      fields = this.formFieldsByFormId().get(r.practiceFormId) ?? [];
+    }
+    if (fields.length === 0) fields = this.fallbackFields();
+
+    const byId = new Map(fields.map(f => [f.id, f]));
+    const rows: RenderedResponseRow[] = [];
+    for (const f of fields) {
+      if (f.type === 'heading') {
+        // Headings have no response value but render as section dividers.
+        rows.push({
+          fieldId: f.id, label: f.label, type: 'heading',
+          value: '', isSignature: false
+        });
+        continue;
+      }
+      if (!(f.id in data)) continue;
+      rows.push(this.buildRow(f.id, data[f.id], f));
+    }
+    for (const key of Object.keys(data)) {
+      if (byId.has(key)) continue;
+      rows.push(this.buildRow(key, data[key], null));
+    }
+
+    // Strip a trailing heading with no following data — it'd render as a
+    // dangling section title with nothing under it.
+    while (rows.length > 0 && rows[rows.length - 1].type === 'heading') rows.pop();
+
+    return {
+      responseId: r.id,
+      formName,
+      submittedAt: r.submittedAt,
+      rows,
+      // Only emit raw JSON when there are no rendered rows AT ALL —
+      // a heading-only fields list (no data) means responsesJson is
+      // empty too, which is fine to skip.
+      rawJson: rows.length === 0 && Object.keys(data).length > 0
+        ? JSON.stringify(data, null, 2) : null
+    };
+  }
+
+  private buildRow(fieldId: string, raw: any, field: IntakeFormField | null): RenderedResponseRow {
     const label = field?.label?.trim() || fieldId;
     const type = field?.type ?? 'text';
     if (type === 'imagemap') {

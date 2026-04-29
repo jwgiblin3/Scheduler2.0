@@ -62,6 +62,7 @@ export class FormTemplateEditComponent implements OnInit {
   // field-group editor; kept in sync by hand. If we add a type there, add
   // it here too.
   fieldTypeOptions = [
+    { value: FieldType.Section,       label: 'Section heading' },
     { value: FieldType.Text,          label: 'Text' },
     { value: FieldType.Textarea,      label: 'Textarea' },
     { value: FieldType.Email,         label: 'Email' },
@@ -135,7 +136,10 @@ export class FormTemplateEditComponent implements OnInit {
     this.items.set(arr);
   }
 
-  /** Field-type change for an inline field — prune options if not needed. */
+  /**
+   * Field-type change for an inline field — prune options if not needed,
+   * and clear collection-only flags when switching to Section.
+   */
   onInlineTypeChange(idx: number) {
     const arr = [...this.items()];
     const it = arr[idx];
@@ -145,6 +149,16 @@ export class FormTemplateEditComponent implements OnInit {
     } else if (!it.field.options || it.field.options.length === 0) {
       it.field.options = [{ value: '', label: '' }, { value: '', label: '' }];
     }
+    if (this.isSection(it.field.type)) {
+      it.field.required = false;
+      it.field.phiFlag = false;
+      it.field.width = FieldWidth.Full;
+      it.field.options = null;
+      it.field.placeholder = null;
+      it.field.maxLength = null;
+      it.field.minLength = null;
+      it.field.pattern = null;
+    }
     this.items.set(arr);
   }
 
@@ -153,6 +167,11 @@ export class FormTemplateEditComponent implements OnInit {
         || t === FieldType.Multiselect
         || t === FieldType.Radio
         || t === FieldType.CheckboxGroup;
+  }
+
+  /** Section is a structural divider — no value collection, no validation. */
+  isSection(t: FieldType): boolean {
+    return t === FieldType.Section;
   }
 
   addInlineOption(itemIdx: number) {
@@ -222,13 +241,15 @@ export class FormTemplateEditComponent implements OnInit {
       this.error.set('Add at least one item (field group or inline field) before saving.');
       return;
     }
-    // Validate inline fields
+    // Validate inline fields. Sections still need a label (the section
+    // title) but skip the options check.
     for (const it of this.items()) {
       if (it.kind === 'field') {
         if (!it.field || !it.field.label.trim()) {
           this.error.set('Every inline field needs a label.');
           return;
         }
+        if (this.isSection(it.field.type)) continue;
         if (this.usesOptions(it.field.type)) {
           const opts = (it.field.options ?? []).filter(o => o.value.trim() && o.label.trim());
           if (opts.length < 2) {

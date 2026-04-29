@@ -164,7 +164,10 @@ export interface AppointmentDetail extends AppointmentSummary {
   appointmentTypeId: number;
   durationMinutes: number;
   notes?: string;
+  /** Most recent response — kept for back-compat. New UI reads `intakeResponses`. */
   intakeResponse?: IntakeFormResponse;
+  /** Every submitted response on this appointment, most-recent first. */
+  intakeResponses?: IntakeFormResponse[];
 }
 
 export enum AppointmentStatus {
@@ -194,7 +197,10 @@ export interface PracticeForm {
 export interface IntakeFormField {
   id: string;
   label: string;
-  type: 'text' | 'textarea' | 'radio' | 'checkbox' | 'date' | 'signature' | 'imagemap';
+  // 'heading' is a non-input section divider — carries a label that
+  // renders as a header in both the booking flow and the submitted-form
+  // view. Patients don't fill it in; nothing is stored in responses for it.
+  type: 'text' | 'textarea' | 'radio' | 'checkbox' | 'date' | 'signature' | 'imagemap' | 'heading';
   required: boolean;
   options?: string[];
 
@@ -226,6 +232,11 @@ export interface IntakeFormResponse {
   id: number;
   responsesJson: string;
   submittedAt: string;
+  // Name of the PracticeForm this response was submitted against.
+  // Null on legacy rows that pre-date the forms library — UI should
+  // fall back to "Intake Form" when this is missing.
+  formName?: string | null;
+  practiceFormId?: number | null;
 }
 
 export interface BookingInfo {

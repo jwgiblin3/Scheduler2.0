@@ -27,7 +27,14 @@ export enum FieldType {
   File = 14,
   BodyDiagram = 15,
   AddressBlock = 16,
-  PaymentMethod = 17
+  PaymentMethod = 17,
+  /**
+   * Visual section divider with a label (section title) and optional help
+   * text (sub-copy). Stores no value — patients don't fill sections in.
+   * Used to break a form into "Personal Information", "Insurance", etc.
+   * groupings without spinning up a full FieldGroup.
+   */
+  Section = 18
 }
 
 /** Layout width: full / half / third / quarter columns. */

@@ -8,6 +8,7 @@ import {
 } from '../../core/models/admin-models';
 
 const FIELD_TYPES: Array<{ value: IntakeFormField['type']; label: string; hasOptions: boolean }> = [
+  { value: 'heading',   label: 'Heading',                    hasOptions: false },
   { value: 'text',      label: 'Short text',                 hasOptions: false },
   { value: 'textarea',  label: 'Long text',                  hasOptions: false },
   { value: 'radio',     label: 'Single choice (radio)',      hasOptions: true  },

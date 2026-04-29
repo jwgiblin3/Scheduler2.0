@@ -104,7 +104,18 @@ public enum FieldType
     File = 14,                // tied to FileBlob via FileBlobId in response
     BodyDiagram = 15,         // image-map component already in the codebase (parking lot #17)
     AddressBlock = 16,        // composite — renders as line1/line2/city/state/zip
-    PaymentMethod = 17        // RESERVED: tokenized payment iframe. Tabled in v1 (parking lot #1).
+    PaymentMethod = 17,       // RESERVED: tokenized payment iframe. Tabled in v1 (parking lot #1).
+
+    /// <summary>
+    /// Visual section divider within a group or template. Holds a label
+    /// (the section title) and optional help text (sub-copy). Stores no
+    /// value — patients don't fill sections in. The renderer treats this
+    /// as a header that breaks the field grid into named groupings like
+    /// "Personal Information" or "Insurance" without requiring a separate
+    /// FieldGroup. Required / Width / Options / validation bounds don't
+    /// apply and are ignored on save.
+    /// </summary>
+    Section = 18
 }
 
 /// <summary>

@@ -41,7 +41,7 @@
             <div class="notes-block">
               <div class="notes-header">
                 <div class="info-label">Notes</div>
-                <span class="notes-counter" [class.over]="(notesEdit()?.length ?? 0) > notesMaxLength">
+                <span class="notes-counter" [class.over]="notesEdit().length > notesMaxLength">
                   {{ notesCounter() }}
                 </span>
               </div>
@@ -83,25 +83,41 @@
             }
           </div>
 
-          <!-- Intake / submitted form responses — rendered under the appointment
-               as a labeled list when we can resolve field IDs to labels,
-               otherwise falls back to raw JSON. -->
-          <div class="card">
-            <div class="card-header">
-              <h2>Intake Form</h2>
-              @if (appt()!.hasIntakeResponse && appt()!.intakeResponse) {
-                <span class="badge badge-green">
-                  Submitted {{ appt()!.intakeResponse!.submittedAt | date:'MMM d, y · h:mm a' }}
-                </span>
-              } @else {
-                <span class="badge badge-gray">Not yet submitted</span>
-              }
+          <!--
+            Submitted forms — one card per response. An appointment type
+            can have multiple forms attached (Waiver + Intake + ...) and
+            each generates its own response. The header shows the actual
+            form name when available; legacy responses without a
+            PracticeFormId fall back to the generic "Intake Form".
+          -->
+          @if (!appt()!.hasIntakeResponse) {
+            <div class="card">
+              <div class="card-header">
+                <h2>Submitted Forms</h2>
+                <span class="badge badge-gray">Nothing submitted yet</span>
+              </div>
             </div>
+          } @else {
+            @for (form of renderedForms(); track form.responseId) {
+              <div class="card">
+                <div class="card-header">
+                  <h2>{{ form.formName }}</h2>
+                  <span class="badge badge-green">
+                    Submitted {{ form.submittedAt | date:'MMM d, y · h:mm a' }}
+                  </span>
+                </div>
 
-            @if (appt()!.hasIntakeResponse && appt()!.intakeResponse) {
-              @if (renderedResponses().length > 0) {
-                <dl class="response-list">
-                  @for (r of renderedResponses(); track r.fieldId) {
+                @if (form.rows.length > 0) {
+                  <dl class="response-list">
+                    @for (r of form.rows; track r.fieldId) {
+                    <!--
+                      Heading rows render as full-width section dividers
+                      (no value column). They came from the form's field
+                      definition, not the response data.
+                    -->
+                    @if (r.type === 'heading') {
+                      <div class="response-heading">{{ r.label }}</div>
+                    } @else {
                     <div class="response-row">
                       <dt class="response-label">{{ r.label }}</dt>
                       <dd class="response-value">
@@ -151,14 +167,17 @@
                         }
                       </dd>
                     </div>
+                    }
                   }
-                </dl>
-              } @else {
-                <!-- Fallback when the form definition couldn't be loaded. -->
-                <pre class="response-raw">{{ formatResponses(appt()!.intakeResponse!.responsesJson) }}</pre>
-              }
+                  </dl>
+                } @else if (form.rawJson) {
+                  <!-- Fallback when the form's field definition couldn't
+                       be resolved — shows the raw JSON so nothing's lost. -->
+                  <pre class="response-raw">{{ formatResponses(form.rawJson) }}</pre>
+                }
+              </div>
             }
-          </div>
+          }
         </div>
       }
     </div>

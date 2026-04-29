@@ -84,3 +84,15 @@
   margin-top: .5rem;
   color: #a0aec0; font-size: .78rem;
 }
+
+/* Heading — non-input field type that visually breaks a form into
+   named sections (e.g. "Contact Information"). */
+.intake-heading {
+  margin: 1.5rem 0 .5rem;
+  padding-bottom: .35rem;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1a1f36;
+}
+.intake-heading:first-child { margin-top: 0; }

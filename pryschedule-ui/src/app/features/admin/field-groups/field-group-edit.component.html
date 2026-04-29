@@ -56,10 +56,11 @@
       </div>
 
       @for (f of fields(); track $index; let i = $index) {
-        <div class="field-row">
+        <div class="field-row" [class.field-row-section]="isSection(f.type)">
           <div class="field-row-header">
             <span class="field-num">{{ i + 1 }}.</span>
-            <input type="text" class="field-label-input" [(ngModel)]="f.label" [name]="'label-' + i" maxlength="200" placeholder="Field label (what the patient sees)">
+            <input type="text" class="field-label-input" [(ngModel)]="f.label" [name]="'label-' + i" maxlength="200"
+                   [placeholder]="isSection(f.type) ? 'Section title (e.g. Personal Information)' : 'Field label (what the patient sees)'">
             <div class="field-row-actions">
               <button type="button" class="btn-icon" (click)="moveField(i, -1)" [disabled]="i === 0" title="Move up">↑</button>
               <button type="button" class="btn-icon" (click)="moveField(i, 1)" [disabled]="i === fields().length - 1" title="Move down">↓</button>
@@ -67,58 +68,82 @@
             </div>
           </div>
 
-          <div class="field-row-body">
-            <label class="col">
-              <span class="field-label">Type</span>
-              <select [(ngModel)]="f.type" [name]="'type-' + i" (ngModelChange)="onTypeChange(i)">
-                @for (opt of fieldTypeOptions; track opt.value) {
-                  <option [ngValue]="opt.value">{{ opt.label }}</option>
-                }
-              </select>
-            </label>
-            <label class="col">
-              <span class="field-label">Width</span>
-              <select [(ngModel)]="f.width" [name]="'width-' + i">
-                @for (opt of widthOptions; track opt.value) {
-                  <option [ngValue]="opt.value">{{ opt.label }}</option>
-                }
-              </select>
-            </label>
-            <label class="col-grow">
-              <span class="field-label">Help text (optional)</span>
-              <input type="text" [(ngModel)]="f.helpText" [name]="'help-' + i" maxlength="500" placeholder="Shown below the input">
-            </label>
-          </div>
-
-          <div class="field-row-flags">
-            <label class="checkbox-inline">
-              <input type="checkbox" [(ngModel)]="f.required" [name]="'req-' + i">
-              <span>Required</span>
-            </label>
-            <label class="checkbox-inline">
-              <input type="checkbox" [(ngModel)]="f.phiFlag" [name]="'phi-' + i">
-              <span>PHI</span>
-            </label>
-          </div>
-
-          <!-- Options editor for select / radio / multiselect / checkbox-group -->
-          @if (usesOptions(f.type)) {
-            <div class="options-editor">
-              <div class="options-header">
-                <span>Options</span>
-                <button type="button" class="btn-text" (click)="addOption(i)">+ Add option</button>
-              </div>
-              @for (opt of f.options ?? []; track $index; let oi = $index) {
-                <div class="option-row">
-                  <input type="text" [(ngModel)]="opt.value" [name]="'opt-val-' + i + '-' + oi" placeholder="value (stored)" maxlength="100">
-                  <input type="text" [(ngModel)]="opt.label" [name]="'opt-lbl-' + i + '-' + oi" placeholder="label (shown)" maxlength="200">
-                  <button type="button" class="btn-icon danger" (click)="removeOption(i, oi)" title="Remove option">×</button>
-                </div>
-              }
-              @if ((f.options?.length ?? 0) < 2) {
-                <div class="option-hint">At least 2 options are required for this field type.</div>
-              }
+          <!--
+            Section is a structural row — it only carries a title (the
+            label input above) and optional sub-copy (help text below).
+            We swap to a much simpler editor when type === Section so
+            admins aren't presented with width / required / PHI knobs
+            that don't apply to a divider.
+          -->
+          @if (isSection(f.type)) {
+            <div class="field-row-body">
+              <label class="col">
+                <span class="field-label">Type</span>
+                <select [(ngModel)]="f.type" [name]="'type-' + i" (ngModelChange)="onTypeChange(i)">
+                  @for (opt of fieldTypeOptions; track opt.value) {
+                    <option [ngValue]="opt.value">{{ opt.label }}</option>
+                  }
+                </select>
+              </label>
+              <label class="col-grow">
+                <span class="field-label">Sub-copy (optional)</span>
+                <input type="text" [(ngModel)]="f.helpText" [name]="'help-' + i" maxlength="500" placeholder="Optional one-line description shown below the section title">
+              </label>
             </div>
+          } @else {
+            <div class="field-row-body">
+              <label class="col">
+                <span class="field-label">Type</span>
+                <select [(ngModel)]="f.type" [name]="'type-' + i" (ngModelChange)="onTypeChange(i)">
+                  @for (opt of fieldTypeOptions; track opt.value) {
+                    <option [ngValue]="opt.value">{{ opt.label }}</option>
+                  }
+                </select>
+              </label>
+              <label class="col">
+                <span class="field-label">Width</span>
+                <select [(ngModel)]="f.width" [name]="'width-' + i">
+                  @for (opt of widthOptions; track opt.value) {
+                    <option [ngValue]="opt.value">{{ opt.label }}</option>
+                  }
+                </select>
+              </label>
+              <label class="col-grow">
+                <span class="field-label">Help text (optional)</span>
+                <input type="text" [(ngModel)]="f.helpText" [name]="'help-' + i" maxlength="500" placeholder="Shown below the input">
+              </label>
+            </div>
+
+            <div class="field-row-flags">
+              <label class="checkbox-inline">
+                <input type="checkbox" [(ngModel)]="f.required" [name]="'req-' + i">
+                <span>Required</span>
+              </label>
+              <label class="checkbox-inline">
+                <input type="checkbox" [(ngModel)]="f.phiFlag" [name]="'phi-' + i">
+                <span>PHI</span>
+              </label>
+            </div>
+
+            <!-- Options editor for select / radio / multiselect / checkbox-group -->
+            @if (usesOptions(f.type)) {
+              <div class="options-editor">
+                <div class="options-header">
+                  <span>Options</span>
+                  <button type="button" class="btn-text" (click)="addOption(i)">+ Add option</button>
+                </div>
+                @for (opt of f.options ?? []; track $index; let oi = $index) {
+                  <div class="option-row">
+                    <input type="text" [(ngModel)]="opt.value" [name]="'opt-val-' + i + '-' + oi" placeholder="value (stored)" maxlength="100">
+                    <input type="text" [(ngModel)]="opt.label" [name]="'opt-lbl-' + i + '-' + oi" placeholder="label (shown)" maxlength="200">
+                    <button type="button" class="btn-icon danger" (click)="removeOption(i, oi)" title="Remove option">×</button>
+                  </div>
+                }
+                @if ((f.options?.length ?? 0) < 2) {
+                  <div class="option-hint">At least 2 options are required for this field type.</div>
+                }
+              </div>
+            }
           }
         </div>
       }

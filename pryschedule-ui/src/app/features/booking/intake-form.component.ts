@@ -1,8 +1,23 @@
 import { Component, inject, OnInit, signal, AfterViewInit, ElementRef, ViewChildren, QueryList } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 import { ApiService } from '../../core/services/api.service';
 import { PracticeForm, IntakeFormField, ImageMapPoint } from '../../core/models/models';
+
+/**
+ * Public intake step. An appointment type can have MULTIPLE forms attached
+ * (Waiver + Intake + ...) — this page asks the patient to fill all of them
+ * before they're considered done. The forms are rendered as separate cards
+ * stacked top-to-bottom; one Submit at the bottom posts each form
+ * independently to the legacy submit endpoint (one POST per form).
+ */
+interface FormSection {
+  /** The PracticeForm row. */
+  form: PracticeForm;
+  /** Pre-parsed fields. */
+  fields: IntakeFormField[];
+}
 
 @Component({
   selector: 'app-intake-form',
@@ -17,8 +32,17 @@ export class IntakeFormComponent implements OnInit {
   private router = inject(Router);
 
   loading = signal(true);
-  form = signal<PracticeForm | null>(null);
-  fields = signal<IntakeFormField[]>([]);
+  /**
+   * One section per form attached to the appointment type. Empty when no
+   * forms are configured for this type — the page then renders the
+   * "no intake form needed" copy.
+   */
+  sections = signal<FormSection[]>([]);
+  /**
+   * Flat responses map keyed by field id. Field ids are random 8-char
+   * strings so cross-form collisions are astronomically unlikely. We
+   * split this back into per-form blobs at submit time.
+   */
   responses: Record<string, any> = {};
   submitting = signal(false);
   error = signal('');
@@ -166,18 +190,47 @@ export class IntakeFormComponent implements OnInit {
     this.responses[fieldId] = [...points];
   }
 
+  /**
+   * POST one submission per form. Each request carries only the responses
+   * to fields belonging to that form, plus the form's own practiceFormId
+   * so the server can attach the response correctly.
+   *
+   * forkJoin so all forms are submitted in parallel — if one fails, we
+   * surface the error and let the patient retry. Partial-success handling
+   * (some forms saved, others rejected) is parking-lot territory; today's
+   * failure mode is "tell the patient and let them re-submit".
+   */
   submit() {
+    const sections = this.sections();
+    if (sections.length === 0) {
+      // No forms — go straight to confirm.
+      this.router.navigate([`/book/${this.slug}/confirm`], {
+        queryParams: { apptId: this.apptId, token: this.token }
+      });
+      return;
+    }
     this.submitting.set(true);
-    this.api.submitIntakeForm({
-      appointmentId: this.apptId,
-      cancellationToken: this.token,
-      responsesJson: JSON.stringify(this.responses)
-    }).subscribe({
+    this.error.set('');
+
+    const requests = sections.map(s => {
+      const formResponses: Record<string, any> = {};
+      for (const f of s.fields) {
+        if (f.id in this.responses) formResponses[f.id] = this.responses[f.id];
+      }
+      return this.api.submitIntakeForm({
+        appointmentId: this.apptId,
+        cancellationToken: this.token,
+        responsesJson: JSON.stringify(formResponses),
+        practiceFormId: s.form.id
+      });
+    });
+
+    forkJoin(requests).subscribe({
       next: () => this.router.navigate([`/book/${this.slug}/confirm`], {
         queryParams: { apptId: this.apptId, token: this.token }
       }),
       error: err => {
-        this.error.set(err.error || 'Submission failed.');
+        this.error.set(err?.error || 'Submission failed. Please try again.');
         this.submitting.set(false);
       }
     });
@@ -190,33 +243,38 @@ export class IntakeFormComponent implements OnInit {
     this.token = q['token'];
     this.apptTypeId = Number(q['apptTypeId']);
 
-    this.api.getPublicIntakeForm(this.apptTypeId).subscribe({
-      next: f => {
-        this.form.set(f);
-        try {
-          const parsed = JSON.parse(f.fieldsJson) as IntakeFormField[];
-          this.fields.set(Array.isArray(parsed) ? parsed : []);
-          this.seedImagemapDefaults();
-        } catch {
-          this.fields.set([]);
+    // Pull every form attached to this appointment type — the booking
+    // intake page now renders all of them, not just one.
+    this.api.getPublicFormsForType(this.apptTypeId).subscribe({
+      next: forms => {
+        const sections: FormSection[] = [];
+        for (const f of forms) {
+          let fields: IntakeFormField[] = [];
+          try {
+            const parsed = JSON.parse(f.fieldsJson);
+            if (Array.isArray(parsed)) fields = parsed;
+          } catch { /* ignore malformed fieldsJson; section renders empty */ }
+          sections.push({ form: f, fields });
         }
+        this.sections.set(sections);
+        this.seedImagemapDefaults();
         this.loading.set(false);
       },
-      error: () => { this.form.set(null); this.loading.set(false); }
+      error: () => { this.sections.set([]); this.loading.set(false); }
     });
   }
 
-  /** Make sure every imagemap field has a viewBox entry + empty point array. */
+  /** Make sure every imagemap field across every section has a viewBox entry + empty point array. */
   private seedImagemapDefaults() {
-    for (const f of this.fields()) {
-      if (f.type !== 'imagemap') continue;
-      // Default proportions match a standard body-chart; replaced as soon as
-      // the <image> load event reports real dimensions.
-      if (!this.imagemapViewBox[f.id]) {
-        this.imagemapViewBox[f.id] = { w: 500, h: 600 };
-      }
-      if (!Array.isArray(this.responses[f.id])) {
-        this.responses[f.id] = [];
+    for (const section of this.sections()) {
+      for (const f of section.fields) {
+        if (f.type !== 'imagemap') continue;
+        if (!this.imagemapViewBox[f.id]) {
+          this.imagemapViewBox[f.id] = { w: 500, h: 600 };
+        }
+        if (!Array.isArray(this.responses[f.id])) {
+          this.responses[f.id] = [];
+        }
       }
     }
   }

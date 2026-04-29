@@ -81,6 +81,17 @@
       border-bottom: 1px solid #edf2f7;
     }
     .response-row:last-child { border-bottom: none; }
+    /* Heading row — full-width section divider, no value column. */
+    .response-heading {
+      margin-top: 1rem;
+      padding-top: .85rem;
+      padding-bottom: .35rem;
+      border-top: 2px solid #cbd5e0;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1a1f36;
+    }
+    .response-heading:first-child { margin-top: 0; border-top: none; padding-top: 0; }
     .response-label { margin: 0; font-size: .85rem; font-weight: 600; color: #4a5568; }
     .response-value { margin: 0; font-size: .9rem; color: #1a1f36; word-break: break-word; }
     .response-text { white-space: pre-wrap; }

@@ -76,6 +76,24 @@
 
           <!-- Inline field editor body -->
           @if (item.kind === 'field' && item.field) {
+            @if (isSection(item.field!.type)) {
+              <!-- Section: just a type picker + sub-copy. Width / required
+                   / PHI / options don't apply to a divider. -->
+              <div class="inline-field-body">
+                <label class="col">
+                  <span class="field-label">Type</span>
+                  <select [(ngModel)]="item.field!.type" [name]="'type-' + i" (ngModelChange)="onInlineTypeChange(i)">
+                    @for (opt of fieldTypeOptions; track opt.value) {
+                      <option [ngValue]="opt.value">{{ opt.label }}</option>
+                    }
+                  </select>
+                </label>
+                <label class="col-grow">
+                  <span class="field-label">Sub-copy (optional)</span>
+                  <input type="text" [(ngModel)]="item.field!.helpText" [name]="'help-' + i" maxlength="500" placeholder="Optional one-line description shown below the section title">
+                </label>
+              </div>
+            } @else {
             <div class="inline-field-body">
               <label class="col">
                 <span class="field-label">Type</span>
@@ -126,6 +144,7 @@
                   <div class="option-hint">At least 2 options are required.</div>
                 }
               </div>
+            }
             }
           }
         </div>

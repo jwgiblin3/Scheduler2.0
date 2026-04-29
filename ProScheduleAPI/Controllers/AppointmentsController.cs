@@ -138,6 +138,14 @@ public class AppointmentsController : ControllerBase
 
         if (a is null) return NotFound();
 
+        // Project every submitted response, most-recent first, plus a
+        // singular alias for the legacy single-form rendering path. The
+        // alias is just `responses[0]` when the list is non-empty.
+        var responses = a.IntakeFormResponses
+            .OrderByDescending(r => r.SubmittedAt)
+            .Select(BuildIntakeResponseDto)
+            .ToList();
+
         return Ok(new AppointmentDetailDto(
             a.Id,
             a.ClientId,
@@ -154,13 +162,10 @@ public class AppointmentsController : ControllerBase
             a.Status,
             a.Notes,
             // "hasIntakeResponse" is true when at least one form has been submitted.
-            a.IntakeFormResponses.Any(),
-            // Surface the most recent response for backwards-compatibility — the
-            // detail page used to render a single intake blob. Multi-form
-            // display is a later UI follow-up.
-            a.IntakeFormResponses.Any()
-                ? BuildIntakeResponseDto(a.IntakeFormResponses.OrderByDescending(r => r.SubmittedAt).First())
-                : null
+            responses.Count > 0,
+            // Singular kept for back-compat. New UI reads IntakeResponses.
+            responses.Count > 0 ? responses[0] : null,
+            responses
         ));
     }
 
@@ -483,6 +488,10 @@ public class AppointmentsController : ControllerBase
     private static IntakeFormResponseDto BuildIntakeResponseDto(IntakeFormResponse r)
     {
         var submittedUtc = DateTime.SpecifyKind(r.SubmittedAt, DateTimeKind.Utc);
-        return new IntakeFormResponseDto(r.Id, r.ResponsesJson, submittedUtc);
+        // r.PracticeForm is loaded via .ThenInclude in GetById; can still be
+        // null for legacy responses written before the forms library shipped.
+        return new IntakeFormResponseDto(
+            r.Id, r.ResponsesJson, submittedUtc,
+            r.PracticeForm?.Name, r.PracticeFormId);
     }
 }
