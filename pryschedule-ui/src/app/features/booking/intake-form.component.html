@@ -18,7 +18,35 @@
             Please complete the following before your appointment.
           </p>
 
-          @for (section of sections(); track section.form.id) {
+          <!--
+            Tab strip — only renders when there's more than one form
+            attached, so single-form intakes stay visually identical to
+            their pre-tabs layout. Each tab is a button so keyboard users
+            can move between forms with Tab/Enter.
+          -->
+          @if (sections().length > 1) {
+            <div class="form-tabs" role="tablist">
+              @for (section of sections(); track section.form.id; let i = $index) {
+                <button type="button"
+                        class="form-tab"
+                        [class.active]="activeTab() === i"
+                        role="tab"
+                        [attr.aria-selected]="activeTab() === i"
+                        (click)="setActiveTab(i)">
+                  <span class="form-tab-num">{{ i + 1 }}</span>
+                  <span class="form-tab-name">{{ section.form.name }}</span>
+                </button>
+              }
+            </div>
+          }
+
+          <!--
+            Render only the active section. Tracking by form.id keeps
+            field state stable when the user flips between tabs — Angular
+            re-uses the same DOM nodes per form, so partial answers don't
+            get blown away.
+          -->
+          @if (currentSection(); as section) {
           <div class="card">
             <h2>{{ section.form.name }}</h2>
 
@@ -135,15 +163,34 @@
 
           @if (error()) { <div class="alert-error">{{ error() }}</div> }
 
-          <button class="btn-submit" [disabled]="submitting()" (click)="submit()">
-            @if (submitting()) {
-              Submitting…
-            } @else if (sections().length > 1) {
-              Submit {{ sections().length }} Forms
-            } @else {
-              Submit Form
+          <!--
+            Tab navigation. Single-form intakes get a plain Submit button
+            (no Back/Next clutter). Multi-form intakes get Back/Next on
+            interior tabs and Submit only on the last tab so the patient
+            can't accidentally submit before walking through every form.
+          -->
+          <div class="form-actions">
+            @if (sections().length > 1 && !isFirstTab()) {
+              <button type="button" class="btn-tab-back"
+                      [disabled]="submitting()"
+                      (click)="prevTab()">← Back</button>
             }
-          </button>
+            @if (sections().length > 1 && !isLastTab()) {
+              <button type="button" class="btn-tab-next"
+                      [disabled]="submitting()"
+                      (click)="nextTab()">Next →</button>
+            } @else {
+              <button class="btn-submit" [disabled]="submitting()" (click)="submit()">
+                @if (submitting()) {
+                  Submitting…
+                } @else if (sections().length > 1) {
+                  Submit {{ sections().length }} Forms
+                } @else {
+                  Submit Form
+                }
+              </button>
+            }
+          </div>
         }
       </div>
     </div>

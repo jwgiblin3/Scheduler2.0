@@ -42,6 +42,14 @@ export interface CreatePracticeRequest {
   practiceSlug: string;
 }
 
+/** Form attached to a client appointment, with completion status. */
+export interface MyAppointmentForm {
+  id: number;
+  name: string;
+  /** True when the client has submitted a response for this form. */
+  completed: boolean;
+}
+
 /** Appointment as seen by a client on "My Appointments". */
 export interface MyAppointment {
   id: number;
@@ -58,6 +66,22 @@ export interface MyAppointment {
   endTime: string;
   status: AppointmentStatus;
   cancellationToken?: string;
+  /**
+   * Forms attached to this appointment's type, with per-form completion.
+   * Optional so a server that hasn't been redeployed yet (returning the
+   * old DTO without the field) doesn't break the UI — the template just
+   * skips the documents section.
+   */
+  forms?: MyAppointmentForm[];
+  // Address of the practice where the appointment happens. All optional —
+  // the practice may not have entered an address yet, in which case the
+  // detail page just hides the Location section. Surfaced here (rather
+  // than via a separate practice fetch) so /my/appointments/:id can render
+  // location without an extra API round-trip.
+  addressLine1?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postalCode?: string | null;
 }
 
 export interface Provider {

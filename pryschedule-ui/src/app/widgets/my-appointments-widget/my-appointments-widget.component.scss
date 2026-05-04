@@ -15,8 +15,98 @@ h2 { margin: 0 0 .75rem; font-size: 1rem; color: #4a5568; font-weight: 600; }
 .appt-date { font-size: .82rem; color: #718096; text-transform: uppercase; letter-spacing: .04em; font-weight: 600; }
 .appt-time { font-size: 1.1rem; color: #1a1f36; font-weight: 600; margin-top: 2px; }
 .appt-info { min-width: 0; }
+/* New title row: practice name and appointment type share one line so the
+   client sees "Ridgewood Spine · Initial Consultation" at a glance. Wraps
+   on narrow screens; the dot separator hides itself when wrapped via the
+   flex gap (no separator needed when items stack). */
+.appt-title-row {
+  display: flex; flex-wrap: wrap;
+  align-items: baseline;
+  gap: .4rem;
+}
+.appt-practice {
+  font-size: .82rem;
+  font-weight: 600;
+  color: #5a67d8;          /* matches the brand accent */
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.appt-title-sep { color: #cbd5e0; font-weight: 400; }
 .appt-title { font-size: 1rem; font-weight: 600; color: #1a1f36; }
 .appt-meta { font-size: .85rem; color: #4a5568; margin-top: 2px; }
+
+/* ---- Compact documents summary ----
+   Single line: "Documents · 2 of 3 completed". Replaced the per-form
+   list because attaching three or four forms made the card body
+   dominate the page; the full breakdown lives on the detail page now.
+   Color of the count flips green when everything's submitted so the
+   client can scan the list and instantly see which appointments still
+   need attention. */
+.appt-docs-summary {
+  display: inline-flex; align-items: baseline; gap: .5rem;
+  margin-top: .55rem;
+  font-size: .82rem;
+}
+.appt-docs-label {
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  font-weight: 600;
+  color: #718096;
+  font-size: .72rem;
+}
+.appt-docs-count { color: #4a5568; font-weight: 500; }
+.appt-docs-count.docs-complete { color: #2f855a; }
+.appt-docs-count.docs-pending  { color: #92400e; }
+
+/* "View details" link — lives inside the action column, stacked below
+   the Modify/Cancel buttons. Right-aligned so it sits flush under those
+   buttons (which themselves right-align via the card's grid layout).
+   Block-level so it occupies its own row regardless of action-column
+   width. */
+.appt-view-details {
+  display: block;
+  margin-top: .55rem;
+  font-size: .85rem;
+  font-weight: 500;
+  color: #5a67d8;
+  text-decoration: none;
+  text-align: right;
+}
+.appt-view-details:hover { text-decoration: underline; }
+/* Action column: a vertical flex that holds (a) a horizontal row of
+   Modify/Cancel buttons, then (b) the View details link below. Right-
+   aligned so everything sits flush with the right edge of the card. */
+.appt-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: .55rem;
+}
+/* Buttons row — Modify + Cancel side-by-side. */
+.appt-action-buttons {
+  display: flex;
+  gap: .4rem;
+}
+.appt-actions .btn-modify,
+.appt-actions .btn-cancel {
+  margin: 0;
+}
+
+/* Inline status badges shared by the documents list. Small, capsule-shaped,
+   color-coded so the eye can scan completed vs. pending at a glance. */
+.badge {
+  display: inline-block;
+  font-size: .7rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  font-weight: 700;
+  padding: .15rem .5rem;
+  border-radius: 999px;
+  line-height: 1.4;
+}
+.badge-green { background: #e3faed; color: #2f855a; }
+.badge-amber { background: #fef3c7; color: #92400e; }
+.badge-gray  { background: #edf2f7; color: #718096; }
 .appt-status { display: inline-block; margin-top: .5rem; font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; font-weight: 600; padding: .25rem .55rem; border-radius: 4px; }
 .appt-status.status-scheduled { background: #e6f4ff; color: #2c7be5; }
 .appt-status.status-completed { background: #e3faed; color: #2f855a; }

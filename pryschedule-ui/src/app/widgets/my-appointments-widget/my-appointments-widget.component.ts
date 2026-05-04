@@ -152,6 +152,15 @@ export class MyAppointmentsWidgetComponent implements OnInit {
     return 'status-' + this.statusLabel(status).toLowerCase().replace(/\s+/g, '-');
   }
 
+  /**
+   * Count of forms completed for an appointment. Defensive against the
+   * `forms` field being undefined (older server responses) — returns 0
+   * which keeps the "0 of 0 completed" line trivially correct.
+   */
+  formsCompletedCount(a: MyAppointment): number {
+    return (a.forms ?? []).filter(f => f.completed).length;
+  }
+
   cancel(a: MyAppointment) {
     if (!a.cancellationToken) {
       alert('This appointment cannot be cancelled from here. Please contact the practice.');

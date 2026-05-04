@@ -67,39 +67,79 @@
                 <div class="appt-time">{{ a.startTime | date:'h:mm a' }}</div>
               </div>
               <div class="appt-info">
-                <div class="appt-title">{{ a.appointmentTypeName }}</div>
+                <!--
+                  Title now shows the practice + appointment type together
+                  on one line so a client with appointments at multiple
+                  practices can scan the list without parsing a meta line.
+                  The dot separator is purely decorative; if the screen is
+                  narrow the .appt-title-row falls back to wrapping.
+                -->
+                <div class="appt-title-row">
+                  <span class="appt-practice">{{ a.practiceName }}</span>
+                  <span class="appt-title-sep" aria-hidden="true">·</span>
+                  <span class="appt-title">{{ a.appointmentTypeName }}</span>
+                </div>
                 <div class="appt-meta">
                   with <strong>{{ a.providerName }}</strong>
-                  at {{ a.practiceName }}
                 </div>
                 <div class="appt-status" [class]="statusClass(a.status)">
                   {{ statusLabel(a.status) }}
                 </div>
+
+                <!--
+                  Compact documents indicator. Earlier iterations listed
+                  every attached form inline, which dominated the card
+                  visually once an appointment had three or four forms.
+                  Now we just summarize "X of Y completed" and route the
+                  client to the detail page for the full breakdown.
+                -->
+                @if (a.forms && a.forms.length > 0) {
+                  <div class="appt-docs-summary">
+                    <span class="appt-docs-label">Documents</span>
+                    <span class="appt-docs-count"
+                          [class.docs-complete]="formsCompletedCount(a) === a.forms.length"
+                          [class.docs-pending]="formsCompletedCount(a) < a.forms.length">
+                      {{ formsCompletedCount(a) }} of {{ a.forms.length }} completed
+                    </span>
+                  </div>
+                }
               </div>
               <div class="appt-actions">
-                @if (a.cancellationToken && a.practiceSlug) {
-                  <!--
-                    Modify link: passes BOTH names (for the banner copy on
-                    the booking page) AND ids (so the widget can pre-select
-                    the same provider, appointment type, and slot the user
-                    originally chose — they only have to change what they
-                    actually want to change).
-                  -->
-                  <a class="btn-modify"
-                     [routerLink]="['/book', a.practiceSlug]"
-                     [queryParams]="{
-                       reschedule:        a.cancellationToken,
-                       apptId:            a.id,
-                       originalStart:     a.startTime,
-                       originalType:      a.appointmentTypeName,
-                       originalTypeId:    a.appointmentTypeId,
-                       originalProvider:  a.providerName,
-                       originalProviderId: a.providerId
-                     }">
-                    Modify
-                  </a>
-                }
-                <button class="btn-cancel" type="button" (click)="cancel(a)">Cancel</button>
+                <!--
+                  Modify + Cancel sit on a single row so they read as
+                  paired actions. View details lives on its own row below
+                  them so the link doesn't get visually merged into the
+                  button cluster.
+                -->
+                <div class="appt-action-buttons">
+                  @if (a.cancellationToken && a.practiceSlug) {
+                    <!--
+                      Modify link: passes BOTH names (for the banner copy on
+                      the booking page) AND ids (so the widget can pre-select
+                      the same provider, appointment type, and slot the user
+                      originally chose — they only have to change what they
+                      actually want to change).
+                    -->
+                    <a class="btn-modify"
+                       [routerLink]="['/book', a.practiceSlug]"
+                       [queryParams]="{
+                         reschedule:        a.cancellationToken,
+                         apptId:            a.id,
+                         originalStart:     a.startTime,
+                         originalType:      a.appointmentTypeName,
+                         originalTypeId:    a.appointmentTypeId,
+                         originalProvider:  a.providerName,
+                         originalProviderId: a.providerId
+                       }">
+                      Modify
+                    </a>
+                  }
+                  <button class="btn-cancel" type="button" (click)="cancel(a)">Cancel</button>
+                </div>
+                <a class="appt-view-details"
+                   [routerLink]="['/my/appointments', a.id]">
+                  View details →
+                </a>
               </div>
             </div>
           }
@@ -118,14 +158,43 @@
                 <div class="appt-time">{{ a.startTime | date:'h:mm a' }}</div>
               </div>
               <div class="appt-info">
-                <div class="appt-title">{{ a.appointmentTypeName }}</div>
+                <div class="appt-title-row">
+                  <span class="appt-practice">{{ a.practiceName }}</span>
+                  <span class="appt-title-sep" aria-hidden="true">·</span>
+                  <span class="appt-title">{{ a.appointmentTypeName }}</span>
+                </div>
                 <div class="appt-meta">
                   with <strong>{{ a.providerName }}</strong>
-                  at {{ a.practiceName }}
                 </div>
                 <div class="appt-status" [class]="statusClass(a.status)">
                   {{ statusLabel(a.status) }}
                 </div>
+
+                @if (a.forms && a.forms.length > 0) {
+                  <!--
+                    Past-section variant: same compact summary as upcoming,
+                    but the View details link routes to the same client
+                    detail page where the full per-form list lives.
+                  -->
+                  <div class="appt-docs-summary">
+                    <span class="appt-docs-label">Documents</span>
+                    <span class="appt-docs-count">
+                      {{ formsCompletedCount(a) }} of {{ a.forms.length }} submitted
+                    </span>
+                  </div>
+                }
+              </div>
+              <!--
+                Past cards have no Modify/Cancel buttons, but we still want
+                a visible View details link. Reusing .appt-actions keeps the
+                grid layout (when / info / actions) consistent across both
+                sections so cards line up vertically when scrolling.
+              -->
+              <div class="appt-actions">
+                <a class="appt-view-details"
+                   [routerLink]="['/my/appointments', a.id]">
+                  View details →
+                </a>
               </div>
             </div>
           }

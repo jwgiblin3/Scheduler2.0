@@ -1,0 +1,210 @@
+/* Client appointment detail page. Layout intentionally mirrors the My
+   Appointments list page so the navigation between them feels seamless.
+   Card-based stack, single column, max-width capped for readability. */
+
+:host { display: block; min-height: 100vh; background: #f7f8fc; }
+
+.detail-page { min-height: 100vh; background: #f7f8fc; }
+.detail-header {
+  background: #fff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: .9rem 0;
+}
+.detail-header-inner {
+  max-width: 800px; margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex; align-items: center; gap: 1rem;
+}
+.back-link {
+  font-size: .9rem; font-weight: 500;
+  color: #5a67d8; text-decoration: none;
+}
+.back-link:hover { text-decoration: underline; }
+.spacer { flex: 1; }
+.user-chip {
+  display: inline-flex; align-items: center; gap: .55rem;
+  padding: .35rem .55rem .35rem .85rem;
+  background: #f7f8fc; border: 1px solid #e2e8f0; border-radius: 999px;
+  font-size: .85rem;
+}
+.user-chip-name { color: #1a1f36; font-weight: 500; }
+.user-chip-signout {
+  background: transparent; border: none;
+  color: #c53030; font-size: .8rem; font-weight: 500;
+  cursor: pointer; padding: .2rem .55rem;
+  border-radius: 999px;
+}
+.user-chip-signout:hover { background: #fff5f5; }
+
+.detail-container {
+  max-width: 800px; margin: 0 auto;
+  padding: 1.5rem;
+  display: flex; flex-direction: column; gap: 1rem;
+}
+
+.state-panel {
+  background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
+  padding: 1.5rem; color: #4a5568; text-align: center;
+}
+.state-panel.error { background: #fff5f5; border-color: #fed7d7; color: #742a2a; }
+.state-title { font-weight: 600; color: #1a1f36; margin-bottom: .4rem; }
+.state-panel.error .state-title { color: #742a2a; }
+.back-fallback {
+  display: inline-block; margin-top: .75rem;
+  font-size: .9rem; color: #5a67d8; text-decoration: none;
+}
+.back-fallback:hover { text-decoration: underline; }
+
+/* ---- Card primitives ---- */
+.card {
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+}
+.card h2 {
+  margin: 0 0 .75rem;
+  font-size: .8rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: #718096;
+  font-weight: 700;
+}
+
+/* Headline card — the date/time gets the visual weight, status as a pill. */
+.card-headline { padding: 1.5rem; }
+.headline-row {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 1rem; flex-wrap: wrap;
+}
+.headline-when {
+  font-size: 1.4rem; font-weight: 700; color: #1a1f36;
+  line-height: 1.2;
+}
+.headline-time {
+  font-size: 1rem; color: #4a5568;
+  margin-top: .25rem;
+}
+
+.status-badge {
+  display: inline-block;
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  font-weight: 600;
+  padding: .35rem .75rem;
+  border-radius: 4px;
+}
+.status-badge.status-scheduled { background: #e6f4ff; color: #2c7be5; }
+.status-badge.status-completed { background: #e3faed; color: #2f855a; }
+.status-badge.status-cancelled { background: #fff5f5; color: #c53030; }
+.status-badge.status-no-show   { background: #fef3c7; color: #92400e; }
+
+/* Appointment details list — definition list keeps labels and values
+   visually paired without a tabular grid. */
+.info-list {
+  margin: 0;
+  display: flex; flex-direction: column; gap: .55rem;
+}
+.info-row {
+  display: flex; gap: 1rem;
+  align-items: baseline;
+}
+.info-row dt {
+  flex: 0 0 90px;
+  font-size: .82rem; color: #718096;
+  text-transform: uppercase; letter-spacing: .04em;
+  font-weight: 600;
+}
+.info-row dd {
+  margin: 0;
+  font-size: .95rem; color: #1a1f36;
+}
+
+/* Location block — practice name on top, address on a second line, link
+   to Maps below. Visually similar to the booking page's address chip. */
+.location-block {
+  display: flex; flex-direction: column;
+  gap: .3rem;
+}
+.location-name { font-size: 1rem; font-weight: 600; color: #1a1f36; }
+.location-address { font-size: .92rem; color: #4a5568; }
+/* Soft fallback when the practice has no address on file. Lighter
+   weight + italic so it reads as a note, not a real address. */
+.location-address.muted { color: #a0aec0; font-style: italic; }
+.location-maps {
+  display: inline-block; margin-top: .35rem;
+  font-size: .85rem; font-weight: 500;
+  color: #5a67d8; text-decoration: none;
+}
+.location-maps:hover { text-decoration: underline; }
+
+/* Documents — one row per attached form. */
+.forms-list {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column;
+  gap: .5rem;
+}
+.form-row {
+  display: flex; align-items: center; gap: .6rem;
+  padding: .6rem .75rem;
+  background: #f7f8fc; border-radius: 8px;
+  font-size: .92rem;
+}
+.form-name { color: #1a1f36; font-weight: 500; }
+.form-spacer { flex: 1; }
+.form-link {
+  font-size: .82rem; color: #5a67d8;
+  text-decoration: none; font-weight: 500;
+}
+.form-link:hover { text-decoration: underline; }
+
+.badge {
+  display: inline-block;
+  font-size: .7rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  font-weight: 700;
+  padding: .15rem .55rem;
+  border-radius: 999px;
+  line-height: 1.4;
+}
+.badge-green { background: #e3faed; color: #2f855a; }
+.badge-amber { background: #fef3c7; color: #92400e; }
+.badge-gray  { background: #edf2f7; color: #718096; }
+
+.alert-error {
+  background: #fff5f5; color: #c53030;
+  padding: .75rem 1rem; border-radius: 8px;
+  border: 1px solid #fed7d7; font-size: .9rem;
+}
+
+/* Action row — Modify and Cancel side-by-side. The danger color on
+   Cancel is muted enough not to feel hostile but distinct enough to
+   stop the user from clicking it absent-mindedly. */
+.action-row {
+  display: flex; gap: .6rem; flex-wrap: wrap;
+  margin-top: .25rem;
+}
+.btn {
+  display: inline-block;
+  padding: .65rem 1.15rem;
+  border-radius: 8px;
+  font-size: .92rem; font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.btn-secondary {
+  background: #fff;
+  color: #4a5568;
+  border-color: #e2e8f0;
+}
+.btn-secondary:hover { border-color: #667eea; color: #667eea; }
+.btn-danger {
+  background: #fff;
+  color: #c53030;
+  border-color: #e2e8f0;
+}
+.btn-danger:hover { border-color: #c53030; background: #fff5f5; }

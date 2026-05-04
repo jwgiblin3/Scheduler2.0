@@ -40,6 +40,30 @@ public class EmailService
             resolvedFromEmail, resolvedFromName);
     }
 
+    /// <summary>
+    /// Build an absolute URL by prepending the configured public base
+    /// (e.g. <c>https://schedule.example.com</c>) to a relative app path.
+    /// Email clients render bare paths like <c>/book/foo</c> as
+    /// <c>http://book/foo</c> because they have no concept of a "current
+    /// page" to resolve against, so confirmation links MUST be absolute.
+    ///
+    /// Reads <c>App:PublicBaseUrl</c> first; falls back to the legacy
+    /// <c>PublicBaseUrl</c> top-level key. If neither is set we log a
+    /// warning the first time and return the path unchanged — better a
+    /// broken link than a 500 from the email-send pipeline.
+    /// </summary>
+    private string BuildAbsoluteUrl(string path)
+    {
+        var baseUrl = (_config["App:PublicBaseUrl"]
+                    ?? _config["PublicBaseUrl"]
+                    ?? "").Trim();
+        if (string.IsNullOrEmpty(baseUrl)) return path;
+        // Normalize so the join is exactly one slash regardless of how
+        // either side was entered. This is the bug-magnet area; the
+        // explicit Trim avoids double-slash and missing-slash both.
+        return $"{baseUrl.TrimEnd('/')}/{path.TrimStart('/')}";
+    }
+
     // --- Notification templates ---
 
     public Task SendBookingConfirmationAsync(
@@ -53,8 +77,8 @@ public class EmailService
         string? fromEmail = null, string? fromName = null)
     {
         var subject = $"Appointment Confirmed – {apptTypeName}";
-        var cancelUrl = $"/book/{practiceSlug}/cancel?token={cancellationToken}";
-        var rescheduleUrl = $"/book/{practiceSlug}?reschedule={cancellationToken}";
+        var cancelUrl = BuildAbsoluteUrl($"/book/{practiceSlug}/cancel?token={cancellationToken}");
+        var rescheduleUrl = BuildAbsoluteUrl($"/book/{practiceSlug}?reschedule={cancellationToken}");
 
         // Build the location block from whichever structured address fields the
         // practice has filled in. If nothing is set, we simply skip the section
@@ -118,7 +142,7 @@ public class EmailService
         string? fromEmail = null, string? fromName = null)
     {
         var subject = $"Reminder: {apptTypeName} in {hoursAway} hours";
-        var cancelUrl = $"/book/{practiceSlug}/cancel?token={cancellationToken}";
+        var cancelUrl = BuildAbsoluteUrl($"/book/{practiceSlug}/cancel?token={cancellationToken}");
 
         var html = $"""
             <h2>Appointment Reminder</h2>

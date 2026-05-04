@@ -14,6 +14,26 @@
             <span class="detail-label">Date & Time</span>
             <span class="detail-value">{{ startTime() | date:'EEEE, MMMM d, y · h:mm a' }}</span>
           </div>
+
+          <!--
+            Location block — surfaces the practice's physical address so
+            the client knows where to go. Only renders when the practice
+            has filled in any of the structured address fields. The Maps
+            link opens in a new tab so the booking-confirm page stays put;
+            target="_blank" + rel="noopener" is the standard safe pair.
+          -->
+          @if (addressLine(); as line) {
+            <div class="detail-row detail-row-location">
+              <span class="detail-label">Location</span>
+              <span class="detail-value detail-value-location">
+                <span class="location-name">{{ practiceName() || practice()?.name }}</span>
+                <span class="location-address">{{ line }}</span>
+                @if (mapsUrl(); as url) {
+                  <a class="location-maps" [href]="url" target="_blank" rel="noopener">Open in Google Maps →</a>
+                }
+              </span>
+            </div>
+          }
         </div>
 
         <!-- Add to Calendar — opens Google in a new tab, or downloads an

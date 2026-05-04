@@ -36,6 +36,15 @@ export const routes: Routes = [
     canActivate: [clientGuard],
     loadComponent: () => import('./features/client/my-appointments.component').then(m => m.MyAppointmentsComponent)
   },
+  // Detail view for a single appointment from the client portal. Reuses
+  // GET /appointments/me and finds the row locally by id, so this page
+  // works as soon as the server is returning the per-form completion
+  // projection — no second endpoint required.
+  {
+    path: 'my/appointments/:id',
+    canActivate: [clientGuard],
+    loadComponent: () => import('./features/client/my-appointment-detail.component').then(m => m.MyAppointmentDetailComponent)
+  },
 
   // --- SuperAdmin Console (platform-level operator only) ---
   // Server-side authz on the actual API endpoints uses the "ManageGlobals"

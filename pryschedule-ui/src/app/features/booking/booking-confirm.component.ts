@@ -2,7 +2,7 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { ApiService } from '../../core/services/api.service';
-import { PracticeForm } from '../../core/models/models';
+import { BookingInfo, PracticeForm } from '../../core/models/models';
 
 @Component({
   selector: 'app-booking-confirm',
@@ -33,6 +33,44 @@ export class BookingConfirmComponent implements OnInit {
    * what the practice typed in the Forms library — we don't relabel it.
    */
   attachedForms = signal<PracticeForm[]>([]);
+
+  /**
+   * Public practice metadata. Fetched on init so the confirmation page can
+   * surface the location (address) the client should physically go to.
+   * Booking already passes `practiceName` via query string, but the address
+   * fields aren't in the URL — pulling them here keeps the URL clean and
+   * lets us reuse the same getPublicPractice endpoint the booking widget
+   * already hits, so it's a warm cache miss at worst.
+   */
+  practice = signal<BookingInfo | null>(null);
+
+  /**
+   * Formatted single-line address ("123 Main St · Springfield, IL 62701").
+   * Returns null when the practice has no address fields filled in, so the
+   * Location block in the template can suppress itself entirely instead of
+   * rendering a section with empty rows.
+   */
+  addressLine = computed(() => {
+    const p = this.practice();
+    if (!p) return null;
+    const line1 = (p.addressLine1 ?? '').trim();
+    const city  = (p.city ?? '').trim();
+    const state = (p.state ?? '').trim();
+    const zip   = (p.postalCode ?? '').trim();
+    const cityStateZip = [
+      city,
+      [state, zip].filter(s => s.length > 0).join(' ')
+    ].filter(s => s.length > 0).join(', ');
+    const parts = [line1, cityStateZip].filter(s => s.length > 0);
+    return parts.length === 0 ? null : parts.join(' · ');
+  });
+
+  /** Open-in-Maps URL for the practice address; null when no address is set. */
+  mapsUrl = computed(() => {
+    const line = this.addressLine();
+    if (!line) return null;
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(line)}`;
+  });
 
   /** Comma-separated form names with Oxford-comma style joining. */
   attachedFormNames = computed(() => {
@@ -183,6 +221,16 @@ export class BookingConfirmComponent implements OnInit {
       this.api.getPublicFormsForType(this.apptTypeId()).subscribe({
         next: forms => this.attachedForms.set(forms ?? []),
         error: () => { /* leave empty — UI falls back to generic copy */ }
+      });
+    }
+
+    // Pull public practice info (cached, served unauthenticated) so the
+    // Location block can render the practice address. Failure is silent —
+    // missing location is a soft fall-through, not a hard error.
+    if (this.slug) {
+      this.api.getPublicPractice(this.slug).subscribe({
+        next: info => this.practice.set(info),
+        error: () => { /* leave null — Location section stays hidden */ }
       });
     }
   }

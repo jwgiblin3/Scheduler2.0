@@ -1,0 +1,153 @@
+<div class="detail-page">
+  <div class="detail-header">
+    <div class="detail-header-inner">
+      <a class="back-link" routerLink="/my/appointments">← My Appointments</a>
+      <div class="spacer"></div>
+      <div class="user-chip">
+        <span class="user-chip-name">{{ auth.currentUser()?.firstName }} {{ auth.currentUser()?.lastName }}</span>
+        <button class="user-chip-signout" type="button" (click)="auth.logout()">Sign out</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-container">
+    @if (loading()) {
+      <div class="state-panel">Loading appointment...</div>
+    } @else if (error() && !appt()) {
+      <div class="state-panel error">
+        <div class="state-title">{{ error() }}</div>
+        <a routerLink="/my/appointments" class="back-fallback">← Back to My Appointments</a>
+      </div>
+    } @else if (appt(); as a) {
+      <!--
+        Headline card — the most-asked question ("when is it?") answered
+        first, with the appointment type and status in the same eyeful.
+      -->
+      <div class="card card-headline">
+        <div class="headline-row">
+          <div>
+            <div class="headline-when">{{ a.startTime | date:'EEEE, MMMM d, y' }}</div>
+            <div class="headline-time">{{ a.startTime | date:'h:mm a' }} – {{ a.endTime | date:'h:mm a' }}</div>
+          </div>
+          <span class="status-badge" [class]="statusClass(a.status)">
+            {{ statusLabel(a.status) }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Appointment details -->
+      <div class="card">
+        <h2>Appointment</h2>
+        <dl class="info-list">
+          <div class="info-row">
+            <dt>Practice</dt>
+            <dd>{{ a.practiceName }}</dd>
+          </div>
+          <div class="info-row">
+            <dt>Type</dt>
+            <dd>{{ a.appointmentTypeName }}</dd>
+          </div>
+          <div class="info-row">
+            <dt>Provider</dt>
+            <dd>{{ a.providerName }}</dd>
+          </div>
+        </dl>
+      </div>
+
+      <!--
+        Location card. Always renders so the client can see WHERE the
+        appointment is, even if the practice hasn't entered an address
+        yet — in that case we show the practice name with a soft note,
+        which is more useful than hiding the section silently.
+      -->
+      <div class="card">
+        <h2>Location</h2>
+        <div class="location-block">
+          <div class="location-name">{{ a.practiceName }}</div>
+          @if (addressLine(); as line) {
+            <div class="location-address">{{ line }}</div>
+            @if (mapsUrl(); as url) {
+              <a class="location-maps"
+                 [href]="url"
+                 target="_blank"
+                 rel="noopener">Open in Google Maps →</a>
+            }
+          } @else {
+            <!--
+              Soft fallback: the practice hasn't entered an address.
+              Surfacing this explicitly is better than silently omitting
+              the section — the client knows the venue exists but has
+              to contact the practice for directions.
+            -->
+            <div class="location-address muted">
+              Address not on file. Please contact the practice for directions.
+            </div>
+          }
+        </div>
+      </div>
+
+      <!--
+        Documents — full breakdown lives here. Pending forms link to the
+        same intake page used during booking; submitted forms show the
+        completion timestamp would be ideal, but the list endpoint doesn't
+        expose it yet, so we just badge "Completed" for now.
+      -->
+      @if (forms().length > 0) {
+        <div class="card">
+          <h2>Documents</h2>
+          <ul class="forms-list">
+            @for (f of forms(); track f.id) {
+              <li class="form-row">
+                <span class="form-name">{{ f.name }}</span>
+                <span class="form-spacer"></span>
+                @if (f.completed) {
+                  <span class="badge badge-green">Completed</span>
+                } @else if (isUpcoming() && a.cancellationToken) {
+                  <span class="badge badge-amber">Pending</span>
+                  <a class="form-link"
+                     [routerLink]="['/book', a.practiceSlug, 'intake']"
+                     [queryParams]="{
+                       apptId: a.id,
+                       token: a.cancellationToken,
+                       apptTypeId: a.appointmentTypeId
+                     }">Fill out →</a>
+                } @else {
+                  <span class="badge badge-gray">Not submitted</span>
+                }
+              </li>
+            }
+          </ul>
+        </div>
+      }
+
+      @if (error()) {
+        <div class="alert-error">{{ error() }}</div>
+      }
+
+      @if (isUpcoming()) {
+        <!--
+          Action row at the bottom — Modify uses the same query-string
+          contract the list page uses so the booking widget can pre-select
+          the user's original choices and only require them to pick a new
+          time. Cancel posts immediately and routes back to the list.
+        -->
+        <div class="action-row">
+          @if (a.cancellationToken && a.practiceSlug) {
+            <a class="btn btn-secondary"
+               [routerLink]="['/book', a.practiceSlug]"
+               [queryParams]="{
+                 reschedule:        a.cancellationToken,
+                 apptId:            a.id,
+                 originalStart:     a.startTime,
+                 originalType:      a.appointmentTypeName,
+                 originalTypeId:    a.appointmentTypeId,
+                 originalProvider:  a.providerName,
+                 originalProviderId: a.providerId
+               }">Modify</a>
+          }
+          <button class="btn btn-danger" type="button" (click)="cancel()">Cancel appointment</button>
+        </div>
+      }
+    }
+  </div>
+</div>

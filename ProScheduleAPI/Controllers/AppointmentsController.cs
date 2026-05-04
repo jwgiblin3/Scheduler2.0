@@ -98,28 +98,62 @@ public class AppointmentsController : ControllerBase
 
         // Materialize first — GetDisplayName() is a C# extension method and
         // can't be translated to SQL, so the projection must happen in memory.
+        // Pulling AppointmentTypeForms→PracticeForm and IntakeFormResponses
+        // alongside the appointment lets us compute per-form completion in
+        // a single round-trip; the alternative is N+1 queries on the My
+        // Appointments page which can have 50+ rows for a long-tenured client.
         var rows = await _db.Appointments
             .AsNoTracking()
             .Where(a => a.Client.AppUserId == userId)
             .Include(a => a.Client).ThenInclude(c => c.Practice)
             .Include(a => a.Provider)
             .Include(a => a.AppointmentType)
+                .ThenInclude(t => t.AppointmentTypeForms)
+                .ThenInclude(atf => atf.PracticeForm)
+            .Include(a => a.IntakeFormResponses)
             .OrderByDescending(a => a.StartTime)
             .ToListAsync();
 
-        var appts = rows.Select(a => new MyAppointmentDto(
-            a.Id,
-            a.Client.Practice.Name,
-            a.Client.Practice.Slug,
-            a.ProviderId,
-            a.Provider.GetDisplayName(),
-            a.AppointmentTypeId,
-            a.AppointmentType.Name,
-            a.StartTime,
-            a.EndTime,
-            a.Status,
-            a.CancellationToken
-        )).ToList();
+        var appts = rows.Select(a =>
+        {
+            // A form is "Completed" when the client has submitted at least
+            // one IntakeFormResponse on THIS appointment whose PracticeFormId
+            // matches. Legacy responses without a PracticeFormId aren't
+            // matched here — they were submitted against the old single-form
+            // flow which the new attach-table doesn't represent.
+            var submittedFormIds = a.IntakeFormResponses
+                .Where(r => r.PracticeFormId.HasValue)
+                .Select(r => r.PracticeFormId!.Value)
+                .ToHashSet();
+
+            var forms = a.AppointmentType.AppointmentTypeForms
+                .OrderBy(atf => atf.SortOrder)
+                .Select(atf => new MyAppointmentFormDto(
+                    atf.PracticeFormId,
+                    atf.PracticeForm?.Name ?? "Form",
+                    submittedFormIds.Contains(atf.PracticeFormId)
+                ))
+                .ToList();
+
+            return new MyAppointmentDto(
+                a.Id,
+                a.Client.Practice.Name,
+                a.Client.Practice.Slug,
+                a.ProviderId,
+                a.Provider.GetDisplayName(),
+                a.AppointmentTypeId,
+                a.AppointmentType.Name,
+                a.StartTime,
+                a.EndTime,
+                a.Status,
+                a.CancellationToken,
+                forms,
+                a.Client.Practice.AddressLine1,
+                a.Client.Practice.City,
+                a.Client.Practice.State,
+                a.Client.Practice.PostalCode
+            );
+        }).ToList();
 
         return Ok(appts);
     }

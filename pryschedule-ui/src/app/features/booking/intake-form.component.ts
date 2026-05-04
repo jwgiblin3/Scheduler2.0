@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, AfterViewInit, ElementRef, ViewChildren, QueryList } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, AfterViewInit, ElementRef, ViewChildren, QueryList } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
@@ -38,6 +38,39 @@ export class IntakeFormComponent implements OnInit {
    * "no intake form needed" copy.
    */
   sections = signal<FormSection[]>([]);
+
+  /**
+   * Index of the currently visible tab when multiple forms are attached.
+   * Single-form appointments stay on tab 0 forever (the tab strip hides
+   * itself in that case).
+   */
+  activeTab = signal(0);
+
+  /** True iff the active tab is the last one — controls Submit visibility. */
+  readonly isLastTab = computed(() =>
+    this.activeTab() >= this.sections().length - 1
+  );
+
+  /** True iff the active tab is the first one — controls Back visibility. */
+  readonly isFirstTab = computed(() => this.activeTab() <= 0);
+
+  /** Convenience: the section currently displayed. */
+  readonly currentSection = computed(() => {
+    const all = this.sections();
+    if (all.length === 0) return null;
+    const idx = Math.max(0, Math.min(this.activeTab(), all.length - 1));
+    return all[idx];
+  });
+
+  setActiveTab(i: number) {
+    const max = this.sections().length - 1;
+    if (max < 0) return;
+    this.activeTab.set(Math.max(0, Math.min(i, max)));
+  }
+
+  nextTab() { this.setActiveTab(this.activeTab() + 1); }
+  prevTab() { this.setActiveTab(this.activeTab() - 1); }
+
   /**
    * Flat responses map keyed by field id. Field ids are random 8-char
    * strings so cross-form collisions are astronomically unlikely. We

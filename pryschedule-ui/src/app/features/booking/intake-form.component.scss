@@ -15,9 +15,68 @@
     textarea { resize: vertical; }
     .radio-label { display: flex; align-items: center; gap: .4rem; font-size: .9rem; cursor: pointer; margin-bottom: .3rem; font-weight: 400; }
     .radio-label input { width: auto; }
-    .btn-submit { width: 100%; padding: .85rem; background: #667eea; color: #fff; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; }
+    .btn-submit { flex: 1; min-width: 0; padding: .85rem; background: #667eea; color: #fff; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; }
     .btn-submit:hover:not(:disabled) { background: #5a67d8; }
     .btn-submit:disabled { opacity: .6; }
+
+    /* ---- Multi-form tab strip ----
+       Renders above the active form card when an appointment type has more
+       than one form attached. Each pill represents one form; the active
+       pill flips to the brand color so the patient always sees which form
+       they're on. */
+    .form-tabs {
+      display: flex; flex-wrap: wrap; gap: .4rem;
+      margin-bottom: 1rem;
+      padding: .35rem; background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.07);
+    }
+    .form-tab {
+      display: inline-flex; align-items: center; gap: .45rem;
+      padding: .5rem .85rem;
+      border: none; background: transparent;
+      border-radius: 6px;
+      font-size: .88rem; color: #4a5568;
+      cursor: pointer;
+      transition: background .15s, color .15s;
+    }
+    .form-tab:hover { background: #edf2f7; color: #1a1f36; }
+    .form-tab.active { background: #667eea; color: #fff; }
+    .form-tab.active:hover { background: #5a67d8; }
+    .form-tab-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: rgba(0,0,0,.08);
+      font-size: .75rem; font-weight: 700;
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+    }
+    .form-tab.active .form-tab-num { background: rgba(255,255,255,.25); }
+    .form-tab-name { font-weight: 500; }
+
+    /* Action row containing Back / Next / Submit. Buttons stretch to fill
+       so Submit feels as substantial as before on single-form intakes. */
+    .form-actions {
+      display: flex; gap: .6rem;
+      margin-top: 1rem;
+      align-items: stretch;
+    }
+    .btn-tab-back, .btn-tab-next {
+      flex: 1; min-width: 0;
+      padding: .85rem;
+      border-radius: 8px;
+      font-size: 1rem; font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-tab-back {
+      background: #fff; color: #4a5568;
+      border: 1.5px solid #e2e8f0;
+    }
+    .btn-tab-back:hover:not(:disabled) { background: #f7fafc; border-color: #cbd5e0; }
+    .btn-tab-next {
+      background: #667eea; color: #fff; border: none;
+    }
+    .btn-tab-next:hover:not(:disabled) { background: #5a67d8; }
+    .btn-tab-back:disabled, .btn-tab-next:disabled { opacity: .6; cursor: default; }
     .alert-error { background: #fff5f5; color: #c53030; padding: .6rem .75rem; border-radius: 6px; font-size: .85rem; margin-bottom: 1rem; }
     .signature-wrap { display: flex; flex-direction: column; gap: .5rem; }
     .signature-canvas { border: 1.5px solid #e2e8f0; border-radius: 6px; cursor: crosshair; touch-action: none; max-width: 100%; background: #fff; }

@@ -84,6 +84,18 @@ public record IntakeFormResponseDto(
 );
 
 /// <summary>
+/// One attached form on a client's appointment, with completion status
+/// derived from whether an IntakeFormResponse exists for it on this
+/// appointment. Surfaced on the "My Appointments" page so the client can
+/// see at a glance which paperwork is still outstanding.
+/// </summary>
+public record MyAppointmentFormDto(
+    int Id,
+    string Name,
+    bool Completed
+);
+
+/// <summary>
 /// Appointment summary as shown to a signed-in client on their
 /// "My Appointments" page. Includes both display names (for the list)
 /// AND ids (for the Modify booking flow's pre-selection of the original
@@ -100,5 +112,16 @@ public record MyAppointmentDto(
     DateTime StartTime,
     DateTime EndTime,
     AppointmentStatus Status,
-    string? CancellationToken
+    string? CancellationToken,
+    /// <summary>
+    /// Forms attached to the appointment's type, ordered by SortOrder, each
+    /// flagged as Completed when the client has submitted a matching
+    /// IntakeFormResponse. Empty when no forms are attached.
+    /// </summary>
+    List<MyAppointmentFormDto> Forms,
+    /// <summary>Street address line 1 of the practice (where the client goes). Null if unset.</summary>
+    string? AddressLine1,
+    string? City,
+    string? State,
+    string? PostalCode
 );
